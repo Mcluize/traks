@@ -1,0 +1,31 @@
+/* Header Border */
+header {
+    border-bottom: 1px solid #D1D5DB; /* Light gray color */
+}
+
+/* Sidebar Border */
+.sidebar {
+    border-right: 1px solid #D1D5DB; /* Light gray color */
+    background-color: #FFFFFF; /* White background for sidebar */
+}
+
+/* White Background for Content Sections */
+.content-section {
+    background-color: #FFFFFF; /* White background */
+    border-radius: 8px; /* Optional: for rounded corners */
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); /* Optional: adds shadow effect */
+    margin-bottom: 20px; /* Space between sections */
+    padding: 20px;
+}
+
+/* Optional: To Add Padding Inside Header */
+header .navbar {
+    padding: 10px 20px;
+}
+
+/* Notification Icon */
+.nav-item.dropdown {
+    border: 1px solid #D1D5DB; /* Border for the notification dropdown */
+    border-radius: 8px;
+    background-color: #FFFFFF;
+}

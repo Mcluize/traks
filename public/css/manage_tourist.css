@@ -1,0 +1,764 @@
+/* Global Styles */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Poppins', Arial, sans-serif;
+    background-color: #f8f9fa;
+}
+
+/* Breadcrumb Section */
+.container-fluid nav[aria-label="breadcrumb"] {
+    position: relative;
+    top: 0; 
+    z-index: 1030;
+    background-color: transparent;
+    padding: 20px 0 0 20px;
+    max-width: max-content;
+    width: 50%;
+}
+
+.breadcrumb {
+    margin-bottom: 0;
+    padding: 0;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 150%;
+    letter-spacing: 0;
+    margin-top: -83px;
+    margin-bottom: -30px;
+}
+
+.breadcrumb-item a {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 150%;
+    letter-spacing: 0;
+    color: #AAAAAA;
+}
+
+.breadcrumb-item.active {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    line-height: 150%;
+    letter-spacing: 0;
+}
+
+/* Title Section */
+.container-fluid h2 {
+    margin-top: 40px; 
+}
+
+.manage-accounts-title {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 700;
+    font-size: 24px;
+    line-height: 150%;
+    letter-spacing: 0%;
+    vertical-align: middle;
+}
+
+/* Account Cards Styling */
+.account-summary-row {
+    display: flex;
+    margin-bottom: 30px;
+    max-width: 1100px;
+    margin-left: 130px;
+    margin-right: auto;
+    gap: 60px;
+}
+
+.account-card {
+    width: 227px;
+    height: 145px;
+    background-color: #D9D9D9;
+    border-radius: 5px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    transition: background-color 0.3s ease;
+}
+
+.account-card:hover {
+    background-color: #0BC8CA;
+}
+
+.account-card-title {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 700;
+    font-size: 12px;
+    line-height: 150%;
+    letter-spacing: 0%;
+    color: #000;
+    position: absolute;
+    top: 15px;
+    left: 15px;
+}
+
+.account-card-number {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 700;
+    font-size: 48px;
+    line-height: 150%;
+    letter-spacing: 0%;
+    color: #000;
+    margin-top: 15px;
+}
+
+/* Accounts Table Section */
+.accounts-table-section {
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+.table-actions {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 15px;
+    flex-wrap: wrap; /* Add this for better mobile responsiveness */
+    gap: 10px; /* Add this for spacing when items wrap */
+}
+
+.table-filters {
+    display: flex;
+    gap: 15px;
+}
+
+.search-input {
+    padding: 8px 15px;
+    border: 1px solid #D9D9D9;
+    border-radius: 5px;
+    font-family: 'Poppins', sans-serif;
+}
+
+.create-account-btn {
+    padding: 8px 20px;
+    background-color: #FF7E3F;
+    border: none;
+    border-radius: 5px;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    cursor: pointer;
+    color: #fff;
+}
+
+/* Accounts Table Styling */
+.accounts-table {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.table th, .table td {
+    padding: 15px;
+    text-align: left;
+    border-bottom: 1px solid #C5C5C5;
+    font-family: 'Poppins', sans-serif;
+}
+
+.table th {
+    font-weight: 700;
+    font-size: 12px;
+    line-height: 150%;
+    letter-spacing: 0;
+    vertical-align: middle;
+    color: #666666;
+}
+
+.table td {
+    font-weight: 400;
+    font-size: 12px;
+    line-height: 150%;
+    letter-spacing: 0;
+    vertical-align: middle;
+    color: #666666;
+}
+
+/* Navigation link styles (copied from your existing CSS) */
+.nav-link .menu-text {
+    color: #AAAAAA;
+    font-family: 'Poppins';
+    font-weight: 700;
+    font-size: 12px;
+    line-height: 150%;
+}
+
+.nav-link .icon path {
+    fill: #AAAAAA;
+}
+
+.nav-link:hover .menu-text,
+.nav-link.active .menu-text {
+    color: #292D32;
+}
+
+.nav-link:hover .icon path,
+.nav-link.active .icon path {
+    fill: #292D32;
+}
+
+.nav-link.active {
+    background-color: transparent !important;
+    border-left: none !important;
+    box-shadow: none !important;
+}
+
+.nav-link.active::before {
+    content: none !important;
+    display: none !important;
+    border-left: none !important;
+    background: none !important;
+    width: 0 !important;
+}
+
+.nav-link {
+    background-color: transparent !important;
+    color: #AAAAAA !important;
+    border-left: none !important;
+    display: flex;
+    align-items: center; 
+    min-width: 180px;
+}
+
+.nav-link:hover,
+.nav-link.active {
+    color: #292D32 !important;
+}
+
+/* Reset and base styles for modals */
+.modal-backdrop {
+    display: none !important;
+    opacity: 0 !important;
+}
+
+/* Make sure no backdrop is created */
+.modal {
+    background-color: transparent !important;
+}
+
+/* Make body still scrollable when modal is open */
+body.modal-open {
+    overflow: auto !important;
+    padding-right: 0 !important;
+}
+
+/* Position modals properly */
+.modal-dialog {
+    margin: 1.75rem auto;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) !important;
+    max-width: 400px;
+    width: 90%;
+}
+
+.modal-content {
+    background-color: #fff;
+    border-radius: 15px;
+    box-shadow: 0 4px 25px rgba(0, 0, 0, 0.15);
+    border: none;
+    overflow: hidden;
+}
+
+.modal-header {
+    background-color: #0BC8CA;
+    color: white;
+    padding: 15px 20px;
+    border-bottom: none;
+    text-align: center;
+    position: relative;
+}
+
+.modal-title {
+    font-weight: 600;
+    font-size: 18px;
+    width: 100%;
+    text-align: center;
+    margin: 0;
+}
+
+.modal-header .btn-close {
+    position: absolute;
+    right: 15px;
+    top: 15px;
+    color: white;
+    opacity: 1;
+    filter: brightness(0) invert(1);
+}
+
+.modal-body {
+    padding: 25px 20px;
+}
+
+/* PIN Input */
+#pinInput {
+    font-size: 16px;
+    padding: 12px 15px;
+    border-radius: 8px;
+    border: 1px solid #E0E0E0;
+    width: 100%;
+    text-align: center;
+    letter-spacing: 2px;
+    box-shadow: none;
+    transition: all 0.3s;
+}
+
+#pinInput:focus {
+    border-color: #0BC8CA;
+    box-shadow: 0 0 0 3px rgba(11, 200, 202, 0.15);
+    outline: none;
+}
+
+#pinError {
+    font-size: 14px;
+    margin-top: 10px;
+    text-align: center;
+}
+
+/* User Info Modal */
+.user-info-container {
+    background-color: #F9F9F9;
+    border-radius: 12px;
+    padding: 20px;
+}
+
+.user-info-container p {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+    font-size: 14px;
+}
+
+.user-info-container p:last-child {
+    margin-bottom: 0;
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.user-info-container strong {
+    color: #555;
+    font-weight: 600;
+}
+
+/* Button Styling */
+.modal-footer {
+    border-top: none;
+    padding: 0 20px 20px 20px;
+    justify-content: center;
+}
+
+#unlockBtn, #closeUserInfoModal {
+    background-color: #FF7E3F;
+    border-color: #FF7E3F;
+    color: white;
+    font-weight: 600;
+    padding: 10px 35px;
+    border-radius: 8px;
+    font-size: 15px;
+    transition: all 0.3s;
+    box-shadow: 0 2px 5px rgba(255, 126, 63, 0.3);
+    width: 100%;
+}
+
+#unlockBtn:hover, #closeUserInfoModal:hover {
+    background-color: #e06a2f;
+    border-color: #e06a2f;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(255, 126, 63, 0.4);
+}
+
+#closeUserInfoModal {
+    background-color: #6c757d;
+    border-color: #6c757d;
+    box-shadow: 0 2px 5px rgba(108, 117, 125, 0.3);
+}
+
+#closeUserInfoModal:hover {
+    background-color: #5a6268;
+    border-color: #5a6268;
+    box-shadow: 0 4px 8px rgba(108, 117, 125, 0.4);
+}
+
+/* Blur Effect */
+.blurred {
+    filter: blur(5px);
+    transition: filter 0.3s ease;
+}
+
+/* View Details Button */
+.view-details-btn {
+    color: #000000; /* Text color is black */
+    background-color: #ffffff; /* Background color is white */
+    border: 1px solid #e0e0e0; /* Border with light grey color */
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    font-size: 14px;
+    padding: 8px 20px;
+    border-radius: 5px;
+    transition: background-color 0.3s, color 0.3s, border-color 0.3s; /* Smooth transition for hover */
+    cursor: pointer;
+}
+
+/* Hover State for View Details Button */
+.view-details-btn:hover {
+    background-color: #e06a2f; /* Orange background on hover */
+    color: white; /* White text color on hover */
+    border-color: #e06a2f; /* Match border color to the hover background */
+}
+
+#noResultMessage {
+    display: none; 
+    text-align: center;
+    color: #e06a2f;
+    font-size: 16px;
+    font-weight: 600;
+    margin-top: 20px;
+}
+
+/* Add media query for mobile devices */
+@media (max-width: 576px) {
+    .table-filters, .table-actions > div {
+        width: 100%;
+    }
+    
+    .create-account-btn {
+        width: 100%;
+    }
+}
+
+/* Responsive Adjustments */
+@media (max-width: 576px) {
+    .modal-dialog {
+        margin: 0.5rem auto;
+        max-width: 95%;
+    }
+    
+    .modal-body {
+        padding: 20px 15px;
+    }
+    
+    .user-info-container {
+        padding: 15px;
+    }
+}
+
+@media (max-width: 768px) {
+    .account-summary-row {
+        flex-direction: column;
+        align-items: center;
+        gap: 20px;
+    }
+
+    .account-card {
+        width: 100%;
+        margin-bottom: 20px;
+    }
+}
+
+/* Prevent content shift when modal opens */
+.modal-open {
+    padding-right: 0 !important;
+}
+
+/* Keep the scrollbar visible always */
+html {
+    overflow-y: scroll !important;
+}
+
+/* Ensure content doesn't shift */
+body {
+    width: 100% !important;
+    padding-right: 0 !important;
+}
+
+/* Enhanced User Info Modal */
+.user-id-highlight {
+    background-color: #f0f8ff;
+    border-left: 4px solid #0BC8CA;
+    padding: 12px 15px;
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 20px;
+    border-radius: 0 8px 8px 0;
+    color: #333;
+}
+
+/* Two-column layout for main accounts table section */
+.account-tables-container {
+    display: flex;
+    gap: 30px;
+    max-width: 1100px;
+    margin: 0 auto 40px;
+}
+
+.accounts-table-section {
+    flex: 1;
+    background-color: #ffffff;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.accounts-table-section h3.section-title {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 700;
+    font-size: 18px;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #f1f1f1;
+}
+
+/* Responsive layout for account tables */
+@media (max-width: 992px) {
+    .account-tables-container {
+        flex-direction: column;
+    }
+    
+    .accounts-table-section {
+        width: 100%;
+        margin-bottom: 30px;
+    }
+}
+
+/* Table row hover effect */
+.table tbody tr:hover {
+    background-color: #f9f9f9;
+}
+
+/* Change PIN section styles */
+#changePinBtn {
+    background-color: #ffb366;
+    border: none;
+    border-radius: 5px;
+    padding: 8px 15px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #fff;
+    transition: all 0.3s;
+}
+
+#changePinBtn:hover {
+    background-color: #ff9933;
+}
+
+#pinChangeSection {
+    margin-top: 20px;
+    padding: 15px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    border: 1px solid #eee;
+}
+
+#saveNewPinBtn {
+    margin-right: 10px;
+}
+
+#pinChangeError {
+    margin-top: 10px;
+    font-size: 13px;
+}
+
+/* No results message styling */
+.no-result-message {
+    text-align: center;
+    color: #FF7E3F;
+    padding: 15px;
+    font-style: italic;
+    background-color: #fff9f5;
+    border-radius: 5px;
+    margin-top: 15px;
+}
+
+/* Create Account Form Styling */
+#createAccountForm .form-label {
+    font-weight: 600;
+    color: #555;
+    font-size: 14px;
+}
+
+#createAccountForm .form-control {
+    border-radius: 6px;
+    padding: 10px 12px;
+    border: 1px solid #ddd;
+    transition: all 0.3s;
+}
+
+#createAccountForm .form-control:focus {
+    border-color: #FF7E3F;
+    box-shadow: 0 0 0 3px rgba(255, 126, 63, 0.15);
+}
+
+#createAccountForm select.form-control {
+    cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 16px 12px;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+}
+
+/* Dashboard container */
+.dashboard-container {
+    padding: 20px;
+    max-width: 1140px;
+    margin: 0 auto;
+}
+
+/* Better responsive card styles */
+@media (max-width: 768px) {
+    .account-card {
+        height: 120px;
+        width: 100%;
+    }
+    
+    .account-card-number {
+        font-size: 36px;
+    }
+}
+
+/* Better button styling for consistency */
+.btn-primary, .btn-success, .btn-secondary {
+    border-radius: 5px;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-primary {
+    background-color: #0BC8CA;
+    border-color: #0BC8CA;
+}
+
+.btn-primary:hover {
+    background-color: #09b0b2;
+    border-color: #09b0b2;
+}
+
+/* Improve modal transitions */
+.modal {
+    transition: opacity 0.2s ease;
+}
+
+.modal.show {
+    background-color: rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Enhanced cards with different colors */
+.total-accounts-card {
+    background-color: #C8EBFB;
+}
+
+.destination-accounts-card {
+    background-color: #FFE0C2;
+}
+
+.pending-accounts-card {
+    background-color: #D1F0E0;
+}
+
+.account-card:hover .account-card-title,
+.account-card:hover .account-card-number {
+    color: #fff;
+}
+
+/* Enhance modal for mobile view */
+@media (max-width: 576px) {
+    .modal-body {
+        padding: 15px;
+    }
+    
+    .modal-footer {
+        padding: 0 15px 15px;
+    }
+    
+    .user-id-highlight {
+        font-size: 14px;
+        padding: 10px;
+    }
+}
+
+/* Small screens responsiveness for cards */
+@media (max-width: 576px) {
+    .account-summary-row {
+        gap: 15px;
+    }
+    
+    .account-card {
+        height: 110px;
+    }
+    
+    .account-card-title {
+        font-size: 11px;
+    }
+    
+    .account-card-number {
+        font-size: 32px;
+    }
+}
+
+/* Improved form buttons */
+#saveAccountBtn, #unlockBtn {
+    width: 100%;
+    padding: 10px;
+    font-weight: 600;
+    border-radius: 5px;
+    transition: all 0.3s ease;
+}
+
+#saveAccountBtn:hover, #unlockBtn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(255, 126, 63, 0.3);
+}
+.pagination-container {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.pagination-container .pagination {
+    display: inline-flex;
+    padding: 0;
+    list-style: none;
+    background-color: #fff;
+    border-radius: 5px;
+}
+
+.pagination-container .pagination li {
+    margin: 0 5px;
+}
+
+.pagination-container .pagination li a,
+.pagination-container .pagination li span {
+    display: inline-block;
+    padding: 8px 15px;
+    font-size: 14px;
+    color: #0BC8CA;
+    text-decoration: none;
+}
+
+.pagination-container .pagination li.active a {
+    background-color: #0BC8CA;
+    color: white;
+    border-radius: 5px;
+}
+
+.pagination-container .pagination li:hover a {
+    background-color: #e06a2f;
+    color: white;
+}

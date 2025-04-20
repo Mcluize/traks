@@ -1,0 +1,885 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Poppins', Arial, sans-serif;
+    background-color: #f8f9fa;
+}
+
+
+
+/* Dashboard Header */
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.dashboard-title {
+    color: #333;
+}
+
+.dashboard-title h1 {
+    font-size: 24px;
+    margin-bottom: 5px;
+}
+
+.dashboard-title p {
+    color: #666;
+    font-size: 14px;
+}
+
+/* Card Base Styles */
+.card {
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    overflow: visible;
+    position: absolute;
+    border-radius: 8px;  /* Optional: Rounded corners */
+    margin-bottom: 20px; /* Spacing between cards */
+}
+
+.card-header {
+    padding-top: 10px;
+    margin-top: 10px;
+    font-weight: bold;
+    color: #333;
+    display: flex;
+    align-items: center;
+    font-size: 14px;
+    border-bottom: none !important;
+}
+
+
+.card-header svg {
+    margin-right: 8px;
+    flex-shrink: 0; /* Prevents icon from shrinking */
+    display: inline-block;
+    vertical-align: middle;
+}
+
+/* Make sure the text is aligned properly */
+.card-header span {
+    margin-left: 5px;
+    vertical-align: middle;
+}
+
+.card-header i {
+    margin-right: 8px;
+}
+.card-header span {
+    margin-left: 5px;  
+}
+.card-body {
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    height: calc(100% - 50px);
+}
+
+/* Stats Card Styling - Tourist Arrivals */
+.tourist-arrivals {
+    width: 220px;
+    height: 170px;
+    top: 194px;
+    left: 283px;
+    border-radius: 10px;
+    background-color: #292D32 !important;
+    color: white !important;
+}
+
+.tourist-arrivals .card-header {
+    width: 140px;
+    height: 21px;
+    color: white !important;
+    border-bottom: 1px solid #444;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    font-size: 14px;
+    line-height: 150%;
+    letter-spacing: 0;
+    vertical-align: middle;
+}
+
+.tourist-arrivals .card-header i {
+    margin-right: 8px;
+}
+
+.tourist-arrivals .stats-number {
+    width: 116px;
+    height: 78px;
+    margin: 0 auto;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 700;
+    font-size: 52px;
+    line-height: 150%;
+    letter-spacing: 0;
+    vertical-align: middle;
+    color: #8484FF !important;
+    text-align: center;
+    padding-top: 10px;
+}
+
+/* Active Tracking Card */
+.active-tracking {
+    width: 220px;
+    height: 170px;
+    top: 194px;
+    left: 519px;
+    border-radius: 10px;
+}
+
+.active-tracking .card-header {
+    width: 146px;
+    height: 21px;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    line-height: 150%;
+    letter-spacing: 0;
+    vertical-align: middle;
+    color: #484A58;
+}
+
+.active-tracking .stats-number {
+    width: 102px;
+    height: 78px;
+    margin: 0 auto;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 700;
+    font-size: 52px;
+    line-height: 150%;
+    letter-spacing: 0;
+    vertical-align: middle;
+    color: #484A58;
+    text-align: center;
+    padding-top: 10px;
+}
+
+/* Incident Alerts Card */
+.incidents-card {
+    width: 456px;
+    height: 228px;
+    top: 379px;
+    left: 283px;
+    border-radius: 10px;
+}
+
+.incidents-card .card-header {
+    width: 135px;
+    height: 27px;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 700;
+    font-size: 18px;
+    line-height: 150%;
+    letter-spacing: 0;
+    vertical-align: middle;
+    color: #484A58;
+    padding-left: 27px;
+}
+
+.incident-stats {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    flex-wrap: nowrap;
+    
+}
+
+.incident {
+    flex: 1;
+    min-width: 120px;
+    padding: 15px;
+    border-radius: 5px;
+    text-align: center;
+    position: relative;
+}
+
+.incident::after {
+    content: '*';
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    font-size: 16px;
+}
+
+.incident-number {
+    width: 62px;
+    height: 78px;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 700;
+    font-size: 52px;
+    line-height: 150%;
+    letter-spacing: 0;
+    vertical-align: middle;
+    margin: 0 auto 8px;
+    text-align: center;
+}
+
+.incident-title {
+    width: 62px;
+    height: 20px;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    line-height: 150%;
+    letter-spacing: 0;
+    vertical-align: middle;
+    color: #484A58;
+    margin: 0 auto 5px;
+    display: inline-block;
+    white-space: nowrap;
+}
+.incident-type {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.incident-description {
+    width: 86px;
+    height: 24px;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 300;
+    font-size: 8px;
+    line-height: 150%;
+    letter-spacing: 0;
+    vertical-align: middle;
+    color: #666666;
+    margin-left: 8px;
+}
+
+.incident-icon {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    margin-left: auto;
+    align-self: center;
+}
+.incident-icon-container {
+    position: absolute;
+    top: 18px;
+    right: 18px;
+}
+
+.incident-icon-circle {
+    position: absolute;
+    fill-opacity: 0.44; /* 44% opacity as requested */
+}
+
+.incident-icon-arrow {
+    position: relative;
+}
+
+.incident::after {
+    content: none;
+}
+
+.high-risk .incident-number {
+    color: #FF0000;
+}
+
+.high-risk::after {
+    color: #FF0000;
+}
+
+.medium-risk .incident-number {
+    color: #FF7700;
+}
+
+.medium-risk::after {
+    color: #FF7700;
+}
+
+.resolved .incident-number {
+    color: #1EAF01;
+}
+
+.resolved::after {
+    color: #1EAF01;
+}
+
+
+/* Map Card */
+.map-card {
+    width: 412px;
+    height: 414px;
+    top: 194px;
+    left: 762px;
+    border-radius: 10px;
+}
+
+.map-card .card-header {
+    width: 133px;
+    height: 21px;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    line-height: 150%;
+    letter-spacing: 0;
+    vertical-align: middle;
+    color: #484A58;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 15px 10px;
+    width: 100%;
+}
+.map-card .header-left {
+    display: flex;
+    align-items: center;
+}
+
+.map-card .header-right {
+    margin-left: auto;
+}
+.search-container {
+    margin-bottom: 10px;
+    display: none;
+}
+
+.map-card .search-input {
+    width: 221px;
+    height: 33px;
+    padding: 8px 12px;
+    border: 1px solid #C9C9C9;
+    border-radius: 4px;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 300;
+    font-size: 10px;
+    line-height: 150%;
+    letter-spacing: 0;
+    vertical-align: middle;
+    color: #A9A9A9;
+}
+
+.map-container {
+    width: 373px;
+    height: 335px;
+    background-color: #f5f5f5;
+    border-radius: 5px;
+    margin: 5px;
+    border: 1px solid #f1f1f1;
+    flex: 1;
+    overflow: hidden;
+}
+
+/* Tourist Logs Card */
+.logs-card {
+    width: 233px;
+    height: 414px;
+    top: 194px;
+    left: 1181px;
+    border-radius: 10px;
+}
+
+.logs-card .card-header {
+    width: 115px;
+    height: 21px;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    line-height: 150%;
+    letter-spacing: 0;
+    vertical-align: middle;
+    color: #484A58;
+}
+
+.log-entries {
+    overflow-y: auto;
+    max-height: 340px;
+    padding: 10px;
+    border-radius: 5px;
+    margin: 0 5px;
+    flex: 1;
+}
+
+.log-entry {
+    width: 146px;
+    height: 27px;
+    padding-bottom: 60px;
+    border-bottom: none;
+    font-size: 12px;
+    margin: 0 auto 18px;
+}
+
+.log-time {
+    color: #666;
+    margin-bottom: 4px;
+}
+
+.log-description {
+    color: #333;
+    font-weight: bold;
+}
+
+/* Manage Tourist Card */
+.manage-card {
+    width: 598px;
+    height: 373px;
+    top: 625px;
+    left: 283px;
+    border-radius: 10px;
+}
+
+.manage-card .card-header {
+    width: 145px;
+    height: 27px;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 700;
+    font-size: 18px;
+    line-height: 150%;
+    letter-spacing: 0;
+    vertical-align: middle;
+    color: #484A58;
+    padding-left: 27px;
+}
+
+.tourist-table-container {
+    flex: 1;
+    overflow-y: auto;
+    max-height: 290px;
+    margin: 10px;
+    border-radius: 5px;
+    padding: 5px;
+    margin-bottom: 15px;
+}
+
+.tourist-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.tourist-table th {
+    padding: 8px 12px;
+    text-align: left;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 700;
+    font-size: 12px;
+    line-height: 150%;
+    letter-spacing: 0;
+    vertical-align: middle;
+    color: #666666;
+    position: sticky;
+    top: 0;
+    background-color: white;
+}
+
+.tourist-table td {
+    padding: 8px 12px;
+    border-bottom: none;
+    font-size: 13px;
+}
+
+/* Analytics Card */
+.analytics-card {
+    width: 520px;
+    height: 373px;
+    top: 625px;
+    left: 895px;
+    border-radius: 10px;
+}
+
+.analytics-card .card-header {
+    width: 88px;
+    height: 27px;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 700;
+    font-size: 18px;
+    line-height: 150%;
+    letter-spacing: 0;
+    vertical-align: middle;
+    color: #484A58;
+    padding-left: 27px;
+    margin-bottom: -25px;
+}
+
+.analytics-header {
+    margin-bottom: 15px;
+    margin-left: 20px;
+}
+
+.analytics-total h2 {
+    font-size: 32px;
+    font-weight: 700 !important;
+    margin: 0;
+    color: #292D32;
+    line-height: 100%;
+}
+
+.analytics-total p {
+    font-weight: 500 !important;
+    font-size: 8px;
+    color: #666;
+    margin: 5px 0 0;
+}
+
+.chart-container {
+    width: 476px;
+    height: 283px;
+    position: relative;
+    padding: 10px;
+    border: 1px solid #F1F1F1;
+    border-radius: 5px;
+    margin: 10px auto;
+    overflow: hidden;
+}
+
+canvas#analyticsChart {
+    max-width: 100%;
+    height: 100% !important;
+}
+
+/* Header Styles */
+.header-container {
+    margin-top: -10px !important;
+    margin-bottom: 40px !important;
+}
+
+.header-container span1 {
+    width: 328px;
+    height: 51px;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 700;
+    font-size: 34px;
+    line-height: 150%;
+    letter-spacing: 0;
+    vertical-align: middle;
+}
+
+h2.header-container {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 700;
+    font-size: 34px;
+    line-height: 150%;
+    letter-spacing: 0;
+    vertical-align: middle;
+    margin-top: -10px;
+    margin-bottom: 10px;
+}
+
+h2.header-container small {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 400;
+    font-size: 12px;
+    line-height: 150%;
+    letter-spacing: 0;
+    display: block;
+    color: #6c757d;
+    margin-top: 5px;
+}
+
+.day-bold {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 700 !important;
+    font-size: 12px;
+    line-height: 150%;
+    letter-spacing: 0;
+    vertical-align: middle;
+}
+
+.container-fluid {
+    align-content: left;
+}
+
+.container-fluid nav[aria-label="breadcrumb"] {
+    position: relative;
+    top: 0; 
+    z-index: 1030;
+    background-color: transparent;
+    padding: 20px 0 0 20px;
+    max-width: max-content;
+    width: 50%;
+}
+
+.breadcrumb {
+    margin-bottom: 0;
+    padding: 0;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 150%;
+    letter-spacing: 0;
+    margin-top: -83px;
+}
+
+.breadcrumb-item a{
+    font-family: 'Poppins', sans-serif;
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 150%;
+    letter-spacing: 0;
+    color: #AAAAAA;
+}
+
+.breadcrumb-item.active {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    line-height: 150%;
+    letter-spacing: 0;
+}
+
+.container-fluid h2 {
+    margin-top: 40px; 
+}
+/* Container for the button */
+.button-container {
+    position: absolute;
+    top: 118px;
+    left: 1317px;
+}
+
+/* Button Styles */
+.export-button {
+    width: 80px;
+    height: 29px;
+    border-radius: 15px;
+    background-color: #370BDC;
+    color: white;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 700;
+    font-size: 12px;
+    line-height: 150%;
+    letter-spacing: 0%;
+    vertical-align: middle;
+    border: none;
+    cursor: pointer;
+}
+
+/* Adjust the button's text inside */
+.export-button span {
+    width: 40px;
+    height: 18px;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 700;
+    font-size: 12px;
+    line-height: 150%;
+    letter-spacing: 0%;
+    vertical-align: middle;
+}
+/* Default (Resting) State */
+.nav-link .menu-text {
+    color: #AAAAAA;
+    font-family: 'Poppins';
+    font-weight: 700;
+    font-size: 12px;
+    line-height: 150%;
+}
+
+.nav-link .icon path {
+    fill: #AAAAAA;
+}
+
+/* Hover and Active States */
+.nav-link:hover .menu-text,
+.nav-link.active .menu-text {
+    color: #292D32;
+}
+
+.nav-link:hover .icon path,
+.nav-link.active .icon path {
+    fill: #292D32;
+}
+.nav-link.active {
+    background-color: transparent !important;
+    border-left: none !important;
+    box-shadow: none !important;
+}
+.nav-link.active::before {
+    content: none !important;
+    display: none !important;
+    border-left: none !important;
+    background: none !important;
+    width: 0 !important;
+}
+.nav-link {
+    background-color: transparent !important;
+    color: #AAAAAA !important;
+    border-left: none !important;
+    display: flex;
+    align-items: center; 
+    min-width: 180px;
+}
+
+.nav-link:hover,
+.nav-link.active {
+    color: #292D32 !important;
+}
+
+.nav-link .icon path {
+    fill: #AAAAAA !important;
+}
+
+.nav-link:hover .icon path,
+.nav-link.active .icon path {
+    fill: #292D32 !important;
+}
+
+.menu-text {
+    font-family: 'Poppins';
+    font-weight: 700;
+    font-size: 12px;
+    line-height: 150%;
+    color: #AAAAAA;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.nav-link:hover .menu-text,
+.nav-link.active .menu-text {
+    color: #292D32;
+}
+
+.dashboard-container {
+    padding-bottom: 100px !important; 
+    min-height: 102vh; 
+}
+
+
+/* Ensure all cards and content resize properly */
+@media (max-width: 1440px) {
+    .dashboard-container {
+        width: 100%;
+        margin-left: 0;
+        margin-top: 0;
+    }
+    
+    .card {
+        transform: scale(0.9);
+        transform-origin: top left;
+    }
+}
+
+@media (max-width: 1280px) {
+    .dashboard-container {
+        max-width: 100%;
+    }
+    
+    .card {
+        transform: scale(0.85);
+        transform-origin: top left;
+    }
+}
+
+@media (max-width: 992px) {
+    /* Ensure the breadcrumb and dashboard container behave responsively */
+    .container-fluid nav[aria-label="breadcrumb"] {
+        position: relative;
+        left: 0;
+        width: 100%;
+    }
+    
+    .dashboard-container {
+        height: auto;
+        overflow: visible;
+        margin-top: 20px;
+        padding-top: 80px;
+    }
+    
+    /* Cards should stack and take full width on small screens */
+    .card {
+        position: relative;
+        top: auto !important;
+        left: auto !important;
+        width: 100% !important;
+        height: auto !important;
+        margin-bottom: 20px;
+        transform: none;
+    }
+    
+    /* Ensure elements inside cards are properly spaced */
+    .card-body {
+        min-height: unset;
+    }
+    
+    .map-container,
+    .log-entries,
+    .tourist-table-container,
+    .chart-container {
+        width: 100% !important;
+        height: auto;
+        max-height: 300px;
+    }
+    
+    .incident-stats {
+        flex-direction: row;
+    }
+}
+
+@media (max-width: 768px) {
+    /* Stack incidents vertically on smaller screens */
+    .incident-stats {
+        flex-direction: column;
+    }
+    
+    .incident {
+        margin-bottom: 15px;
+    }
+
+    /* Adjust card content spacing */
+    .tourist-arrivals,
+    .active-tracking,
+    .incidents-card,
+    .map-card,
+    .logs-card,
+    .manage-card,
+    .analytics-card {
+        width: 100%;
+        height: auto;
+    }
+    
+    /* Adjust table and log card container sizes for small screens */
+    .tourist-table-container,
+    .log-entries {
+        width: 100%;
+        max-height: none;
+        overflow-y: auto;
+    }
+}
+
+/* Additional responsiveness for very small screens (Mobile) */
+@media (max-width: 480px) {
+    /* Adjust text size and card content */
+    .card-header {
+        font-size: 12px !important;
+    }
+
+    .stats-number {
+        font-size: 36px !important;
+    }
+    
+    .tourist-arrivals,
+    .active-tracking,
+    .incidents-card {
+        width: 100% !important;
+    }
+    
+    .map-container,
+    .log-entries,
+    .tourist-table-container,
+    .chart-container {
+        width: 100%;
+        height: auto;
+    }
+
+    /* Adjust spacing for small devices */
+    .dashboard-container {
+        padding: 10px;
+    }
+}
+@media (max-width: 992px) {
+    .button-container {
+        position: absolute;
+        top: 100px;
+        left: auto;
+        right: 10px;
+    }
+}
+
