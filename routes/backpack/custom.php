@@ -39,11 +39,12 @@ Route::group([
         return view('vendor.backpack.ui.setting');
     })->name('backpack.setting');
 
-    Route::get('notifications', [App\Http\Controllers\NotificationController::class, 'index'])->name('notifications.index');
+    
     Route::get('edit-account-info', 'MyAccountController@getAccountInfoForm')->name('backpack.account.info');
     Route::post('edit-account-info', 'MyAccountController@postAccountInfoForm')->name('backpack.account.info.store');
     Route::post('change-password', 'MyAccountController@postChangePasswordForm')->name('backpack.account.password');
     Route::post('/pin/verify', [UserPinController::class, 'verify']);
     Route::post('/pin/update', [UserPinController::class, 'update']);  
+    Route::post('create-admin-account', 'AdminAccountController@create')->name('backpack.create-admin-account');
 });
 

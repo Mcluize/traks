@@ -453,102 +453,90 @@
         noResultMessage.style.display = found ? 'none' : 'block';
     });
 
-    // Handle Create Account form submission
-document.getElementById('saveAccountBtn').addEventListener('click', function() {
+    document.getElementById('saveAccountBtn').addEventListener('click', function() {
     const fullName = document.getElementById('fullName').value;
     const contactDetails = document.getElementById('contactDetails').value;
     const address = document.getElementById('address').value;
-    const userType = document.getElementById('userType').value;
-    
+
     // Validate form
-    if(!fullName || !contactDetails || !address) {
+    if (!fullName || !contactDetails || !address) {
         alert('Please fill in all required fields');
         return;
     }
-    
-    // Generate random ID for demo
-    const newUserId = 'A' + (Math.floor(Math.random() * 1000) + 100);
-    
-    // Create new dummy user object
-    const newUser = {
-        user_id: newUserId,
-        full_name: fullName,
-        contact_details: contactDetails,
-        address: address,
-        created_at: new Date().toISOString(),
-        user_type: userType
-    };
-    
-    // In a real implementation, you would send this data to your Supabase backend
-    // For example:
-    /*
-    fetch('/admin/create-account', {
+
+    // Show loading indicator
+    this.disabled = true;
+    this.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Creating...';
+
+    fetch('/admin/create-admin-account', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
         },
-        body: JSON.stringify(newUser)
+        body: JSON.stringify({
+            full_name: fullName,
+            contact_details: contactDetails,
+            address: address
+        })
     })
     .then(response => response.json())
     .then(data => {
-        // Process response and update UI
+        // Reset button
+        this.disabled = false;
+        this.innerHTML = 'Save Account';
+
+        if (data.success) {
+            const newUser = data.user;
+
+            // Add to admin table
+            const tableBody = document.getElementById('adminTableBody');
+            const newRow = document.createElement('tr');
+            newRow.className = 'userRow admin-row';
+            newRow.innerHTML = `
+                <td>${newUser.user_id}</td>
+                <td>
+                    <button 
+                        type="button"
+                        class="btn btn-sm btn-primary view-details-btn"
+                        data-user='${JSON.stringify(newUser)}' 
+                        data-user-type="admin"
+                        data-bs-toggle="modal" 
+                        data-bs-target="#userModal">
+                        View Details
+                    </button>
+                </td>
+            `;
+
+            tableBody.prepend(newRow);
+
+            // Update counters
+            const totalCounter = document.querySelector('.total-accounts-card .account-card-number');
+            const onsiteCounter = document.querySelector('.pending-accounts-card .account-card-number');
+            totalCounter.textContent = parseInt(totalCounter.textContent) + 1;
+            onsiteCounter.textContent = parseInt(onsiteCounter.textContent) + 1;
+
+            // Close modal and reset form
+            const createModal = bootstrap.Modal.getInstance(document.getElementById('createAccountModal'));
+            createModal.hide();
+            document.getElementById('createAccountForm').reset();
+
+            // Show success message
+            alert('Admin account created successfully with default PIN: 1234');
+        } else {
+            alert('Failed to create account: ' + data.message);
+        }
+    })
+    .catch(error => {
+        // Reset button
+        this.disabled = false;
+        this.innerHTML = 'Save Account';
+
+        console.error('Error:', error);
+        alert('Error: ' + error.message || 'Something went wrong. Please try again.');
     });
-    */
-    
-    // Add to admin table (for demonstration purposes)
-    const tableBody = document.getElementById('adminTableBody');
-    const newRow = document.createElement('tr');
-    newRow.className = 'userRow admin-row';
-    newRow.innerHTML = `
-        <td>${newUser.user_id}</td>
-        <td>
-            <button 
-                type="button"
-                class="btn btn-sm btn-primary view-details-btn"
-                data-user='${JSON.stringify(newUser)}' 
-                data-user-type="admin"
-                data-bs-toggle="modal" 
-                data-bs-target="#userModal">
-                View Details
-            </button>
-        </td>
-    `;
-    
-    // Add event listener to the new button
-    newRow.querySelector('.view-details-btn').addEventListener('click', function() {
-        selectedUser = JSON.parse(this.dataset.user);
-        selectedUserType = this.dataset.userType;
-        document.getElementById('pinInput').value = '';
-        document.getElementById('pinError').style.display = 'none';
-        document.getElementById('newPinInput').value = '';
-        document.getElementById('pinChangeError').style.display = 'none';
-        document.getElementById('pinChangeSection').style.display = 'none';
-        document.getElementById('unlockBtn').style.display = 'inline-block';
-        document.getElementById('pinInput').style.display = 'inline-block';
-        document.getElementById('changePinBtn').style.display = 'inline-block';
-        document.getElementById('userModalLabel').textContent = 'Enter PIN to View Details';
-        userModalInstance.show();
-        mainContent.classList.add('blurred');
-    });
-    
-    tableBody.prepend(newRow);
-    
-    // Update counters
-    const totalCounter = document.querySelector('.total-accounts-card .account-card-number');
-    totalCounter.textContent = parseInt(totalCounter.textContent) + 1;
-    
-    // Hide any no results message
-    document.getElementById('noAdminResultMessage').style.display = 'none';
-    
-    // Close modal and reset form
-    const createModal = bootstrap.Modal.getInstance(document.getElementById('createAccountModal'));
-    createModal.hide();
-    document.getElementById('createAccountForm').reset();
-    
-    // Show success message
-    alert('Admin account created successfully!');
 });
+
 
     // Prevent content shift when modals are displayed
     document.querySelectorAll('[data-bs-toggle="modal"]').forEach(button => {
