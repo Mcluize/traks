@@ -164,8 +164,9 @@ body {
 .table th, .table td {
     padding: 15px;
     text-align: left;
-    border-bottom: 1px solid #C5C5C5;
+    border-bottom: none;
     font-family: 'Poppins', sans-serif;
+    text-align: center;
 }
 
 .table th {
@@ -727,38 +728,71 @@ body {
     box-shadow: 0 4px 8px rgba(255, 126, 63, 0.3);
 }
 .pagination-container {
-    text-align: center;
-    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 30px;
+    padding-bottom: 20px;
+    font-family: 'Poppins', sans-serif;
 }
 
-.pagination-container .pagination {
-    display: inline-flex;
-    padding: 0;
-    list-style: none;
-    background-color: #fff;
-    border-radius: 5px;
+.pagination {
+    display: flex;
+    align-items: center;
+    gap: 12px;
 }
 
-.pagination-container .pagination li {
-    margin: 0 5px;
-}
-
-.pagination-container .pagination li a,
-.pagination-container .pagination li span {
-    display: inline-block;
-    padding: 8px 15px;
+.pagination-btn,
+.page-number {
+    padding: 8px 12px;
     font-size: 14px;
-    color: #0BC8CA;
-    text-decoration: none;
+    font-weight: 600;
+    font-family: 'Poppins', sans-serif;
+    border: none;
+    background: none;
+    cursor: pointer;
+    transition: color 0.3s ease;
+    color: #949494;
 }
 
-.pagination-container .pagination li.active a {
-    background-color: #0BC8CA;
-    color: white;
-    border-radius: 5px;
+.pagination-btn:hover,
+.page-number:hover {
+    color: #FF7E3F;
 }
 
-.pagination-container .pagination li:hover a {
-    background-color: #e06a2f;
-    color: white;
+.page-number.active {
+    color: #FF7E3F;
+}
+
+.ellipsis {
+    color: #949494;
+    margin: 0 4px;
+}
+
+.pagination-btn.disabled {
+    cursor: default;
+    opacity: 0.5;
+}
+/* Side by side modal buttons */
+.modal-footer-side-by-side {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    padding: 0 20px 20px;
+}
+
+.modal-footer-side-by-side button {
+    flex: 1;
+    max-width: 48%;
+}
+
+.modal-footer-side-by-side button:first-child {
+    margin-right: 10px;
+    background-color: #6c757d;
+    border-color: #6c757d;
+}
+
+.modal-footer-side-by-side button:last-child {
+    background-color: #FF7E3F;
+    border-color: #FF7E3F;
 }

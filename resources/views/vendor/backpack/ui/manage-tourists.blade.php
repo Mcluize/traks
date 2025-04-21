@@ -222,7 +222,7 @@
                     <input type="hidden" id="userType" value="admin">
                 </form>
             </div>
-            <div class="modal-footer">
+            <div class="modal-footer-side-by-side">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                 <button type="button" class="btn btn-primary" id="saveAccountBtn" style="background-color: #FF7E3F;">Save Account</button>
             </div>
@@ -489,7 +489,7 @@
         if (data.success) {
             const newUser = data.user;
 
-            // Add to admin table
+            // Add to admin table (dynamically without reload)
             const tableBody = document.getElementById('adminTableBody');
             const newRow = document.createElement('tr');
             newRow.className = 'userRow admin-row';
@@ -507,8 +507,31 @@
                     </button>
                 </td>
             `;
+            
+            // Prepend the new row to the top of the table
+            if (tableBody.firstChild) {
+                tableBody.insertBefore(newRow, tableBody.firstChild);
+            } else {
+                tableBody.appendChild(newRow);
+            }
 
-            tableBody.prepend(newRow);
+            // Attach the event listener to the new button
+            const newButton = newRow.querySelector('.view-details-btn');
+            newButton.addEventListener('click', function() {
+                selectedUser = JSON.parse(this.dataset.user);
+                selectedUserType = this.dataset.userType;
+                document.getElementById('pinInput').value = '';
+                document.getElementById('pinError').style.display = 'none';
+                document.getElementById('newPinInput').value = '';
+                document.getElementById('pinChangeError').style.display = 'none';
+                document.getElementById('pinChangeSection').style.display = 'none';
+                document.getElementById('unlockBtn').style.display = 'inline-block';
+                document.getElementById('pinInput').style.display = 'inline-block';
+                document.getElementById('changePinBtn').style.display = 'inline-block';
+                document.getElementById('userModalLabel').textContent = 'Enter PIN to View Details';
+                userModalInstance.show();
+                mainContent.classList.add('blurred');
+            });
 
             // Update counters
             const totalCounter = document.querySelector('.total-accounts-card .account-card-number');
@@ -537,7 +560,6 @@
     });
 });
 
-
     // Prevent content shift when modals are displayed
     document.querySelectorAll('[data-bs-toggle="modal"]').forEach(button => {
         button.addEventListener('click', function(e) {
@@ -557,6 +579,163 @@
             document.body.style.overflow = 'auto';
         });
     });
+    $(document).ready(function() {
+    // Initialize pagination for both tables with 5 users per page
+    initPagination('.tourist-accounts table tbody', 5, 'tourist-pagination');
+    initPagination('.admin-accounts table tbody', 5, 'admin-pagination');
+    
+    function initPagination(tableBodySelector, rowsPerPage, paginationId) {
+        const $tableBody = $(tableBodySelector);
+        const $rows = $tableBody.find('tr');  // All rows in the table
+        const totalRows = $rows.length;
+        const totalPages = Math.max(1, Math.ceil(totalRows / rowsPerPage));
+        
+        // Add pagination container if it doesn't exist
+        if ($(`#${paginationId}`).length === 0) {
+            $tableBody.closest('.accounts-table, table').parent().append(`
+                <div class="pagination-container" id="${paginationId}">
+                    <button class="pagination-btn prev-btn">Previous</button>
+                    <div class="pagination"></div>
+                    <button class="pagination-btn next-btn">Next</button>
+                </div>
+            `);
+        }
+        
+        // Create pagination
+        let currentPage = 1;
+        updatePagination();
+        showPage(currentPage);
+        
+        // Handle pagination clicks
+        $(`#${paginationId} .pagination`).on('click', '.page-number', function() {
+            currentPage = parseInt($(this).text());
+            updatePagination();
+            showPage(currentPage);
+        });
+        
+        // Handle next button
+        $(`#${paginationId} .next-btn`).click(function() {
+            if (currentPage < totalPages) {
+                currentPage++;
+                updatePagination();
+                showPage(currentPage);
+            }
+        });
+        
+        // Handle previous button
+        $(`#${paginationId} .prev-btn`).click(function() {
+            if (currentPage > 1) {
+                currentPage--;
+                updatePagination();
+                showPage(currentPage);
+            }
+        });
+        
+        // Update pagination UI
+        function updatePagination() {
+            const $pagination = $(`#${paginationId} .pagination`);
+            $pagination.empty();
+            
+            // If only one page, don't show pagination
+            if (totalPages <= 1) {
+                $(`#${paginationId}`).hide();
+                return;
+            } else {
+                $(`#${paginationId}`).show();
+            }
+            
+            // Display numbered pagination like in the screenshot
+            // Format: 01 02 03 04 ... 11
+            for (let i = 1; i <= totalPages; i++) {
+                // If we're showing the first few pages, last few pages, or current page and its neighbors
+                if (i <= 4 || i > totalPages - 2 || Math.abs(i - currentPage) <= 1) {
+                    // Format number with leading zero if less than 10
+                    let pageNum = i < 10 ? '0' + i : i;
+                    $pagination.append(`<button class="page-number ${i === currentPage ? 'active' : ''}">${pageNum}</button>`);
+                } 
+                // Add ellipsis but only once per gap
+                else if (i === 5 || i === totalPages - 2) {
+                    $pagination.append(`<span class="ellipsis">...</span>`);
+                }
+            }
+            
+            // Update button states
+            $(`#${paginationId} .prev-btn`).toggleClass('disabled', currentPage === 1);
+            $(`#${paginationId} .next-btn`).toggleClass('disabled', currentPage === totalPages);
+        }
+        
+        // Show specified page
+        function showPage(page) {
+            const start = (page - 1) * rowsPerPage;
+            const end = start + rowsPerPage;
+            
+            // Hide all rows first
+            $rows.hide();
+            
+            // Show only rows for current page
+            $rows.slice(start, end).show();
+            
+            // Handle search no results message if it exists
+            const $searchInput = $tableBody.closest('.accounts-table-section, .accounts-table').find('.search-input');
+            if ($searchInput.length) {
+                const isSearching = $searchInput.val().trim() !== '';
+                const $visibleRows = $rows.filter(':visible');
+                const $noResultMessage = tableBodySelector.includes('tourist') ? 
+                    $('#noTouristResultMessage') : $('#noAdminResultMessage');
+                    
+                if ($noResultMessage.length && isSearching && $visibleRows.length === 0) {
+                    $noResultMessage.show();
+                } else if ($noResultMessage.length) {
+                    $noResultMessage.hide();
+                }
+            }
+        }
+        
+        // Integrate with existing search functionality
+        const $searchInput = $tableBody.closest('.accounts-table-section, .accounts-table').find('.search-input');
+        if ($searchInput.length) {
+            $searchInput.on('keyup', function() {
+                // Reset to first page after search
+                currentPage = 1;
+                updatePagination();
+                showPage(currentPage);
+            });
+        }
+        
+        // Handle newly added users
+        $(document).on('user:added', function() {
+            // Refresh row count
+            const $updatedRows = $tableBody.find('tr');
+            const updatedTotalRows = $updatedRows.length;
+            
+            // Update pagination if needed
+            if (updatedTotalRows !== totalRows) {
+                const updatedTotalPages = Math.max(1, Math.ceil(updatedTotalRows / rowsPerPage));
+                if (updatedTotalPages !== totalPages) {
+                    // Go to first page to show new user
+                    currentPage = 1;
+                }
+                
+                // Update rows and total pages
+                $rows = $updatedRows;
+                totalPages = updatedTotalPages;
+                
+                // Refresh pagination UI
+                updatePagination();
+                showPage(currentPage);
+            }
+        });
+    }
+    
+    // When adding a new admin user, trigger an event
+    $(document).on('click', '#saveAccountBtn', function() {
+        // We'll trigger our custom event after a short delay to ensure the DOM is updated
+        setTimeout(function() {
+            $(document).trigger('user:added');
+        }, 500);
+    });
+});
+
     
 </script>
 @endpush

@@ -81,4 +81,13 @@ class AdminAccountController extends Controller
         ], 500);
     }
 }
+public function manageTourists(SupabaseService $supabase)
+{
+    // Fetch all users
+    $users = $supabase->fetchTable('users');
+    
+    // Ensure it returns JSON with the correct structure
+    return response()->json(['users' => $users]);
+}
+
 }
