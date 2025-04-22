@@ -31,15 +31,15 @@
     <div class="account-summary-row">
         <div class="account-card total-accounts-card">
             <div class="account-card-title">Total Accounts</div>
-            <div class="account-card-number">145</div>
+            <div class="account-card-number">{{ $totalAccounts }}</div>
         </div>
         <div class="account-card destination-accounts-card">
-            <div class="account-card-title">Online Created Accounts</div>
-            <div class="account-card-number">89</div>
+            <div class="account-card-title">Total Tourist Accounts</div>
+            <div class="account-card-number">{{ $touristAccounts }}</div>
         </div>
         <div class="account-card pending-accounts-card">
-            <div class="account-card-title">Onsite Created Accounts</div>
-            <div class="account-card-number">50</div>
+            <div class="account-card-title">Total Admin Accounts</div>
+            <div class="account-card-number">{{ $adminAccounts }}</div>
         </div>
     </div>
 

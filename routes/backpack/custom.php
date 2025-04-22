@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Services\SupabaseService;
 use App\Http\Controllers\Admin\MyAccountController;
 use App\Http\Controllers\UserPinController;
+use App\Http\Controllers\Admin\AdminAccountController;
 Route::group([
     'prefix' => config('backpack.base.route_prefix', 'admin'),
     'middleware' => array_merge(
@@ -17,10 +18,7 @@ Route::group([
         return view('vendor.backpack.ui.tracking'); 
     })->name('backpack.tracking');
     
-    Route::get('manage-tourists', function (SupabaseService $supabase) {
-        $users = $supabase->fetchTable('users');
-        return view('vendor.backpack.ui.manage-tourists', compact('users'));
-    });
+    Route::get('manage-tourists', [AdminAccountController::class, 'manageTourists']);
 
     Route::get('incident-detection', function () {
         return view('vendor.backpack.ui.incident-detection');
@@ -46,5 +44,8 @@ Route::group([
     Route::post('/pin/verify', [UserPinController::class, 'verify']);
     Route::post('/pin/update', [UserPinController::class, 'update']);  
     Route::post('create-admin-account', 'AdminAccountController@create')->name('backpack.create-admin-account');
+    
+
+
 });
 

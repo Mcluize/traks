@@ -85,9 +85,25 @@ public function manageTourists(SupabaseService $supabase)
 {
     // Fetch all users
     $users = $supabase->fetchTable('users');
-    
-    // Ensure it returns JSON with the correct structure
-    return response()->json(['users' => $users]);
+
+    // Count total users, tourists, and admin accounts based on user_type
+    $totalAccounts = count($users); // Get the count of all users
+    $touristAccounts = count(array_filter($users, fn($user) => $user['user_type'] === 'user')); 
+    $adminAccounts = count(array_filter($users, fn($user) => $user['user_type'] === 'admin')); 
+
+    // Log the data for debugging
+    \Log::info("Total Accounts: $totalAccounts");
+    \Log::info("Tourist Accounts: $touristAccounts");
+    \Log::info("Admin Accounts: $adminAccounts");
+
+    // Pass the data to the view along with the users list
+    return view('vendor.backpack.ui.manage-tourists', compact('totalAccounts', 'touristAccounts', 'adminAccounts', 'users'));
 }
+
+
+
+
+
+
 
 }
