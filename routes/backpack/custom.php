@@ -44,8 +44,6 @@ Route::group([
     Route::post('/pin/verify', [UserPinController::class, 'verify']);
     Route::post('/pin/update', [UserPinController::class, 'update']);  
     Route::post('create-admin-account', 'AdminAccountController@create')->name('backpack.create-admin-account');
-    
-
-
+    Route::patch('/admin/lock/{userId}', [AdminAccountController::class, 'lockAccount'])->name('admin.lock');
 });
 

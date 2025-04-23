@@ -21,10 +21,11 @@
 @endsection
 
 @section('content')
-
+<link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet">
 <link href="{{ asset('css/manage_tourist.css') }}" rel="stylesheet">
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
 
 <div class="dashboard-container" id="mainContent">
     <!-- Account Summary Section -->
@@ -72,7 +73,10 @@
                                     <button 
                                         type="button"
                                         class="btn btn-sm btn-primary view-details-btn"
-                                        data-user='@json($user)' data-user-type="tourist" data-bs-toggle="modal" data-bs-target="#userModal">
+                                        data-user='@json($user)' 
+                                        data-user-type="tourist" 
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#userModal">
                                         View Details
                                     </button>
                                 </td>
@@ -114,15 +118,26 @@
                     </thead>
                     <tbody id="adminTableBody">
                         @forelse($users as $user)
-                            @if($user['user_type'] == 'admin')
-                            <tr class="userRow admin-row">
+                            @if($user['user_type'] == 'admin' && $user['status'] !== 'locked')
+                            <tr class="userRow admin-row" data-user-id="{{ $user['user_id'] }}">
                                 <td>{{ $user['user_id'] }}</td>
                                 <td>
                                     <button 
                                         type="button"
                                         class="btn btn-sm btn-primary view-details-btn"
-                                        data-user='@json($user)' data-user-type="admin" data-bs-toggle="modal" data-bs-target="#userModal">
+                                        data-user='@json($user)' 
+                                        data-user-type="admin" 
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#userModal">
                                         View Details
+                                    </button>
+                                    <button 
+                                        type="button"
+                                        class="btn btn-sm btn-danger lock-btn"
+                                        data-user-id="{{ $user['user_id'] }}"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#lockConfirmModal">
+                                        Lock
                                     </button>
                                 </td>
                             </tr>
@@ -197,545 +212,360 @@
     </div>
 </div>
 
-<!-- Modal 3: Create Account -->
-<div class="modal fade" id="createAccountModal" tabindex="-1" aria-labelledby="createAccountModalLabel" aria-hidden="true">
+<!-- Lock Confirmation Modal -->
+<div class="modal fade" id="lockConfirmModal" tabindex="-1" aria-labelledby="lockConfirmModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
-            <div class="modal-header" style="background-color: #FF7E3F; color: #fff;">
-                <h5 class="modal-title" id="createAccountModalLabel">Create New Admin Account</h5>
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title" id="lockConfirmModalLabel">Confirm Lock Account</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <form id="createAccountForm">
-                    <div class="mb-3">
-                        <label for="fullName" class="form-label">Full Name</label>
-                        <input type="text" class="form-control" id="fullName" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="contactDetails" class="form-label">Contact Details</label>
-                        <input type="text" class="form-control" id="contactDetails" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="address" class="form-label">Address</label>
-                        <textarea class="form-control" id="address" rows="3" required></textarea>
-                    </div>
-                    <input type="hidden" id="userType" value="admin">
-                </form>
+                Are you sure you want to lock this account? This will prevent the user from accessing the system.
             </div>
-            <div class="modal-footer-side-by-side">
+            <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" id="saveAccountBtn" style="background-color: #FF7E3F;">Save Account</button>
+                <button type="button" class="btn btn-danger">Lock</button>
             </div>
         </div>
     </div>
 </div>
 
+<!-- Create Account Modal -->
+<div class="modal fade" id="createAccountModal" tabindex="-1" aria-labelledby="createAccountModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header" style="background-color: #0BC8CA; color: #fff;">
+                <h5 class="modal-title" id="createAccountModalLabel">Create New Admin Account</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="fullName" class="form-label">Full Name</label>
+                    <input type="text" class="form-control" id="fullName" required>
+                </div>
+                <div class="mb-3">
+                    <label for="contactDetails" class="form-label">Contact Details</label>
+                    <input type="text" class="form-control" id="contactDetails" required>
+                </div>
+            </div>
+            <div class="modal-footer justify-content-between">
+                <div class="d-flex w-100 gap-2">
+                    <button type="button" class="btn btn-secondary w-50" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn w-50" id="saveAccountBtn" style="background-color: #FF7E3F; color: white;">Save Account</button>
+                </div>
+            </div>            
+        </div>
+    </div>
+</div>
 @endsection
 
 @push('after_scripts')
 <script>
-    let selectedUser = null;
-    let selectedUserType = 'tourist';
-    const userModalEl = document.getElementById('userModal');
-    const userInfoModalEl = document.getElementById('userInfoModal');
-    const userModalInstance = new bootstrap.Modal(userModalEl);
-    const userInfoModalInstance = new bootstrap.Modal(userInfoModalEl);
-    const mainContent = document.getElementById('mainContent');
+    document.addEventListener('DOMContentLoaded', function () {
+        let selectedUser = null;
+        let selectedUserType = 'tourist';
+        const userModalEl = document.getElementById('userModal');
+        const userInfoModalEl = document.getElementById('userInfoModal');
+        const createAccountModalEl = document.getElementById('createAccountModal');
+        const userModalInstance = new bootstrap.Modal(userModalEl);
+        const userInfoModalInstance = new bootstrap.Modal(userInfoModalEl);
+        const createAccountModalInstance = new bootstrap.Modal(createAccountModalEl);
+        const mainContent = document.getElementById('mainContent');
 
-    // Set selected user
-    document.querySelectorAll('.view-details-btn').forEach(button => {
-        button.addEventListener('click', function () {
-            selectedUser = JSON.parse(this.dataset.user);
-            selectedUserType = this.dataset.userType;
-            document.getElementById('pinInput').value = '';
-            document.getElementById('pinError').style.display = 'none';
-            document.getElementById('newPinInput').value = '';
-            document.getElementById('pinChangeError').style.display = 'none';
-            document.getElementById('pinChangeSection').style.display = 'none';
-            document.getElementById('unlockBtn').style.display = 'inline-block';
-            document.getElementById('pinInput').style.display = 'inline-block';
-            document.getElementById('changePinBtn').style.display = 'inline-block';
-            document.getElementById('userModalLabel').textContent = 'Enter PIN to View Details';
-            userModalInstance.show();
-            mainContent.classList.add('blurred');
-        });
-    });
-
-    // Verify PIN for Viewing Details
-    document.getElementById('unlockBtn').addEventListener('click', function () {
-        const pin = document.getElementById('pinInput').value;
-
-        fetch(`/admin/pin/verify`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-            },
-            body: JSON.stringify({ pin })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.message) {
-                userModalInstance.hide();
-                
-                // Set the user type label (Tourist or Admin)
-                document.getElementById('modalUserTypeLabel').textContent = selectedUserType.charAt(0).toUpperCase() + selectedUserType.slice(1);
-                
-                // Update modal title based on user type
-                document.getElementById('userInfoModalTitle').textContent = 
-                    selectedUserType === 'tourist' ? 'Tourist Information' : 'Admin Information';
-                
-                // Set user ID in the highlighted area
-                document.getElementById('modalUserId').textContent = selectedUser.user_id;
-                
-                // Fill in the user details
-                document.getElementById('modalFullName').textContent = selectedUser.full_name;
-                document.getElementById('modalContact').textContent = selectedUser.contact_details;
-                document.getElementById('modalAddress').textContent = selectedUser.address;
-                document.getElementById('modalCreatedAt').textContent = new Date(selectedUser.created_at).toLocaleString();
-                
-                // Show the user info modal
-                userInfoModalInstance.show();
-            } else {
-                document.getElementById('pinError').textContent = 'Incorrect PIN.';
-                document.getElementById('pinError').style.display = 'block';
-            }
-        })
-        .catch(() => {
-            document.getElementById('pinError').textContent = 'Error validating PIN.';
-            document.getElementById('pinError').style.display = 'block';
-        });
-    });
-
-    // Verify PIN before showing Change PIN section
-    document.getElementById('changePinBtn').addEventListener('click', function () {
-        const pin = document.getElementById('pinInput').value;
-
-        fetch(`/admin/pin/verify`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-            },
-            body: JSON.stringify({ pin })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.message) {
-                // Unlock PIN change section
-                document.getElementById('pinChangeSection').style.display = 'block';
-                document.getElementById('unlockBtn').style.display = 'none';
-                document.getElementById('pinInput').style.display = 'none';
-                document.getElementById('changePinBtn').style.display = 'none';
-                document.getElementById('userModalLabel').textContent = 'Change PIN';
-                document.getElementById('pinError').style.display = 'none';
-            } else {
-                document.getElementById('pinError').textContent = 'Incorrect PIN to authorize PIN change.';
-                document.getElementById('pinError').style.display = 'block';
-            }
-        })
-        .catch(() => {
-            document.getElementById('pinError').textContent = 'Error verifying current PIN.';
-            document.getElementById('pinError').style.display = 'block';
-        });
-    });
-
-    document.getElementById('cancelPinChange').addEventListener('click', function () {
-        document.getElementById('pinChangeSection').style.display = 'none';
-        document.getElementById('unlockBtn').style.display = 'inline-block';
-        document.getElementById('pinInput').style.display = 'inline-block';
-        document.getElementById('changePinBtn').style.display = 'inline-block';
-        document.getElementById('userModalLabel').textContent = 'Enter PIN to View Details';
-
-        // Clear both password fields
-        document.getElementById('pinInput').value = '';
-        document.getElementById('newPinInput').value = '';
-        document.getElementById('pinError').style.display = 'none';
-        document.getElementById('pinChangeError').style.display = 'none';
-    });
-
-    document.getElementById('saveNewPinBtn').addEventListener('click', function () {
-        const newPin = document.getElementById('newPinInput').value;
-        const currentPin = document.getElementById('pinInput').value;
-
-        if (newPin.length !== 6) {
-            document.getElementById('pinChangeError').textContent = 'PIN must be exactly 6 digits.';
-            document.getElementById('pinChangeError').style.display = 'block';
-            return;
-        }
-
-        fetch(`/admin/pin/update`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-            },
-            body: JSON.stringify({
-                current_pin: currentPin,
-                new_pin: newPin
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.message) {
-                alert('PIN updated successfully');
-
-                // Reset modal state
-                document.getElementById('pinChangeSection').style.display = 'none';
-                document.getElementById('unlockBtn').style.display = 'inline-block';
-                document.getElementById('pinInput').style.display = 'inline-block';
-                document.getElementById('changePinBtn').style.display = 'inline-block';
-                document.getElementById('userModalLabel').textContent = 'Enter PIN to View Details';
-                document.getElementById('pinChangeError').style.display = 'none';
-
-                // Clear both password fields
-                document.getElementById('pinInput').value = '';
-                document.getElementById('newPinInput').value = '';
-            } else {
-                document.getElementById('pinChangeError').textContent = 'Failed to update PIN.';
-                document.getElementById('pinChangeError').style.display = 'block';
-            }
-        })
-        .catch(() => {
-            document.getElementById('pinChangeError').textContent = 'Something went wrong. Please try again.';
-            document.getElementById('pinChangeError').style.display = 'block';
-        });
-    });
-
-    // Close modals and blur effects
-    document.getElementById('closeUserInfoModal').addEventListener('click', () => mainContent.classList.remove('blurred'));
-    userModalEl.addEventListener('shown.bs.modal', () => mainContent.classList.add('blurred'));
-    userInfoModalEl.addEventListener('shown.bs.modal', () => mainContent.classList.add('blurred'));
-    userModalEl.addEventListener('hidden.bs.modal', () => {
-        if (!userInfoModalEl.classList.contains('show')) {
-            mainContent.classList.remove('blurred');
-        }
-    });
-    userInfoModalEl.addEventListener('hidden.bs.modal', () => mainContent.classList.remove('blurred'));
-
-    // Search by Tourist ID
-    document.getElementById('searchTouristInput').addEventListener('keyup', function () {
-        const searchQuery = this.value.toLowerCase();
-        const rows = document.querySelectorAll('.tourist-row');
-        const noResultMessage = document.getElementById('noTouristResultMessage');
-        let found = false;
-
-        rows.forEach(row => {
-            const touristId = row.querySelector('td:first-child').textContent.toLowerCase();
-            if (touristId.includes(searchQuery)) {
-                row.style.display = '';
-                found = true;
-            } else {
-                row.style.display = 'none';
-            }
+        // Reset userModal on show
+        userModalEl.addEventListener('show.bs.modal', function () {
+            const pinInput = document.getElementById('pinInput');
+            const pinError = document.getElementById('pinError');
+            const newPinInput = document.getElementById('newPinInput');
+            const pinChangeError = document.getElementById('pinChangeError');
+            const pinChangeSection = document.getElementById('pinChangeSection');
+            if (pinInput) pinInput.value = '';
+            if (pinError) pinError.style.display = 'none';
+            if (newPinInput) newPinInput.value = '';
+            if (pinChangeError) pinChangeError.style.display = 'none';
+            if (pinChangeSection) pinChangeSection.style.display = 'none';
         });
 
-        noResultMessage.style.display = found ? 'none' : 'block';
-    });
-    
-    // Search by Admin ID
-    document.getElementById('searchAdminInput').addEventListener('keyup', function () {
-        const searchQuery = this.value.toLowerCase();
-        const rows = document.querySelectorAll('.admin-row');
-        const noResultMessage = document.getElementById('noAdminResultMessage');
-        let found = false;
-
-        rows.forEach(row => {
-            const adminId = row.querySelector('td:first-child').textContent.toLowerCase();
-            if (adminId.includes(searchQuery)) {
-                row.style.display = '';
-                found = true;
-            } else {
-                row.style.display = 'none';
-            }
+        // Reset createAccountModal on show
+        createAccountModalEl.addEventListener('show.bs.modal', function () {
+            const fullName = document.getElementById('fullName');
+            const contactDetails = document.getElementById('contactDetails');
+            if (fullName) fullName.value = '';
+            if (contactDetails) contactDetails.value = '';
         });
 
-        noResultMessage.style.display = found ? 'none' : 'block';
-    });
-
-    document.getElementById('saveAccountBtn').addEventListener('click', function() {
-    const fullName = document.getElementById('fullName').value;
-    const contactDetails = document.getElementById('contactDetails').value;
-    const address = document.getElementById('address').value;
-
-    // Validate form
-    if (!fullName || !contactDetails || !address) {
-        alert('Please fill in all required fields');
-        return;
-    }
-
-    // Show loading indicator
-    this.disabled = true;
-    this.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Creating...';
-
-    fetch('/admin/create-admin-account', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-        },
-        body: JSON.stringify({
-            full_name: fullName,
-            contact_details: contactDetails,
-            address: address
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        // Reset button
-        this.disabled = false;
-        this.innerHTML = 'Save Account';
-
-        if (data.success) {
-            const newUser = data.user;
-
-            // Add to admin table (dynamically without reload)
-            const tableBody = document.getElementById('adminTableBody');
-            const newRow = document.createElement('tr');
-            newRow.className = 'userRow admin-row';
-            newRow.innerHTML = `
-                <td>${newUser.user_id}</td>
-                <td>
-                    <button 
-                        type="button"
-                        class="btn btn-sm btn-primary view-details-btn"
-                        data-user='${JSON.stringify(newUser)}' 
-                        data-user-type="admin"
-                        data-bs-toggle="modal" 
-                        data-bs-target="#userModal">
-                        View Details
-                    </button>
-                </td>
-            `;
-            
-            // Prepend the new row to the top of the table
-            if (tableBody.firstChild) {
-                tableBody.insertBefore(newRow, tableBody.firstChild);
-            } else {
-                tableBody.appendChild(newRow);
-            }
-
-            // Attach the event listener to the new button
-            const newButton = newRow.querySelector('.view-details-btn');
-            newButton.addEventListener('click', function() {
-                selectedUser = JSON.parse(this.dataset.user);
-                selectedUserType = this.dataset.userType;
-                document.getElementById('pinInput').value = '';
-                document.getElementById('pinError').style.display = 'none';
-                document.getElementById('newPinInput').value = '';
-                document.getElementById('pinChangeError').style.display = 'none';
-                document.getElementById('pinChangeSection').style.display = 'none';
-                document.getElementById('unlockBtn').style.display = 'inline-block';
-                document.getElementById('pinInput').style.display = 'inline-block';
-                document.getElementById('changePinBtn').style.display = 'inline-block';
-                document.getElementById('userModalLabel').textContent = 'Enter PIN to View Details';
+        // Event delegation for View Details buttons
+        document.addEventListener('click', function (event) {
+            if (event.target.classList.contains('view-details-btn')) {
+                selectedUser = JSON.parse(event.target.dataset.user);
+                selectedUserType = event.target.dataset.userType;
                 userModalInstance.show();
                 mainContent.classList.add('blurred');
+            }
+        });
+
+        // Lock account handling
+        $(document).on('click', '.lock-btn', function () {
+            const userId = $(this).data('user-id');
+            $('#lockConfirmModal').modal('show');
+            $('.modal-footer button:contains("Lock")').data('user-id', userId);
+        });
+
+        $('.modal-footer button:contains("Lock")').click(function () {
+            const userId = $(this).data('user-id');
+            const lockButton = $(this);
+            console.log('Attempting to lock admin account ID:', userId);
+            lockButton.prop('disabled', true).text('Locking...');
+
+            $.ajax({
+                url: `/admin/admin/lock/${userId}`,
+                method: 'PATCH',
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                success: function (response) {
+                    if (response.success) {
+                        toastr.success('Account locked successfully');
+                        $(`tr[data-user-id="${userId}"]`).find('.lock-btn').remove();
+                        $('#lockConfirmModal').modal('hide');
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1500);
+                    } else {
+                        toastr.error('Failed to lock account');
+                    }
+                },
+                error: function (xhr) {
+                    console.error('Error details:', xhr.responseText);
+                    toastr.error('An error occurred while locking the account');
+                },
+                complete: function () {
+                    lockButton.prop('disabled', false).text('Lock');
+                }
             });
-
-            // Update counters
-            const totalCounter = document.querySelector('.total-accounts-card .account-card-number');
-            const onsiteCounter = document.querySelector('.pending-accounts-card .account-card-number');
-            totalCounter.textContent = parseInt(totalCounter.textContent) + 1;
-            onsiteCounter.textContent = parseInt(onsiteCounter.textContent) + 1;
-
-            // Close modal and reset form
-            const createModal = bootstrap.Modal.getInstance(document.getElementById('createAccountModal'));
-            createModal.hide();
-            document.getElementById('createAccountForm').reset();
-
-            // Show success message
-            alert('Admin account created successfully with default PIN: 1234');
-        } else {
-            alert('Failed to create account: ' + data.message);
-        }
-    })
-    .catch(error => {
-        // Reset button
-        this.disabled = false;
-        this.innerHTML = 'Save Account';
-
-        console.error('Error:', error);
-        alert('Error: ' + error.message || 'Something went wrong. Please try again.');
-    });
-});
-
-    // Prevent content shift when modals are displayed
-    document.querySelectorAll('[data-bs-toggle="modal"]').forEach(button => {
-        button.addEventListener('click', function(e) {
-            e.preventDefault();
-            const targetModal = document.querySelector(this.getAttribute('data-bs-target'));
-            if (targetModal) {
-                document.body.style.paddingRight = '0';
-                document.body.style.overflow = 'auto';
-            }
         });
-    });
 
-    // For modal close events
-    document.querySelectorAll('.modal').forEach(modal => {
-        modal.addEventListener('hidden.bs.modal', function() {
-            document.body.style.paddingRight = '0';
-            document.body.style.overflow = 'auto';
-        });
-    });
-    $(document).ready(function() {
-    // Initialize pagination for both tables with 5 users per page
-    initPagination('.tourist-accounts table tbody', 5, 'tourist-pagination');
-    initPagination('.admin-accounts table tbody', 5, 'admin-pagination');
-    
-    function initPagination(tableBodySelector, rowsPerPage, paginationId) {
-        const $tableBody = $(tableBodySelector);
-        const $rows = $tableBody.find('tr');  // All rows in the table
-        const totalRows = $rows.length;
-        const totalPages = Math.max(1, Math.ceil(totalRows / rowsPerPage));
-        
-        // Add pagination container if it doesn't exist
-        if ($(`#${paginationId}`).length === 0) {
-            $tableBody.closest('.accounts-table, table').parent().append(`
-                <div class="pagination-container" id="${paginationId}">
-                    <button class="pagination-btn prev-btn">Previous</button>
-                    <div class="pagination"></div>
-                    <button class="pagination-btn next-btn">Next</button>
-                </div>
-            `);
-        }
-        
-        // Create pagination
-        let currentPage = 1;
-        updatePagination();
-        showPage(currentPage);
-        
-        // Handle pagination clicks
-        $(`#${paginationId} .pagination`).on('click', '.page-number', function() {
-            currentPage = parseInt($(this).text());
-            updatePagination();
-            showPage(currentPage);
-        });
-        
-        // Handle next button
-        $(`#${paginationId} .next-btn`).click(function() {
-            if (currentPage < totalPages) {
-                currentPage++;
-                updatePagination();
-                showPage(currentPage);
-            }
-        });
-        
-        // Handle previous button
-        $(`#${paginationId} .prev-btn`).click(function() {
-            if (currentPage > 1) {
-                currentPage--;
-                updatePagination();
-                showPage(currentPage);
-            }
-        });
-        
-        // Update pagination UI
-        function updatePagination() {
-            const $pagination = $(`#${paginationId} .pagination`);
-            $pagination.empty();
-            
-            // If only one page, don't show pagination
-            if (totalPages <= 1) {
-                $(`#${paginationId}`).hide();
-                return;
-            } else {
-                $(`#${paginationId}`).show();
-            }
-            
-            // Display numbered pagination like in the screenshot
-            // Format: 01 02 03 04 ... 11
-            for (let i = 1; i <= totalPages; i++) {
-                // If we're showing the first few pages, last few pages, or current page and its neighbors
-                if (i <= 4 || i > totalPages - 2 || Math.abs(i - currentPage) <= 1) {
-                    // Format number with leading zero if less than 10
-                    let pageNum = i < 10 ? '0' + i : i;
-                    $pagination.append(`<button class="page-number ${i === currentPage ? 'active' : ''}">${pageNum}</button>`);
-                } 
-                // Add ellipsis but only once per gap
-                else if (i === 5 || i === totalPages - 2) {
-                    $pagination.append(`<span class="ellipsis">...</span>`);
+        // Search by Tourist ID
+        const searchTouristInput = document.getElementById('searchTouristInput');
+        if (searchTouristInput) {
+            searchTouristInput.addEventListener('keyup', function () {
+                const searchQuery = this.value.toLowerCase();
+                const rows = document.querySelectorAll('.tourist-row');
+                const noResultMessage = document.getElementById('noTouristResultMessage');
+                let found = false;
+
+                rows.forEach(row => {
+                    const touristId = row.querySelector('td:first-child').textContent.toLowerCase();
+                    if (touristId.includes(searchQuery)) {
+                        row.style.display = '';
+                        found = true;
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+
+                if (noResultMessage) {
+                    noResultMessage.style.display = found ? 'none' : 'block';
                 }
-            }
-            
-            // Update button states
-            $(`#${paginationId} .prev-btn`).toggleClass('disabled', currentPage === 1);
-            $(`#${paginationId} .next-btn`).toggleClass('disabled', currentPage === totalPages);
-        }
-        
-        // Show specified page
-        function showPage(page) {
-            const start = (page - 1) * rowsPerPage;
-            const end = start + rowsPerPage;
-            
-            // Hide all rows first
-            $rows.hide();
-            
-            // Show only rows for current page
-            $rows.slice(start, end).show();
-            
-            // Handle search no results message if it exists
-            const $searchInput = $tableBody.closest('.accounts-table-section, .accounts-table').find('.search-input');
-            if ($searchInput.length) {
-                const isSearching = $searchInput.val().trim() !== '';
-                const $visibleRows = $rows.filter(':visible');
-                const $noResultMessage = tableBodySelector.includes('tourist') ? 
-                    $('#noTouristResultMessage') : $('#noAdminResultMessage');
-                    
-                if ($noResultMessage.length && isSearching && $visibleRows.length === 0) {
-                    $noResultMessage.show();
-                } else if ($noResultMessage.length) {
-                    $noResultMessage.hide();
-                }
-            }
-        }
-        
-        // Integrate with existing search functionality
-        const $searchInput = $tableBody.closest('.accounts-table-section, .accounts-table').find('.search-input');
-        if ($searchInput.length) {
-            $searchInput.on('keyup', function() {
-                // Reset to first page after search
-                currentPage = 1;
-                updatePagination();
-                showPage(currentPage);
             });
         }
-        
-        // Handle newly added users
-        $(document).on('user:added', function() {
-            // Refresh row count
-            const $updatedRows = $tableBody.find('tr');
-            const updatedTotalRows = $updatedRows.length;
-            
-            // Update pagination if needed
-            if (updatedTotalRows !== totalRows) {
-                const updatedTotalPages = Math.max(1, Math.ceil(updatedTotalRows / rowsPerPage));
-                if (updatedTotalPages !== totalPages) {
-                    // Go to first page to show new user
-                    currentPage = 1;
+
+        // Search by Admin ID
+        const searchAdminInput = document.getElementById('searchAdminInput');
+        if (searchAdminInput) {
+            searchAdminInput.addEventListener('keyup', function () {
+                const searchQuery = this.value.toLowerCase();
+                const rows = document.querySelectorAll('.admin-row');
+                const noResultMessage = document.getElementById('noAdminResultMessage');
+                let found = false;
+
+                rows.forEach(row => {
+                    const adminId = row.querySelector('td:first-child').textContent.toLowerCase();
+                    if (adminId.includes(searchQuery)) {
+                        row.style.display = '';
+                        found = true;
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+
+                if (noResultMessage) {
+                    noResultMessage.style.display = found ? 'none' : 'block';
                 }
-                
-                // Update rows and total pages
-                $rows = $updatedRows;
-                totalPages = updatedTotalPages;
-                
-                // Refresh pagination UI
-                updatePagination();
-                showPage(currentPage);
+            });
+        }
+
+        // Function to sort admin table in descending order
+        function sortAdminTable() {
+            const tableBody = document.getElementById('adminTableBody');
+            const rows = Array.from(tableBody.querySelectorAll('tr'));
+            rows.sort((a, b) => {
+                const idA = parseInt(a.querySelector('td:first-child').textContent);
+                const idB = parseInt(b.querySelector('td:first-child').textContent);
+                return idB - idA;
+            });
+            rows.forEach(row => tableBody.appendChild(row));
+        }
+
+        // Create account functionality
+        const saveAccountBtn = document.getElementById('saveAccountBtn');
+        if (saveAccountBtn) {
+            saveAccountBtn.addEventListener('click', function () {
+                const fullName = document.getElementById('fullName');
+                const contactDetails = document.getElementById('contactDetails');
+
+                if (!fullName || !contactDetails) {
+                    alert('Required input fields are missing in the DOM');
+                    return;
+                }
+
+                const fullNameValue = fullName.value;
+                const contactDetailsValue = contactDetails.value;
+
+                if (!fullNameValue || !contactDetailsValue) {
+                    alert('Please fill in all required fields');
+                    return;
+                }
+
+                this.disabled = true;
+                this.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Creating...';
+
+                fetch('/admin/create-admin-account', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    },
+                    body: JSON.stringify({
+                        full_name: fullNameValue,
+                        contact_details: contactDetailsValue
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    this.disabled = false;
+                    this.innerHTML = 'Save Account';
+
+                    if (data.success) {
+                        const newUser = data.user;
+                        const tableBody = document.getElementById('adminTableBody');
+                        const newRow = document.createElement('tr');
+                        newRow.className = 'userRow admin-row';
+                        newRow.setAttribute('data-user-id', newUser.user_id);
+                        newRow.innerHTML = `
+                            <td>${newUser.user_id}</td>
+                            <td>
+                                <button 
+                                    type="button"
+                                    class="btn btn-sm btn-primary view-details-btn"
+                                    data-user='${JSON.stringify(newUser)}' 
+                                    data-user-type="admin"
+                                    data-bs-toggle="modal" 
+                                    data-bs-target="#userModal">
+                                    View Details
+                                </button>
+                                <button 
+                                    type="button"
+                                    class="btn btn-sm btn-danger lock-btn"
+                                    data-user-id="${newUser.user_id}"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#lockConfirmModal">
+                                    Lock
+                                </button>
+                            </td>
+                        `;
+
+                        tableBody.appendChild(newRow); // Append new row
+                        sortAdminTable(); // Sort table after adding new row
+                        createAccountModalInstance.hide();
+                        toastr.success('Admin account created successfully with default PIN: 1234');
+                    } else {
+                        alert('Failed to create account: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    this.disabled = false;
+                    this.innerHTML = 'Save Account';
+                    console.error('Error:', error);
+                    alert('Error: ' + (error.message || 'Something went wrong. Please try again.'));
+                });
+            });
+        }
+
+        // Close modals and remove blur effect
+        const closeUserInfoModal = document.getElementById('closeUserInfoModal');
+        if (closeUserInfoModal) {
+            closeUserInfoModal.addEventListener('click', () => {
+                mainContent.classList.remove('blurred');
+            });
+        }
+
+        userModalEl.addEventListener('hidden.bs.modal', () => {
+            if (!userInfoModalEl.classList.contains('show')) {
+                mainContent.classList.remove('blurred');
             }
         });
-    }
-    
-    // When adding a new admin user, trigger an event
-    $(document).on('click', '#saveAccountBtn', function() {
-        // We'll trigger our custom event after a short delay to ensure the DOM is updated
-        setTimeout(function() {
-            $(document).trigger('user:added');
-        }, 500);
-    });
-});
+        userInfoModalEl.addEventListener('hidden.bs.modal', () => {
+            mainContent.classList.remove('blurred');
+        });
 
-    
+        // Verify PIN for Viewing Details
+        const unlockBtn = document.getElementById('unlockBtn');
+        if (unlockBtn) {
+            unlockBtn.addEventListener('click', function () {
+                const pinInput = document.getElementById('pinInput');
+                if (!pinInput) return;
+                const pin = pinInput.value;
+
+                fetch(`/admin/pin/verify`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    },
+                    body: JSON.stringify({ pin })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.message) {
+                        userModalInstance.hide();
+                        const modalUserTypeLabel = document.getElementById('modalUserTypeLabel');
+                        const userInfoModalTitle = document.getElementById('userInfoModalTitle');
+                        const modalUserId = document.getElementById('modalUserId');
+                        const modalFullName = document.getElementById('modalFullName');
+                        const modalContact = document.getElementById('modalContact');
+                        const modalAddress = document.getElementById('modalAddress');
+                        const modalCreatedAt = document.getElementById('modalCreatedAt');
+
+                        if (modalUserTypeLabel) modalUserTypeLabel.textContent = selectedUserType.charAt(0).toUpperCase() + selectedUserType.slice(1);
+                        if (userInfoModalTitle) userInfoModalTitle.textContent = selectedUserType === 'tourist' ? 'Tourist Information' : 'Admin Information';
+                        if (modalUserId) modalUserId.textContent = selectedUser.user_id;
+                        if (modalFullName) modalFullName.textContent = selectedUser.full_name;
+                        if (modalContact) modalContact.textContent = selectedUser.contact_details;
+                        if (modalAddress) modalAddress.textContent = selectedUser.address || 'N/A';
+                        if (modalCreatedAt) modalCreatedAt.textContent = new Date(selectedUser.created_at).toLocaleString();
+                        userInfoModalInstance.show();
+                    } else {
+                        const pinError = document.getElementById('pinError');
+                        if (pinError) {
+                            pinError.textContent = 'Incorrect PIN.';
+                            pinError.style.display = 'block';
+                        }
+                    }
+                })
+                .catch(() => {
+                    const pinError = document.getElementById('pinError');
+                    if (pinError) {
+                        pinError.textContent = 'Error validating PIN.';
+                        pinError.style.display = 'block';
+                    }
+                });
+            });
+        }
+
+        // Initial sort on page load
+        sortAdminTable();
+    });
 </script>
 @endpush
