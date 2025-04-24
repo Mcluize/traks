@@ -19,6 +19,7 @@ class AdminAccountController extends Controller
 
     public function create(Request $request)
     {
+        // Unchanged code remains as is
         try {
             $validated = $request->validate([
                 'full_name' => 'required|string|max:255',
@@ -71,7 +72,24 @@ class AdminAccountController extends Controller
     public function manageTourists()
     {
         $users = $this->supabase->fetchTable('users');
-        
+        $touristSpots = $this->supabase->fetchTable('tourist_spots');
+
+        // Create a mapping of admin user_id to address from tourist_spots
+        $adminAddresses = [];
+        foreach ($touristSpots as $spot) {
+            if (isset($spot['created_by']) && !empty($spot['address'])) {
+                $adminAddresses[$spot['created_by']] = $spot['address'];
+            }
+        }
+
+        // Update admin users with the address from tourist_spots if available
+        foreach ($users as &$user) {
+            if ($user['user_type'] === 'admin' && isset($adminAddresses[$user['user_id']])) {
+                $user['address'] = $adminAddresses[$user['user_id']];
+            }
+        }
+        unset($user); // Unset reference to avoid side effects
+
         // Sort users in descending order by user_id
         usort($users, function($a, $b) {
             return $b['user_id'] <=> $a['user_id'];
@@ -94,6 +112,7 @@ class AdminAccountController extends Controller
 
     public function lockAccount(Request $request, $userId)
     {
+        // Unchanged code remains as is
         try {
             \Log::info('Attempting to lock account', ['user_id' => $userId]);
             

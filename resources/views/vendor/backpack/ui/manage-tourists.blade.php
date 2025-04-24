@@ -89,6 +89,14 @@
                         @endforelse
                     </tbody>
                 </table>
+                <div class="pagination-container" id="touristPagination">
+                    <div class="pagination">
+                        <button class="pagination-btn prev-btn" id="touristPrevBtn" disabled>&lt; Previous</button>
+                        <div class="page-numbers" id="touristPageNumbers">
+                        </div>
+                        <button class="pagination-btn next-btn" id="touristNextBtn">Next &gt;</button>
+                    </div>
+                </div>
                 <p id="noTouristResultMessage" style="display: none;" class="no-result-message">No tourist found with that ID.</p>
             </div>
         </div>
@@ -149,6 +157,14 @@
                         @endforelse
                     </tbody>
                 </table>
+                <div class="pagination-container" id="adminPagination">
+                    <div class="pagination">
+                        <button class="pagination-btn prev-btn" id="adminPrevBtn" disabled>&lt; Previous</button>
+                        <div class="page-numbers" id="adminPageNumbers">
+                        </div>
+                        <button class="pagination-btn next-btn" id="adminNextBtn">Next &gt;</button>
+                    </div>
+                </div>
                 <p id="noAdminResultMessage" style="display: none;" class="no-result-message">No admin found with that ID.</p>
             </div>
         </div>
@@ -216,14 +232,14 @@
 <div class="modal fade" id="lockConfirmModal" tabindex="-1" aria-labelledby="lockConfirmModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
-            <div class="modal-header bg-warning text-dark">
+            <div class="modal-header">
                 <h5 class="modal-title" id="lockConfirmModalLabel">Confirm Lock Account</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                Are you sure you want to lock this account? This will prevent the user from accessing the system.
+                <p>Are you sure you want to lock this account? This will prevent the user from accessing the system.</p>
             </div>
-            <div class="modal-footer">
+            <div class="modal-footer modal-footer-side-by-side">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                 <button type="button" class="btn btn-danger">Lock</button>
             </div>
@@ -272,6 +288,25 @@
         const userInfoModalInstance = new bootstrap.Modal(userInfoModalEl);
         const createAccountModalInstance = new bootstrap.Modal(createAccountModalEl);
         const mainContent = document.getElementById('mainContent');
+
+        // Pagination Configuration
+        const ITEMS_PER_PAGE = 5;
+        
+        // Tourist Pagination
+        let touristCurrentPage = 1;
+        const touristRows = document.querySelectorAll('.tourist-row');
+        const touristTotalItems = touristRows.length;
+        const touristTotalPages = Math.ceil(touristTotalItems / ITEMS_PER_PAGE);
+        
+        // Admin Pagination
+        let adminCurrentPage = 1;
+        const adminRows = document.querySelectorAll('.admin-row');
+        const adminTotalItems = adminRows.length;
+        const adminTotalPages = Math.ceil(adminTotalItems / ITEMS_PER_PAGE);
+        
+        // Initialize both paginations
+        initPagination('tourist', touristRows, touristTotalPages);
+        initPagination('admin', adminRows, adminTotalPages);
 
         // Reset userModal on show
         userModalEl.addEventListener('show.bs.modal', function () {
@@ -346,7 +381,7 @@
             });
         });
 
-        // Search by Tourist ID
+        // Search by Tourist ID with pagination integration
         const searchTouristInput = document.getElementById('searchTouristInput');
         if (searchTouristInput) {
             searchTouristInput.addEventListener('keyup', function () {
@@ -358,12 +393,25 @@
                 rows.forEach(row => {
                     const touristId = row.querySelector('td:first-child').textContent.toLowerCase();
                     if (touristId.includes(searchQuery)) {
+                        row.classList.add('searchable');
                         row.style.display = '';
                         found = true;
                     } else {
+                        row.classList.remove('searchable');
                         row.style.display = 'none';
                     }
                 });
+
+                // Handle pagination during search
+                if (searchQuery) {
+                    // Hide pagination if searching
+                    document.getElementById('touristPagination').style.display = 'none';
+                } else {
+                    // Show pagination when not searching
+                    document.getElementById('touristPagination').style.display = 'flex';
+                    touristCurrentPage = 1;
+                    updatePageDisplay('tourist', touristRows, touristTotalPages, touristCurrentPage);
+                }
 
                 if (noResultMessage) {
                     noResultMessage.style.display = found ? 'none' : 'block';
@@ -371,7 +419,7 @@
             });
         }
 
-        // Search by Admin ID
+        // Search by Admin ID with pagination integration
         const searchAdminInput = document.getElementById('searchAdminInput');
         if (searchAdminInput) {
             searchAdminInput.addEventListener('keyup', function () {
@@ -383,12 +431,25 @@
                 rows.forEach(row => {
                     const adminId = row.querySelector('td:first-child').textContent.toLowerCase();
                     if (adminId.includes(searchQuery)) {
+                        row.classList.add('searchable');
                         row.style.display = '';
                         found = true;
                     } else {
+                        row.classList.remove('searchable');
                         row.style.display = 'none';
                     }
                 });
+
+                // Handle pagination during search
+                if (searchQuery) {
+                    // Hide pagination if searching
+                    document.getElementById('adminPagination').style.display = 'none';
+                } else {
+                    // Show pagination when not searching
+                    document.getElementById('adminPagination').style.display = 'flex';
+                    adminCurrentPage = 1;
+                    updatePageDisplay('admin', adminRows, adminTotalPages, adminCurrentPage);
+                }
 
                 if (noResultMessage) {
                     noResultMessage.style.display = found ? 'none' : 'block';
@@ -478,6 +539,13 @@
 
                         tableBody.appendChild(newRow); // Append new row
                         sortAdminTable(); // Sort table after adding new row
+                        
+                        // Update pagination after adding a new row
+                        const adminRows = document.querySelectorAll('.admin-row');
+                        const adminTotalItems = adminRows.length;
+                        const adminTotalPages = Math.ceil(adminTotalItems / ITEMS_PER_PAGE);
+                        initPagination('admin', adminRows, adminTotalPages);
+                        
                         createAccountModalInstance.hide();
                         toastr.success('Admin account created successfully with default PIN: 1234');
                     } else {
@@ -566,6 +634,168 @@
 
         // Initial sort on page load
         sortAdminTable();
+        
+        // Pagination Functions
+        // Pagination initialization function
+        function initPagination(tableType, rows, totalPages) {
+            // Create page number buttons
+            createPaginationButtons(tableType, totalPages);
+            
+            // Initial page display
+            updatePageDisplay(tableType, rows, totalPages, 1);
+            
+            // Set up event listeners for pagination controls
+            document.getElementById(`${tableType}PrevBtn`).addEventListener('click', function() {
+                if (tableType === 'tourist') {
+                    if (touristCurrentPage > 1) {
+                        touristCurrentPage--;
+                        updatePageDisplay(tableType, rows, totalPages, touristCurrentPage);
+                    }
+                } else {
+                    if (adminCurrentPage > 1) {
+                        adminCurrentPage--;
+                        updatePageDisplay(tableType, rows, totalPages, adminCurrentPage);
+                    }
+                }
+            });
+            
+            document.getElementById(`${tableType}NextBtn`).addEventListener('click', function() {
+                if (tableType === 'tourist') {
+                    if (touristCurrentPage < totalPages) {
+                        touristCurrentPage++;
+                        updatePageDisplay(tableType, rows, totalPages, touristCurrentPage);
+                    }
+                } else {
+                    if (adminCurrentPage < totalPages) {
+                        adminCurrentPage++;
+                        updatePageDisplay(tableType, rows, totalPages, adminCurrentPage);
+                    }
+                }
+            });
+        }
+        
+        // Create pagination buttons
+        function createPaginationButtons(tableType, totalPages) {
+            const pageNumbersContainer = document.getElementById(`${tableType}PageNumbers`);
+            if (!pageNumbersContainer) return;
+            
+            pageNumbersContainer.innerHTML = '';
+            
+            // Create a simplified pagination system
+            if (totalPages <= 7) {
+                // Show all pages if 7 or fewer
+                for (let i = 1; i <= totalPages; i++) {
+                    const pageButton = document.createElement('button');
+                    pageButton.className = 'page-number';
+                    pageButton.textContent = i;
+                    pageButton.dataset.page = i;
+                    
+                    pageButton.addEventListener('click', function() {
+                        const page = parseInt(this.dataset.page);
+                        if (tableType === 'tourist') {
+                            touristCurrentPage = page;
+                            updatePageDisplay(tableType, touristRows, totalPages, page);
+                        } else {
+                            adminCurrentPage = page;
+                            updatePageDisplay(tableType, adminRows, totalPages, page);
+                        }
+                    });
+                    
+                    pageNumbersContainer.appendChild(pageButton);
+                }
+            } else {
+                // Complex pagination with ellipsis for more pages
+                createComplexPagination(tableType, totalPages, 1);
+            }
+        }
+        
+        // Create complex pagination with ellipsis
+        function createComplexPagination(tableType, totalPages, currentPage) {
+            const pageNumbersContainer = document.getElementById(`${tableType}PageNumbers`);
+            if (!pageNumbersContainer) return;
+            
+            pageNumbersContainer.innerHTML = '';
+            
+            const createPageButton = (number) => {
+                const button = document.createElement('button');
+                button.className = 'page-number';
+                button.textContent = number;
+                button.dataset.page = number;
+                
+                if (number === currentPage) {
+                    button.classList.add('active');
+                }
+                
+                button.addEventListener('click', function() {
+                    const page = parseInt(this.dataset.page);
+                    if (tableType === 'tourist') {
+                        touristCurrentPage = page;
+                        updatePageDisplay(tableType, touristRows, totalPages, page);
+                    } else {
+                        adminCurrentPage = page;
+                        updatePageDisplay(tableType, adminRows, totalPages, page);
+                    }
+                });
+                
+                return button;
+            };
+            
+            const addEllipsis = () => {
+                const span = document.createElement('span');
+                span.className = 'ellipsis';
+                span.textContent = '...';
+                pageNumbersContainer.appendChild(span);
+            };
+            
+            // Always show page 1
+            pageNumbersContainer.appendChild(createPageButton(1));
+            
+            if (currentPage > 3) {
+                addEllipsis();
+            }
+            
+            // Show current page and neighbors
+            for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) {
+                pageNumbersContainer.appendChild(createPageButton(i));
+            }
+            
+            if (currentPage < totalPages - 2) {
+                addEllipsis();
+            }
+            
+            // Always show last page
+            if (totalPages > 1) {
+                pageNumbersContainer.appendChild(createPageButton(totalPages));
+            }
+        }
+        
+        // Update page display based on current page
+        function updatePageDisplay(tableType, rows, totalPages, currentPage) {
+            // Update buttons' state
+            const prevBtn = document.getElementById(`${tableType}PrevBtn`);
+            const nextBtn = document.getElementById(`${tableType}NextBtn`);
+            
+            if (prevBtn) prevBtn.disabled = currentPage === 1;
+            if (nextBtn) nextBtn.disabled = currentPage === totalPages;
+            
+            // Hide all rows first
+            rows.forEach(row => {
+                row.style.display = 'none';
+            });
+            
+            // Show only rows for current page
+            const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+            const endIndex = Math.min(startIndex + ITEMS_PER_PAGE, rows.length);
+            
+            for (let i = startIndex; i < endIndex; i++) {
+                if (rows[i]) {
+                    rows[i].style.display = '';
+                }
+            }
+            
+            // Update page numbers display
+            createComplexPagination(tableType, totalPages, currentPage);
+        }
     });
 </script>
-@endpush
+@endpush    

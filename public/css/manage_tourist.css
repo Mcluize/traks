@@ -338,7 +338,7 @@ body.modal-open {
 
 .user-info-container p {
     display: flex;
-    justify-content: space-between;
+    align-items: flex-start; /* Align items to the top for multi-line values */
     margin-bottom: 15px;
     padding-bottom: 10px;
     border-bottom: 1px solid #eee;
@@ -352,8 +352,17 @@ body.modal-open {
 }
 
 .user-info-container strong {
+    flex: 0 0 120px; /* Fixed width for labels, adjust as needed */
     color: #555;
     font-weight: 600;
+    text-align: left; /* Labels stay left-aligned */
+}
+
+.user-info-container span {
+    flex: 1;
+    text-align: right; /* Values align to the right */
+    word-wrap: break-word; /* Long addresses wrap neatly */
+    color: #333; /* Slightly darker for readability */
 }
 
 /* Button Styling */
@@ -401,25 +410,61 @@ body.modal-open {
     transition: filter 0.3s ease;
 }
 
-/* View Details Button */
-.view-details-btn {
-    color: #000000; /* Text color is black */
-    background-color: #ffffff; /* Background color is white */
-    border: 1px solid #e0e0e0; /* Border with light grey color */
+/* Consistent button styling for admin actions with smaller size */
+.view-details-btn,
+.lock-btn {
+    display: inline-block;
+    width: 120px; /* Reduced from 140px */
+    color: #ffffff;
     font-family: 'Poppins', sans-serif;
     font-weight: 600;
-    font-size: 14px;
-    padding: 8px 20px;
+    font-size: 12px; /* Reduced from 14px */
+    padding: 6px 15px; /* Reduced padding */
     border-radius: 5px;
-    transition: background-color 0.3s, color 0.3s, border-color 0.3s; /* Smooth transition for hover */
+    transition: background-color 0.3s, color 0.3s, border-color 0.3s;
     cursor: pointer;
+    text-align: center;
+    text-decoration: none;
+    margin: 0 4px; /* Slightly reduced margin */
 }
 
-/* Hover State for View Details Button */
+/* View Details button styling */
+.view-details-btn {
+    background-color: #0BC8CA;
+    border: 1px solid #0BC8CA;
+}
+
 .view-details-btn:hover {
-    background-color: #e06a2f; /* Orange background on hover */
-    color: white; /* White text color on hover */
-    border-color: #e06a2f; /* Match border color to the hover background */
+    background-color: #09b0b2;
+    border-color: #09b0b2;
+}
+
+/* Lock button styling */
+.lock-btn {
+    background-color: #FF5656;
+    border: 1px solid #FF5656;
+}
+
+.lock-btn:hover {
+    background-color: #e24444;
+    border-color: #e24444;
+}
+
+/* Action column spacing */
+.action-buttons {
+    display: flex;
+    justify-content: flex-start;
+    gap: 8px; /* Reduced gap */
+}
+
+/* Responsive adjustments for even smaller screens */
+@media (max-width: 576px) {
+    .view-details-btn,
+    .lock-btn {
+        width: 100px;
+        font-size: 11px;
+        padding: 5px 10px;
+    }
 }
 
 #noResultMessage {
@@ -739,7 +784,7 @@ body {
 .pagination {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 130px;
 }
 
 .pagination-btn,
@@ -795,4 +840,30 @@ body {
 .modal-footer-side-by-side button:last-child {
     background-color: #FF7E3F;
     border-color: #FF7E3F;
+}
+/* Add search button styling */
+.search-button {
+    height: 42px;
+    padding: 0 15px;
+    background-color: #FF7E3F;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.search-button:hover {
+    background-color: #E96E30;
+}
+
+/* Make sure modal works without backdrop */
+.modal-backdrop {
+    display: none !important;
+}
+
+.modal {
+    background-color: rgba(0, 0, 0, 0.5);
 }
