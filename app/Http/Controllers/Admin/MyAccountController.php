@@ -44,9 +44,8 @@ class MyAccountController extends Controller
         // Handle profile image upload if provided
         if ($request->hasFile('profile_image')) {
             $imagePath = $request->file('profile_image')->store('profile_images', 'public');
-            $user->profile_image = $imagePath; // Save the image path in the database
+            $user->profile_image = $imagePath; 
         }
-
 
         // Update the user's information
         $result = $user->update($request->except(['_token', 'profile_image']));
@@ -66,6 +65,13 @@ class MyAccountController extends Controller
     public function postChangePasswordForm(ChangePasswordRequest $request)
     {
         $user = $this->guard()->user();
+
+        // Check if the old password matches
+        if (!Hash::check($request->old_password, $user->password)) {
+            return back()->withErrors(['old_password' => 'The current password is incorrect.']);
+        }
+
+        // Update the password
         $user->password = Hash::make($request->new_password);
 
         if ($user->save()) {
