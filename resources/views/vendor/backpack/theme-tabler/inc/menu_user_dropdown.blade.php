@@ -1,4 +1,4 @@
-<div class="nav-item dropdown" style="margin-right: 23px;">
+{{-- <div class="nav-item dropdown" style="margin-right: 23px;">
     <a href="#" class="nav-link d-flex lh-1 text-reset p-0 position-relative" data-bs-toggle="dropdown" aria-label="Open notification menu">
         <svg width="25" height="24" viewBox="0 0 25 24" fill="none" xmlns="http://www.w3.org/2000/svg" style=" border-radius: 5px;">
             <path d="M21.4884 15.9984C21.4073 15.9047 21.3277 15.8109 21.2496 15.7204C20.1754 14.4731 19.5255 13.7203 19.5255 10.1892C19.5255 8.36107 19.0699 6.86107 18.172 5.73607C17.5099 4.90498 16.6148 4.27451 15.4351 3.80857C15.42 3.80047 15.4064 3.78983 15.3951 3.77717C14.9708 2.4131 13.8097 1.49951 12.5001 1.49951C11.1905 1.49951 10.0299 2.41311 9.60556 3.77576C9.59424 3.78796 9.58087 3.79826 9.56601 3.80623C6.81308 4.8942 5.47519 6.98154 5.47519 10.1878C5.47519 13.7203 4.82627 14.4731 3.75107 15.719C3.67295 15.8095 3.59336 15.9014 3.5123 15.997C3.30293 16.2394 3.17027 16.5343 3.13003 16.8468C3.08979 17.1594 3.14366 17.4764 3.28525 17.7604C3.58652 18.3698 4.22861 18.7481 4.96152 18.7481H20.044C20.7735 18.7481 21.4112 18.3703 21.7135 17.7637C21.8557 17.4796 21.91 17.1623 21.8701 16.8494C21.8303 16.5366 21.6978 16.2412 21.4884 15.9984V15.9984Z" fill="#AAAAAA"/>
@@ -11,7 +11,7 @@
         <a href="{{ route('notifications.index') }}" class="dropdown-item">Notification 2</a>
         <a href="{{ route('notifications.index') }}" class="dropdown-item">Notification 3</a>
     </div>
-</div>
+</div> --}}
 
 
 

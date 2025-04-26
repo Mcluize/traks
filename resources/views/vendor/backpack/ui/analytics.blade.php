@@ -26,10 +26,5 @@
 <link href="{{ asset('css/analytics.css') }}" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
 
-<div class="dashboard-container" style="padding-top: 20px;">
-    <div class="card p-6">
-        <h4>Welcome to the Analytics Page!</h4>
-        <p>You can now fully customize this section.</p>
-    </div>
-</div>
+
 @endsection

@@ -8,7 +8,18 @@
     <!-- Include the custom CSS for this page -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet">
     <link href="{{ asset('css/my-account.css') }}" rel="stylesheet">
-    
+    <div class="container-fluid">
+        <div class="justify-content-between align-items-left">
+            <div>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb bg-transparent p-0">
+                        <li class="breadcrumb-item"><a href="#">Pages</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">Setting</li>
+                    </ol>
+                </nav>
+            </div>
+        </div>
+    </div>
     <section class="header-operation container-fluid animated fadeIn d-flex mb-2 align-items-center d-print-none" bp-section="page-header">
         <!-- Profile Avatar -->
         <div class="profile-avatar mr-3">

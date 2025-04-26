@@ -5,6 +5,7 @@ use App\Services\SupabaseService;
 use App\Http\Controllers\Admin\MyAccountController;
 use App\Http\Controllers\UserPinController;
 use App\Http\Controllers\Admin\AdminAccountController;
+
 Route::group([
     'prefix' => config('backpack.base.route_prefix', 'admin'),
     'middleware' => array_merge(
@@ -32,12 +33,11 @@ Route::group([
         return view('vendor.backpack.ui.notification');
     })->name('notifications.index');
     
-    
+    // Updated setting route to redirect to edit-account-info
     Route::get('setting', function () {
-        return view('vendor.backpack.ui.setting');
+        return redirect()->route('backpack.account.info');
     })->name('backpack.setting');
 
-    
     Route::get('edit-account-info', 'MyAccountController@getAccountInfoForm')->name('backpack.account.info');
     Route::post('edit-account-info', 'MyAccountController@postAccountInfoForm')->name('backpack.account.info.store');
     Route::post('change-password', 'MyAccountController@postChangePasswordForm')->name('backpack.account.password');
@@ -46,4 +46,3 @@ Route::group([
     Route::post('create-admin-account', 'AdminAccountController@create')->name('backpack.create-admin-account');
     Route::patch('/admin/lock/{userId}', [AdminAccountController::class, 'lockAccount'])->name('admin.lock');
 });
-

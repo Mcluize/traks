@@ -285,8 +285,7 @@ body {
 }
 
 .checkins-table tr:hover {
-    background-color: #f8d7da;
-    color: #721c24;
+    color: #FF7E3F;
 }
 
 /* Pagination Styling */
