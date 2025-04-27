@@ -259,14 +259,31 @@ body {
 }
 
 .page-item.active .page-link {
-    background-color: #0BC8CA;
-    border-color: #0BC8CA;
+    background-color: #FF7E3F;
+    border-color: #FF7E3F;
+    color: white;
+}
+
+.page-item:not(.active) .page-link:hover {
+    background-color: rgba(255, 126, 63, 0.1);
+    color: #FF7E3F;
 }
 
 .page-item.disabled .page-link {
     color: #6c757d;
     background-color: #fff;
     border-color: #e3e6f0;
+}
+
+.card .error-message {
+    background-color: #fff9f5 !important;
+    font-style: italic !important;
+    color: #FF7E3F !important;
+    padding: 10px !important;
+    border-radius: 5px !important;
+    text-align: center !important;
+    margin-top: 10px !important;
+    font-size: 14px !important;
 }
 
 /* Responsive adjustments */

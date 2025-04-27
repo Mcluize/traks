@@ -91,10 +91,10 @@
                 </table>
                 <div class="pagination-container" id="touristPagination">
                     <div class="pagination">
-                        <button class="pagination-btn prev-btn" id="touristPrevBtn" disabled>&lt; Previous</button>
+                        <button class="pagination-btn prev-btn" id="touristPrevBtn" disabled>< Previous</button>
                         <div class="page-numbers" id="touristPageNumbers">
                         </div>
-                        <button class="pagination-btn next-btn" id="touristNextBtn">Next &gt;</button>
+                        <button class="pagination-btn next-btn" id="touristNextBtn">Next ></button>
                     </div>
                 </div>
                 <p id="noTouristResultMessage" style="display: none;" class="no-result-message">No tourist found with that ID.</p>
@@ -159,10 +159,10 @@
                 </table>
                 <div class="pagination-container" id="adminPagination">
                     <div class="pagination">
-                        <button class="pagination-btn prev-btn" id="adminPrevBtn" disabled>&lt; Previous</button>
+                        <button class="pagination-btn prev-btn" id="adminPrevBtn" disabled>< Previous</button>
                         <div class="page-numbers" id="adminPageNumbers">
                         </div>
-                        <button class="pagination-btn next-btn" id="adminNextBtn">Next &gt;</button>
+                        <button class="pagination-btn next-btn" id="adminNextBtn">Next ></button>
                     </div>
                 </div>
                 <p id="noAdminResultMessage" style="display: none;" class="no-result-message">No admin found with that ID.</p>
@@ -185,15 +185,6 @@
                 <div class="mt-3">
                     <button id="changePinBtn" class="btn btn-warning">Change PIN</button>
                 </div>
-                <!-- Change PIN Section -->
-                <div id="pinChangeSection" style="display:none;">
-                    <input type="password" id="newPinInput" class="form-control mb-3" placeholder="Enter New PIN" maxlength="6">
-                    <div id="pinChangeError" class="text-danger" style="display:none;">Failed to update PIN.</div>
-                    <div class="mt-2">
-                        <button id="saveNewPinBtn" class="btn btn-success">Save New PIN</button>
-                        <button id="cancelPinChange" class="btn btn-secondary">Cancel</button>
-                    </div>
-                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-primary" id="unlockBtn" style="background-color: #FF7E3F;">Unlock</button>
@@ -202,7 +193,27 @@
     </div>
 </div>
 
-<!-- Modal 2: User Info (after PIN unlocked) -->
+<!-- Modal 2: Change PIN Modal -->
+<div class="modal fade" id="changePinModal" tabindex="-1" aria-labelledby="changePinModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header" style="background-color: #FF7E3F; color: #fff;">
+                <h5 class="modal-title" id="changePinModalLabel">Change Your PIN</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <input type="password" id="newPinInput" class="form-control mb-3" placeholder="Enter New PIN" maxlength="6">
+                <div id="pinChangeError" class="text-danger" style="display:none;">Failed to update PIN.</div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="cancelPinChange">Cancel</button>
+                <button type="button" class="btn btn-success" id="saveNewPinBtn">Save New PIN</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal 3: User Info (after PIN unlocked) -->
 <div class="modal fade" id="userInfoModal" tabindex="-1" aria-labelledby="userInfoModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -278,455 +289,495 @@
 
 @push('after_scripts')
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        let selectedUser = null;
-        let selectedUserType = 'tourist';
-        const userModalEl = document.getElementById('userModal');
-        const userInfoModalEl = document.getElementById('userInfoModal');
-        const createAccountModalEl = document.getElementById('createAccountModal');
-        const userModalInstance = new bootstrap.Modal(userModalEl);
-        const userInfoModalInstance = new bootstrap.Modal(userInfoModalEl);
-        const createAccountModalInstance = new bootstrap.Modal(createAccountModalEl);
-        const mainContent = document.getElementById('mainContent');
+document.addEventListener('DOMContentLoaded', function () {
+    let selectedUser = null;
+    let selectedUserType = 'tourist';
+    const userModalEl = document.getElementById('userModal');
+    const changePinModalEl = document.getElementById('changePinModal');
+    const userInfoModalEl = document.getElementById('userInfoModal');
+    const createAccountModalEl = document.getElementById('createAccountModal');
+    const userModalInstance = new bootstrap.Modal(userModalEl);
+    const changePinModalInstance = new bootstrap.Modal(changePinModalEl);
+    const userInfoModalInstance = new bootstrap.Modal(userInfoModalEl);
+    const createAccountModalInstance = new bootstrap.Modal(createAccountModalEl);
+    const mainContent = document.getElementById('mainContent');
 
-        // Pagination Configuration
-        const ITEMS_PER_PAGE = 5;
-        
-        // Tourist Pagination
-        let touristCurrentPage = 1;
-        const touristRows = document.querySelectorAll('.tourist-row');
-        const touristTotalItems = touristRows.length;
-        const touristTotalPages = Math.ceil(touristTotalItems / ITEMS_PER_PAGE);
-        
-        // Admin Pagination
-        let adminCurrentPage = 1;
-        const adminRows = document.querySelectorAll('.admin-row');
-        const adminTotalItems = adminRows.length;
-        const adminTotalPages = Math.ceil(adminTotalItems / ITEMS_PER_PAGE);
-        
-        // Initialize both paginations
-        initPagination('tourist', touristRows, touristTotalPages);
-        initPagination('admin', adminRows, adminTotalPages);
+    // Pagination Configuration
+    const ITEMS_PER_PAGE = 5;
+    
+    // Tourist Pagination
+    let touristCurrentPage = 1;
+    const touristRows = document.querySelectorAll('.tourist-row');
+    const touristTotalItems = touristRows.length;
+    const touristTotalPages = Math.ceil(touristTotalItems / ITEMS_PER_PAGE);
+    
+    // Admin Pagination
+    let adminCurrentPage = 1;
+    const adminRows = document.querySelectorAll('.admin-row');
+    const adminTotalItems = adminRows.length;
+    const adminTotalPages = Math.ceil(adminTotalItems / ITEMS_PER_PAGE);
+    
+    // Initialize both paginations
+    initPagination('tourist', touristRows, touristTotalPages);
+    initPagination('admin', adminRows, adminTotalPages);
 
-        // Reset userModal on show
-        userModalEl.addEventListener('show.bs.modal', function () {
-            const pinInput = document.getElementById('pinInput');
-            const pinError = document.getElementById('pinError');
-            const newPinInput = document.getElementById('newPinInput');
-            const pinChangeError = document.getElementById('pinChangeError');
-            const pinChangeSection = document.getElementById('pinChangeSection');
-            if (pinInput) pinInput.value = '';
-            if (pinError) pinError.style.display = 'none';
-            if (newPinInput) newPinInput.value = '';
-            if (pinChangeError) pinChangeError.style.display = 'none';
-            if (pinChangeSection) pinChangeSection.style.display = 'none';
+    // Reset userModal on show
+    userModalEl.addEventListener('show.bs.modal', function () {
+        resetPinModal();
+    });
+
+    // Reset changePinModal on show
+    changePinModalEl.addEventListener('show.bs.modal', function () {
+        document.getElementById('newPinInput').value = '';
+        document.getElementById('pinChangeError').style.display = 'none';
+    });
+
+    // Reset createAccountModal on show
+    createAccountModalEl.addEventListener('show.bs.modal', function () {
+        const fullName = document.getElementById('fullName');
+        const contactDetails = document.getElementById('contactDetails');
+        if (fullName) fullName.value = '';
+        if (contactDetails) contactDetails.value = '';
+    });
+
+    // Event delegation for View Details buttons
+    document.addEventListener('click', function (event) {
+        if (event.target.classList.contains('view-details-btn')) {
+            selectedUser = JSON.parse(event.target.dataset.user);
+            selectedUserType = event.target.dataset.userType;
+            userModalInstance.show();
+            mainContent.classList.add('blurred');
+        }
+    });
+
+    // Verify PIN before allowing Change PIN
+    document.getElementById('changePinBtn').addEventListener('click', function () {
+        const pinInput = document.getElementById('pinInput').value;
+        if (!pinInput) {
+            document.getElementById('pinError').textContent = 'Please enter your current PIN';
+            document.getElementById('pinError').style.display = 'block';
+            return;
+        }
+
+        fetch('/admin/pin/verify', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            },
+            body: JSON.stringify({ pin: pinInput })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.message) {
+                userModalInstance.hide();
+                changePinModalInstance.show();
+                document.getElementById('pinError').style.display = 'none';
+            } else {
+                document.getElementById('pinError').textContent = 'Wrong PIN, not authorized to change PIN';
+                document.getElementById('pinError').style.display = 'block';
+            }
+        })
+        .catch(() => {
+            document.getElementById('pinError').textContent = 'Error verifying PIN';
+            document.getElementById('pinError').style.display = 'block';
         });
+    });
 
-        // Reset createAccountModal on show
-        createAccountModalEl.addEventListener('show.bs.modal', function () {
+    // Handle Save New PIN button click
+    document.getElementById('saveNewPinBtn').addEventListener('click', function () {
+        const currentPin = document.getElementById('pinInput').value;
+        const newPin = document.getElementById('newPinInput').value;
+
+        if (!newPin) {
+            document.getElementById('pinChangeError').textContent = 'Please enter a new PIN';
+            document.getElementById('pinChangeError').style.display = 'block';
+            return;
+        }
+
+        fetch('/admin/pin/update', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            },
+            body: JSON.stringify({
+                current_pin: currentPin,
+                new_pin: newPin
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.message) {
+                toastr.success('PIN updated successfully');
+                changePinModalInstance.hide();
+                userModalInstance.show();
+                resetPinModal();
+            } else {
+                document.getElementById('pinChangeError').textContent = data.error || 'Failed to update PIN';
+                document.getElementById('pinChangeError').style.display = 'block';
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            document.getElementById('pinChangeError').textContent = 'Error updating PIN';
+            document.getElementById('pinChangeError').style.display = 'block';
+        });
+    });
+
+    // Cancel PIN change and return to userModal
+    document.getElementById('cancelPinChange').addEventListener('click', function () {
+        changePinModalInstance.hide();
+        userModalInstance.show();
+        resetPinModal();
+    });
+
+    // Function to reset the PIN modal to its original state
+    function resetPinModal() {
+        document.getElementById('pinInput').value = '';
+        document.getElementById('pinError').style.display = 'none';
+    }
+
+    // Lock account handling
+    $(document).on('click', '.lock-btn', function () {
+        const userId = $(this).data('user-id');
+        $('#lockConfirmModal').modal('show');
+        $('.modal-footer button:contains("Lock")').data('user-id', userId);
+    });
+
+    $('.modal-footer button:contains("Lock")').click(function () {
+        const userId = $(this).data('user-id');
+        const lockButton = $(this);
+        console.log('Attempting to lock admin account ID:', userId);
+        lockButton.prop('disabled', true).text('Locking...');
+
+        $.ajax({
+            url: `/admin/admin/lock/${userId}`,
+            method: 'PATCH',
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            },
+            success: function (response) {
+                if (response.success) {
+                    toastr.success('Account locked successfully');
+                    $(`tr[data-user-id="${userId}"]`).find('.lock-btn').remove();
+                    $('#lockConfirmModal').modal('hide');
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1500);
+                } else {
+                    toastr.error('Failed to lock account');
+                }
+            },
+            error: function (xhr) {
+                console.error('Error details:', xhr.responseText);
+                toastr.error('An error occurred while locking the account');
+            },
+            complete: function () {
+                lockButton.prop('disabled', false).text('Lock');
+            }
+        });
+    });
+
+    // Search by Tourist ID with pagination integration
+    const searchTouristInput = document.getElementById('searchTouristInput');
+    if (searchTouristInput) {
+        searchTouristInput.addEventListener('keyup', function () {
+            const searchQuery = this.value.toLowerCase();
+            const rows = document.querySelectorAll('.tourist-row');
+            const noResultMessage = document.getElementById('noTouristResultMessage');
+            let found = false;
+
+            rows.forEach(row => {
+                const touristId = row.querySelector('td:first-child').textContent.toLowerCase();
+                if (touristId.includes(searchQuery)) {
+                    row.classList.add('searchable');
+                    row.style.display = '';
+                    found = true;
+                } else {
+                    row.classList.remove('searchable');
+                    row.style.display = 'none';
+                }
+            });
+
+            if (searchQuery) {
+                document.getElementById('touristPagination').style.display = 'none';
+            } else {
+                document.getElementById('touristPagination').style.display = 'flex';
+                touristCurrentPage = 1;
+                updatePageDisplay('tourist', touristRows, touristTotalPages, touristCurrentPage);
+            }
+
+            if (noResultMessage) {
+                noResultMessage.style.display = found ? 'none' : 'block';
+            }
+        });
+    }
+
+    // Search by Admin ID with pagination integration
+    const searchAdminInput = document.getElementById('searchAdminInput');
+    if (searchAdminInput) {
+        searchAdminInput.addEventListener('keyup', function () {
+            const searchQuery = this.value.toLowerCase();
+            const rows = document.querySelectorAll('.admin-row');
+            const noResultMessage = document.getElementById('noAdminResultMessage');
+            let found = false;
+
+            rows.forEach(row => {
+                const adminId = row.querySelector('td:first-child').textContent.toLowerCase();
+                if (adminId.includes(searchQuery)) {
+                    row.classList.add('searchable');
+                    row.style.display = '';
+                    found = true;
+                } else {
+                    row.classList.remove('searchable');
+                    row.style.display = 'none';
+                }
+            });
+
+            if (searchQuery) {
+                document.getElementById('adminPagination').style.display = 'none';
+            } else {
+                document.getElementById('adminPagination').style.display = 'flex';
+                adminCurrentPage = 1;
+                updatePageDisplay('admin', adminRows, adminTotalPages, adminCurrentPage);
+            }
+
+            if (noResultMessage) {
+                noResultMessage.style.display = found ? 'none' : 'block';
+            }
+        });
+    }
+
+    // Function to sort admin table in descending order
+    function sortAdminTable() {
+        const tableBody = document.getElementById('adminTableBody');
+        const rows = Array.from(tableBody.querySelectorAll('tr'));
+        rows.sort((a, b) => {
+            const idA = parseInt(a.querySelector('td:first-child').textContent);
+            const idB = parseInt(b.querySelector('td:first-child').textContent);
+            return idB - idA;
+        });
+        rows.forEach(row => tableBody.appendChild(row));
+    }
+
+    // Create account functionality
+    const saveAccountBtn = document.getElementById('saveAccountBtn');
+    if (saveAccountBtn) {
+        saveAccountBtn.addEventListener('click', function () {
             const fullName = document.getElementById('fullName');
             const contactDetails = document.getElementById('contactDetails');
-            if (fullName) fullName.value = '';
-            if (contactDetails) contactDetails.value = '';
-        });
 
-        // Event delegation for View Details buttons
-        document.addEventListener('click', function (event) {
-            if (event.target.classList.contains('view-details-btn')) {
-                selectedUser = JSON.parse(event.target.dataset.user);
-                selectedUserType = event.target.dataset.userType;
-                userModalInstance.show();
-                mainContent.classList.add('blurred');
+            if (!fullName || !contactDetails) {
+                alert('Required input fields are missing in the DOM');
+                return;
             }
-        });
 
-        // Lock account handling
-        $(document).on('click', '.lock-btn', function () {
-            const userId = $(this).data('user-id');
-            $('#lockConfirmModal').modal('show');
-            $('.modal-footer button:contains("Lock")').data('user-id', userId);
-        });
+            const fullNameValue = fullName.value;
+            const contactDetailsValue = contactDetails.value;
 
-        $('.modal-footer button:contains("Lock")').click(function () {
-            const userId = $(this).data('user-id');
-            const lockButton = $(this);
-            console.log('Attempting to lock admin account ID:', userId);
-            lockButton.prop('disabled', true).text('Locking...');
+            if (!fullNameValue || !contactDetailsValue) {
+                alert('Please fill in all required fields');
+                return;
+            }
 
-            $.ajax({
-                url: `/admin/admin/lock/${userId}`,
-                method: 'PATCH',
+            this.disabled = true;
+            this.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Creating...';
+
+            fetch('/admin/create-admin-account', {
+                method: 'POST',
                 headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
                 },
-                success: function (response) {
-                    if (response.success) {
-                        toastr.success('Account locked successfully');
-                        $(`tr[data-user-id="${userId}"]`).find('.lock-btn').remove();
-                        $('#lockConfirmModal').modal('hide');
-                        setTimeout(() => {
-                            window.location.reload();
-                        }, 1500);
-                    } else {
-                        toastr.error('Failed to lock account');
-                    }
-                },
-                error: function (xhr) {
-                    console.error('Error details:', xhr.responseText);
-                    toastr.error('An error occurred while locking the account');
-                },
-                complete: function () {
-                    lockButton.prop('disabled', false).text('Lock');
+                body: JSON.stringify({
+                    full_name: fullNameValue,
+                    contact_details: contactDetailsValue
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                this.disabled = false;
+                this.innerHTML = 'Save Account';
+
+                if (data.success) {
+                    const newUser = data.user;
+                    const tableBody = document.getElementById('adminTableBody');
+                    const newRow = document.createElement('tr');
+                    newRow.className = 'userRow admin-row';
+                    newRow.setAttribute('data-user-id', newUser.user_id);
+                    newRow.innerHTML = `
+                        <td>${newUser.user_id}</td>
+                        <td>
+                            <button 
+                                type="button"
+                                class="btn btn-sm btn-primary view-details-btn"
+                                data-user='${JSON.stringify(newUser)}' 
+                                data-user-type="admin"
+                                data-bs-toggle="modal" 
+                                data-bs-target="#userModal">
+                                View Details
+                            </button>
+                            <button 
+                                type="button"
+                                class="btn btn-sm btn-danger lock-btn"
+                                data-user-id="${newUser.user_id}"
+                                data-bs-toggle="modal"
+                                data-bs-target="#lockConfirmModal">
+                                Lock
+                            </button>
+                        </td>
+                    `;
+
+                    tableBody.appendChild(newRow);
+                    sortAdminTable();
+                    const adminRows = document.querySelectorAll('.admin-row');
+                    const adminTotalItems = adminRows.length;
+                    const adminTotalPages = Math.ceil(adminTotalItems / ITEMS_PER_PAGE);
+                    initPagination('admin', adminRows, adminTotalPages);
+                    
+                    createAccountModalInstance.hide();
+                    toastr.success('Admin account created successfully with default PIN: 1234');
+                } else {
+                    alert('Failed to create account: ' + data.message);
                 }
+            })
+            .catch(error => {
+                this.disabled = false;
+                this.innerHTML = 'Save Account';
+                console.error('Error:', error);
+                alert('Error: ' + (error.message || 'Something went wrong. Please try again.'));
             });
         });
+    }
 
-        // Search by Tourist ID with pagination integration
-        const searchTouristInput = document.getElementById('searchTouristInput');
-        if (searchTouristInput) {
-            searchTouristInput.addEventListener('keyup', function () {
-                const searchQuery = this.value.toLowerCase();
-                const rows = document.querySelectorAll('.tourist-row');
-                const noResultMessage = document.getElementById('noTouristResultMessage');
-                let found = false;
-
-                rows.forEach(row => {
-                    const touristId = row.querySelector('td:first-child').textContent.toLowerCase();
-                    if (touristId.includes(searchQuery)) {
-                        row.classList.add('searchable');
-                        row.style.display = '';
-                        found = true;
-                    } else {
-                        row.classList.remove('searchable');
-                        row.style.display = 'none';
-                    }
-                });
-
-                // Handle pagination during search
-                if (searchQuery) {
-                    // Hide pagination if searching
-                    document.getElementById('touristPagination').style.display = 'none';
-                } else {
-                    // Show pagination when not searching
-                    document.getElementById('touristPagination').style.display = 'flex';
-                    touristCurrentPage = 1;
-                    updatePageDisplay('tourist', touristRows, touristTotalPages, touristCurrentPage);
-                }
-
-                if (noResultMessage) {
-                    noResultMessage.style.display = found ? 'none' : 'block';
-                }
-            });
-        }
-
-        // Search by Admin ID with pagination integration
-        const searchAdminInput = document.getElementById('searchAdminInput');
-        if (searchAdminInput) {
-            searchAdminInput.addEventListener('keyup', function () {
-                const searchQuery = this.value.toLowerCase();
-                const rows = document.querySelectorAll('.admin-row');
-                const noResultMessage = document.getElementById('noAdminResultMessage');
-                let found = false;
-
-                rows.forEach(row => {
-                    const adminId = row.querySelector('td:first-child').textContent.toLowerCase();
-                    if (adminId.includes(searchQuery)) {
-                        row.classList.add('searchable');
-                        row.style.display = '';
-                        found = true;
-                    } else {
-                        row.classList.remove('searchable');
-                        row.style.display = 'none';
-                    }
-                });
-
-                // Handle pagination during search
-                if (searchQuery) {
-                    // Hide pagination if searching
-                    document.getElementById('adminPagination').style.display = 'none';
-                } else {
-                    // Show pagination when not searching
-                    document.getElementById('adminPagination').style.display = 'flex';
-                    adminCurrentPage = 1;
-                    updatePageDisplay('admin', adminRows, adminTotalPages, adminCurrentPage);
-                }
-
-                if (noResultMessage) {
-                    noResultMessage.style.display = found ? 'none' : 'block';
-                }
-            });
-        }
-
-        // Function to sort admin table in descending order
-        function sortAdminTable() {
-            const tableBody = document.getElementById('adminTableBody');
-            const rows = Array.from(tableBody.querySelectorAll('tr'));
-            rows.sort((a, b) => {
-                const idA = parseInt(a.querySelector('td:first-child').textContent);
-                const idB = parseInt(b.querySelector('td:first-child').textContent);
-                return idB - idA;
-            });
-            rows.forEach(row => tableBody.appendChild(row));
-        }
-
-        // Create account functionality
-        const saveAccountBtn = document.getElementById('saveAccountBtn');
-        if (saveAccountBtn) {
-            saveAccountBtn.addEventListener('click', function () {
-                const fullName = document.getElementById('fullName');
-                const contactDetails = document.getElementById('contactDetails');
-
-                if (!fullName || !contactDetails) {
-                    alert('Required input fields are missing in the DOM');
-                    return;
-                }
-
-                const fullNameValue = fullName.value;
-                const contactDetailsValue = contactDetails.value;
-
-                if (!fullNameValue || !contactDetailsValue) {
-                    alert('Please fill in all required fields');
-                    return;
-                }
-
-                this.disabled = true;
-                this.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Creating...';
-
-                fetch('/admin/create-admin-account', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                    },
-                    body: JSON.stringify({
-                        full_name: fullNameValue,
-                        contact_details: contactDetailsValue
-                    })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    this.disabled = false;
-                    this.innerHTML = 'Save Account';
-
-                    if (data.success) {
-                        const newUser = data.user;
-                        const tableBody = document.getElementById('adminTableBody');
-                        const newRow = document.createElement('tr');
-                        newRow.className = 'userRow admin-row';
-                        newRow.setAttribute('data-user-id', newUser.user_id);
-                        newRow.innerHTML = `
-                            <td>${newUser.user_id}</td>
-                            <td>
-                                <button 
-                                    type="button"
-                                    class="btn btn-sm btn-primary view-details-btn"
-                                    data-user='${JSON.stringify(newUser)}' 
-                                    data-user-type="admin"
-                                    data-bs-toggle="modal" 
-                                    data-bs-target="#userModal">
-                                    View Details
-                                </button>
-                                <button 
-                                    type="button"
-                                    class="btn btn-sm btn-danger lock-btn"
-                                    data-user-id="${newUser.user_id}"
-                                    data-bs-toggle="modal"
-                                    data-bs-target="#lockConfirmModal">
-                                    Lock
-                                </button>
-                            </td>
-                        `;
-
-                        tableBody.appendChild(newRow); // Append new row
-                        sortAdminTable(); // Sort table after adding new row
-                        
-                        // Update pagination after adding a new row
-                        const adminRows = document.querySelectorAll('.admin-row');
-                        const adminTotalItems = adminRows.length;
-                        const adminTotalPages = Math.ceil(adminTotalItems / ITEMS_PER_PAGE);
-                        initPagination('admin', adminRows, adminTotalPages);
-                        
-                        createAccountModalInstance.hide();
-                        toastr.success('Admin account created successfully with default PIN: 1234');
-                    } else {
-                        alert('Failed to create account: ' + data.message);
-                    }
-                })
-                .catch(error => {
-                    this.disabled = false;
-                    this.innerHTML = 'Save Account';
-                    console.error('Error:', error);
-                    alert('Error: ' + (error.message || 'Something went wrong. Please try again.'));
-                });
-            });
-        }
-
-        // Close modals and remove blur effect
-        const closeUserInfoModal = document.getElementById('closeUserInfoModal');
-        if (closeUserInfoModal) {
-            closeUserInfoModal.addEventListener('click', () => {
-                mainContent.classList.remove('blurred');
-            });
-        }
-
-        userModalEl.addEventListener('hidden.bs.modal', () => {
-            if (!userInfoModalEl.classList.contains('show')) {
-                mainContent.classList.remove('blurred');
-            }
-        });
-        userInfoModalEl.addEventListener('hidden.bs.modal', () => {
+    // Close modals and remove blur effect
+    const closeUserInfoModal = document.getElementById('closeUserInfoModal');
+    if (closeUserInfoModal) {
+        closeUserInfoModal.addEventListener('click', () => {
             mainContent.classList.remove('blurred');
         });
+    }
 
-        // Verify PIN for Viewing Details
-        const unlockBtn = document.getElementById('unlockBtn');
-        if (unlockBtn) {
-            unlockBtn.addEventListener('click', function () {
-                const pinInput = document.getElementById('pinInput');
-                if (!pinInput) return;
-                const pin = pinInput.value;
+    userModalEl.addEventListener('hidden.bs.modal', () => {
+        if (!userInfoModalEl.classList.contains('show') && !changePinModalEl.classList.contains('show')) {
+            mainContent.classList.remove('blurred');
+        }
+    });
+    userInfoModalEl.addEventListener('hidden.bs.modal', () => {
+        mainContent.classList.remove('blurred');
+    });
+    changePinModalEl.addEventListener('hidden.bs.modal', () => {
+        if (!userModalEl.classList.contains('show')) {
+            mainContent.classList.remove('blurred');
+        }
+    });
 
-                fetch(`/admin/pin/verify`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                    },
-                    body: JSON.stringify({ pin })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.message) {
-                        userModalInstance.hide();
-                        const modalUserTypeLabel = document.getElementById('modalUserTypeLabel');
-                        const userInfoModalTitle = document.getElementById('userInfoModalTitle');
-                        const modalUserId = document.getElementById('modalUserId');
-                        const modalFullName = document.getElementById('modalFullName');
-                        const modalContact = document.getElementById('modalContact');
-                        const modalAddress = document.getElementById('modalAddress');
-                        const modalCreatedAt = document.getElementById('modalCreatedAt');
+    // Verify PIN for Viewing Details
+    const unlockBtn = document.getElementById('unlockBtn');
+    if (unlockBtn) {
+        unlockBtn.addEventListener('click', function () {
+            const pinInput = document.getElementById('pinInput');
+            if (!pinInput) return;
+            const pin = pinInput.value;
 
-                        if (modalUserTypeLabel) modalUserTypeLabel.textContent = selectedUserType.charAt(0).toUpperCase() + selectedUserType.slice(1);
-                        if (userInfoModalTitle) userInfoModalTitle.textContent = selectedUserType === 'tourist' ? 'Tourist Information' : 'Admin Information';
-                        if (modalUserId) modalUserId.textContent = selectedUser.user_id;
-                        if (modalFullName) modalFullName.textContent = selectedUser.full_name;
-                        if (modalContact) modalContact.textContent = selectedUser.contact_details;
-                        if (modalAddress) modalAddress.textContent = selectedUser.address || 'N/A';
-                        if (modalCreatedAt) modalCreatedAt.textContent = new Date(selectedUser.created_at).toLocaleString();
-                        userInfoModalInstance.show();
-                    } else {
-                        const pinError = document.getElementById('pinError');
-                        if (pinError) {
-                            pinError.textContent = 'Incorrect PIN.';
-                            pinError.style.display = 'block';
-                        }
-                    }
-                })
-                .catch(() => {
+            fetch(`/admin/pin/verify`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
+                body: JSON.stringify({ pin })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message) {
+                    userModalInstance.hide();
+                    const modalUserTypeLabel = document.getElementById('modalUserTypeLabel');
+                    const userInfoModalTitle = document.getElementById('userInfoModalTitle');
+                    const modalUserId = document.getElementById('modalUserId');
+                    const modalFullName = document.getElementById('modalFullName');
+                    const modalContact = document.getElementById('modalContact');
+                    const modalAddress = document.getElementById('modalAddress');
+                    const modalCreatedAt = document.getElementById('modalCreatedAt');
+
+                    if (modalUserTypeLabel) modalUserTypeLabel.textContent = selectedUserType.charAt(0).toUpperCase() + selectedUserType.slice(1);
+                    if (userInfoModalTitle) userInfoModalTitle.textContent = selectedUserType === 'tourist' ? 'Tourist Information' : 'Admin Information';
+                    if (modalUserId) modalUserId.textContent = selectedUser.user_id;
+                    if (modalFullName) modalFullName.textContent = selectedUser.full_name;
+                    if (modalContact) modalContact.textContent = selectedUser.contact_details;
+                    if (modalAddress) modalAddress.textContent = selectedUser.address || 'N/A';
+                    if (modalCreatedAt) modalCreatedAt.textContent = new Date(selectedUser.created_at).toLocaleString();
+                    userInfoModalInstance.show();
+                } else {
                     const pinError = document.getElementById('pinError');
                     if (pinError) {
-                        pinError.textContent = 'Error validating PIN.';
+                        pinError.textContent = 'Incorrect PIN.';
                         pinError.style.display = 'block';
                     }
-                });
+                }
+            })
+            .catch(() => {
+                const pinError = document.getElementById('pinError');
+                if (pinError) {
+                    pinError.textContent = 'Error validating PIN.';
+                    pinError.style.display = 'block';
+                }
             });
-        }
+        });
+    }
 
-        // Initial sort on page load
-        sortAdminTable();
+    // Initial sort on page load
+    sortAdminTable();
+    
+    // Pagination Functions
+    function initPagination(tableType, rows, totalPages) {
+        createPaginationButtons(tableType, totalPages);
+        updatePageDisplay(tableType, rows, totalPages, 1);
         
-        // Pagination Functions
-        // Pagination initialization function
-        function initPagination(tableType, rows, totalPages) {
-            // Create page number buttons
-            createPaginationButtons(tableType, totalPages);
-            
-            // Initial page display
-            updatePageDisplay(tableType, rows, totalPages, 1);
-            
-            // Set up event listeners for pagination controls
-            document.getElementById(`${tableType}PrevBtn`).addEventListener('click', function() {
-                if (tableType === 'tourist') {
-                    if (touristCurrentPage > 1) {
-                        touristCurrentPage--;
-                        updatePageDisplay(tableType, rows, totalPages, touristCurrentPage);
-                    }
-                } else {
-                    if (adminCurrentPage > 1) {
-                        adminCurrentPage--;
-                        updatePageDisplay(tableType, rows, totalPages, adminCurrentPage);
-                    }
-                }
-            });
-            
-            document.getElementById(`${tableType}NextBtn`).addEventListener('click', function() {
-                if (tableType === 'tourist') {
-                    if (touristCurrentPage < totalPages) {
-                        touristCurrentPage++;
-                        updatePageDisplay(tableType, rows, totalPages, touristCurrentPage);
-                    }
-                } else {
-                    if (adminCurrentPage < totalPages) {
-                        adminCurrentPage++;
-                        updatePageDisplay(tableType, rows, totalPages, adminCurrentPage);
-                    }
-                }
-            });
-        }
-        
-        // Create pagination buttons
-        function createPaginationButtons(tableType, totalPages) {
-            const pageNumbersContainer = document.getElementById(`${tableType}PageNumbers`);
-            if (!pageNumbersContainer) return;
-            
-            pageNumbersContainer.innerHTML = '';
-            
-            // Create a simplified pagination system
-            if (totalPages <= 7) {
-                // Show all pages if 7 or fewer
-                for (let i = 1; i <= totalPages; i++) {
-                    const pageButton = document.createElement('button');
-                    pageButton.className = 'page-number';
-                    pageButton.textContent = i;
-                    pageButton.dataset.page = i;
-                    
-                    pageButton.addEventListener('click', function() {
-                        const page = parseInt(this.dataset.page);
-                        if (tableType === 'tourist') {
-                            touristCurrentPage = page;
-                            updatePageDisplay(tableType, touristRows, totalPages, page);
-                        } else {
-                            adminCurrentPage = page;
-                            updatePageDisplay(tableType, adminRows, totalPages, page);
-                        }
-                    });
-                    
-                    pageNumbersContainer.appendChild(pageButton);
+        document.getElementById(`${tableType}PrevBtn`).addEventListener('click', function() {
+            if (tableType === 'tourist') {
+                if (touristCurrentPage > 1) {
+                    touristCurrentPage--;
+                    updatePageDisplay(tableType, rows, totalPages, touristCurrentPage);
                 }
             } else {
-                // Complex pagination with ellipsis for more pages
-                createComplexPagination(tableType, totalPages, 1);
-            }
-        }
-        
-        // Create complex pagination with ellipsis
-        function createComplexPagination(tableType, totalPages, currentPage) {
-            const pageNumbersContainer = document.getElementById(`${tableType}PageNumbers`);
-            if (!pageNumbersContainer) return;
-            
-            pageNumbersContainer.innerHTML = '';
-            
-            const createPageButton = (number) => {
-                const button = document.createElement('button');
-                button.className = 'page-number';
-                button.textContent = number;
-                button.dataset.page = number;
-                
-                if (number === currentPage) {
-                    button.classList.add('active');
+                if (adminCurrentPage > 1) {
+                    adminCurrentPage--;
+                    updatePageDisplay(tableType, rows, totalPages, adminCurrentPage);
                 }
+            }
+        });
+        
+        document.getElementById(`${tableType}NextBtn`).addEventListener('click', function() {
+            if (tableType === 'tourist') {
+                if (touristCurrentPage < totalPages) {
+                    touristCurrentPage++;
+                    updatePageDisplay(tableType, rows, totalPages, touristCurrentPage);
+                }
+            } else {
+                if (adminCurrentPage < totalPages) {
+                    adminCurrentPage++;
+                    updatePageDisplay(tableType, rows, totalPages, adminCurrentPage);
+                }
+            }
+        });
+    }
+    
+    function createPaginationButtons(tableType, totalPages) {
+        const pageNumbersContainer = document.getElementById(`${tableType}PageNumbers`);
+        if (!pageNumbersContainer) return;
+        
+        pageNumbersContainer.innerHTML = '';
+        
+        if (totalPages <= 7) {
+            for (let i = 1; i <= totalPages; i++) {
+                const pageButton = document.createElement('button');
+                pageButton.className = 'page-number';
+                pageButton.textContent = i;
+                pageButton.dataset.page = i;
                 
-                button.addEventListener('click', function() {
+                pageButton.addEventListener('click', function() {
                     const page = parseInt(this.dataset.page);
                     if (tableType === 'tourist') {
                         touristCurrentPage = page;
@@ -737,65 +788,91 @@
                     }
                 });
                 
-                return button;
-            };
+                pageNumbersContainer.appendChild(pageButton);
+            }
+        } else {
+            createComplexPagination(tableType, totalPages, 1);
+        }
+    }
+    
+    function createComplexPagination(tableType, totalPages, currentPage) {
+        const pageNumbersContainer = document.getElementById(`${tableType}PageNumbers`);
+        if (!pageNumbersContainer) return;
+        
+        pageNumbersContainer.innerHTML = '';
+        
+        const createPageButton = (number) => {
+            const button = document.createElement('button');
+            button.className = 'page-number';
+            button.textContent = number;
+            button.dataset.page = number;
             
-            const addEllipsis = () => {
-                const span = document.createElement('span');
-                span.className = 'ellipsis';
-                span.textContent = '...';
-                pageNumbersContainer.appendChild(span);
-            };
-            
-            // Always show page 1
-            pageNumbersContainer.appendChild(createPageButton(1));
-            
-            if (currentPage > 3) {
-                addEllipsis();
+            if (number === currentPage) {
+                button.classList.add('active');
             }
             
-            // Show current page and neighbors
-            for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) {
-                pageNumbersContainer.appendChild(createPageButton(i));
-            }
+            button.addEventListener('click', function() {
+                const page = parseInt(this.dataset.page);
+                if (tableType === 'tourist') {
+                    touristCurrentPage = page;
+                    updatePageDisplay(tableType, touristRows, totalPages, page);
+                } else {
+                    adminCurrentPage = page;
+                    updatePageDisplay(tableType, adminRows, totalPages, page);
+                }
+            });
             
-            if (currentPage < totalPages - 2) {
-                addEllipsis();
-            }
-            
-            // Always show last page
-            if (totalPages > 1) {
-                pageNumbersContainer.appendChild(createPageButton(totalPages));
+            return button;
+        };
+        
+        const addEllipsis = () => {
+            const span = document.createElement('span');
+            span.className = 'ellipsis';
+            span.textContent = '...';
+            pageNumbersContainer.appendChild(span);
+        };
+        
+        pageNumbersContainer.appendChild(createPageButton(1));
+        
+        if (currentPage > 3) {
+            addEllipsis();
+        }
+        
+        for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) {
+            pageNumbersContainer.appendChild(createPageButton(i));
+        }
+        
+        if (currentPage < totalPages - 2) {
+            addEllipsis();
+        }
+        
+        if (totalPages > 1) {
+            pageNumbersContainer.appendChild(createPageButton(totalPages));
+        }
+    }
+    
+    function updatePageDisplay(tableType, rows, totalPages, currentPage) {
+        const prevBtn = document.getElementById(`${tableType}PrevBtn`);
+        const nextBtn = document.getElementById(`${tableType}NextBtn`);
+        
+        if (prevBtn) prevBtn.disabled = currentPage === 1;
+        if (nextBtn) nextBtn.disabled = currentPage === totalPages;
+        
+        rows.forEach(row => {
+            row.style.display = 'none';
+        });
+        
+        const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+        const endIndex = Math.min(startIndex + ITEMS_PER_PAGE, rows.length);
+        
+        for (let i = startIndex; i < endIndex; i++) {
+            if (rows[i]) {
+                rows[i].style.display = '';
             }
         }
         
-        // Update page display based on current page
-        function updatePageDisplay(tableType, rows, totalPages, currentPage) {
-            // Update buttons' state
-            const prevBtn = document.getElementById(`${tableType}PrevBtn`);
-            const nextBtn = document.getElementById(`${tableType}NextBtn`);
-            
-            if (prevBtn) prevBtn.disabled = currentPage === 1;
-            if (nextBtn) nextBtn.disabled = currentPage === totalPages;
-            
-            // Hide all rows first
-            rows.forEach(row => {
-                row.style.display = 'none';
-            });
-            
-            // Show only rows for current page
-            const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-            const endIndex = Math.min(startIndex + ITEMS_PER_PAGE, rows.length);
-            
-            for (let i = startIndex; i < endIndex; i++) {
-                if (rows[i]) {
-                    rows[i].style.display = '';
-                }
-            }
-            
-            // Update page numbers display
-            createComplexPagination(tableType, totalPages, currentPage);
-        }
-    });
+        createComplexPagination(tableType, totalPages, currentPage);
+    }
+});
 </script>
-@endpush    
+@endpush

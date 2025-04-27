@@ -2,6 +2,8 @@
 
 @php
     $user = isset($user) ? $user : auth()->user();
+    $superAdminController = app(\App\Http\Controllers\Admin\SuperAdminContactController::class);
+    $super_admin_contact = $superAdminController->getContactDetails();
 @endphp
 
 @section('header')
@@ -13,7 +15,7 @@
                 <nav aria-label="breadcrumb">
                     <ol class="breadcrumb bg-transparent p-0">
                         <li class="breadcrumb-item"><a href="#">Pages</a></li>
-                        <li class="breadcrumb-item active" aria-current="page">Setting</li>
+                        <li class="breadcrumb-item active" aria-current="page">My Account</li>
                     </ol>
                 </nav>
             </div>
@@ -80,39 +82,26 @@
                 </div>
             </div>
             
-            <!-- Account Stats Card -->
+            <!-- Super Admin Contact Card -->
             <div class="col-lg-4 col-md-5 mb-4">
                 <div class="card stats-card h-100">
                     <div class="card-header">
-                        <h4 class="card-title">Account Stats</h4>
+                        <h4 class="card-title">Emergency Contact Number</h4>
                     </div>
                     <div class="card-body">
                         <div class="stat-item">
                             <div class="stat-icon">
-                                <i class="la la-calendar"></i>
+                                <i class="la la-phone"></i>
                             </div>
                             <div class="stat-info">
-                                <label>Member Since</label>
-                                <h5>{{ $user->created_at->format('M d, Y') }}</h5>
+                                <label>Contact Number</label>
+                                <h5>{{ $super_admin_contact ?? 'Not set' }}</h5>
                             </div>
                         </div>
-                        <div class="stat-item">
-                            <div class="stat-icon">
-                                <i class="la la-clock"></i>
-                            </div>
-                            <div class="stat-info">
-                                <label>Last Login</label>
-                                <h5>{{ now()->format('M d, Y') }}</h5>
-                            </div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-icon">
-                                <i class="la la-shield"></i>
-                            </div>
-                            <div class="stat-info">
-                                <label>Account Status</label>
-                                <h5 class="badge status-badge">Active</h5>
-                            </div>
+                        <div class="mt-3">
+                            <button class="btn edit-btn" data-toggle="modal" data-target="#editSuperAdminContactModal">
+                                <i class="la la-edit"></i> Edit Contact
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -165,7 +154,6 @@
                                 </div>
                             </div>
                             
-                            <!-- Profile Image -->
                             <div class="form-group">
                                 <label for="profile_image" class="font-weight-bold">Profile Image</label>
                                 <div class="custom-file">
@@ -174,16 +162,42 @@
                                 <small class="form-text text-muted">Recommended: Square image, at least 300x300px</small>
                             </div>
 
-                            <!-- Name -->
                             <div class="form-group">
                                 <label for="name" class="font-weight-bold">Name</label>
                                 <input type="text" name="name" id="name" class="form-control" value="{{ $user->name }}" required>
                             </div>
 
-                            <!-- Email -->
                             <div class="form-group">
                                 <label for="email" class="font-weight-bold">Email</label>
                                 <input type="email" name="email" id="email" class="form-control" value="{{ $user->email }}" required>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn submit-btn">Save Changes</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Edit Super Admin Contact Modal -->
+        <div class="modal fade" id="editSuperAdminContactModal" tabindex="-1" role="dialog" aria-labelledby="editSuperAdminContactModalLabel" aria-hidden="true" data-backdrop="false">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="editSuperAdminContactModalLabel">Edit Super Admin Contact</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">×</span>
+                        </button>
+                    </div>
+                    <form method="POST" action="{{ route('superadmin.contact.update') }}" id="super-admin-contact-form">
+                        @csrf
+                        @method('POST')
+                        <div class="modal-body">
+                            <div class="form-group">
+                                <label for="super_admin_contact" class="font-weight-bold">Contact Number</label>
+                                <input type="text" name="super_admin_contact" id="super_admin_contact" class="form-control" value="{{ $super_admin_contact ?? '' }}" required>
                             </div>
                         </div>
                         <div class="modal-footer">
@@ -245,7 +259,6 @@
         }
 
         $(document).ready(function() {
-            // Form submission with SweetAlert for profile update
             $('#profile-form').on('submit', function(e) {
                 e.preventDefault();
                 
@@ -295,7 +308,6 @@
                 });
             });
 
-            // Form submission with SweetAlert for password change
             $('#password-form').on('submit', function(e) {
                 e.preventDefault();
                 
@@ -341,6 +353,41 @@
                                 confirmButtonColor: '#FF7E3F'
                             });
                         }
+                    }
+                });
+            });
+
+            $('#super-admin-contact-form').on('submit', function(e) {
+                e.preventDefault();
+                
+                var form = $(this);
+                var formData = new FormData(form[0]);
+                
+                $.ajax({
+                    url: form.attr('action'),
+                    type: form.attr('method'),
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function(response) {
+                        $('#editSuperAdminContactModal').modal('hide');
+                        
+                        Swal.fire({
+                            title: 'Success!',
+                            text: 'Super admin contact has been updated successfully.',
+                            icon: 'success',
+                            confirmButtonColor: '#0BC8CA'
+                        }).then((result) => {
+                            location.reload();
+                        });
+                    },
+                    error: function(xhr) {
+                        Swal.fire({
+                            title: 'Error!',
+                            text: 'Failed to update super admin contact.',
+                            icon: 'error',
+                            confirmButtonColor: '#FF7E3F'
+                        });
                     }
                 });
             });

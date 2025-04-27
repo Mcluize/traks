@@ -59,25 +59,24 @@ class SupabaseService
         }
     }
 
-    public function updateTable($table, $userId, $data)
-{
-    try {
-        $response = Http::withHeaders([
-            'apikey' => $this->key,
-            'Authorization' => 'Bearer ' . $this->key,
-            'Content-Type' => 'application/json',
-            'Prefer' => 'return=representation'
-        ])->patch("{$this->url}/rest/v1/{$table}?user_id=eq.{$userId}", $data);
+    public function updateTable($table, $column, $value, $data)
+    {
+        try {
+            $response = Http::withHeaders([
+                'apikey' => $this->key,
+                'Authorization' => 'Bearer ' . $this->key,
+                'Content-Type' => 'application/json',
+                'Prefer' => 'return=representation'
+            ])->patch("{$this->url}/rest/v1/{$table}?{$column}=eq.{$value}", $data);
 
-        if ($response->successful()) {
-            return $response->json();
+            if ($response->successful()) {
+                return $response->json();
+            }
+
+            throw new \Exception('Supabase error: ' . $response->status() . ' - ' . $response->body());
+        } catch (\Exception $e) {
+            \Log::error('Supabase update error', ['error' => $e->getMessage()]);
+            throw $e;
         }
-
-        throw new \Exception('Supabase error: ' . $response->status() . ' - ' . $response->body());
-    } catch (\Exception $e) {
-        \Log::error('Supabase update error', ['error' => $e->getMessage()]);
-        throw $e;
     }
-}
-
 }

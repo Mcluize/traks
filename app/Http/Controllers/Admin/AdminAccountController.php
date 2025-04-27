@@ -19,7 +19,6 @@ class AdminAccountController extends Controller
 
     public function create(Request $request)
     {
-        // Unchanged code remains as is
         try {
             $validated = $request->validate([
                 'full_name' => 'required|string|max:255',
@@ -112,12 +111,11 @@ class AdminAccountController extends Controller
 
     public function lockAccount(Request $request, $userId)
     {
-        // Unchanged code remains as is
         try {
             \Log::info('Attempting to lock account', ['user_id' => $userId]);
             
             $data = ['status' => 'locked'];
-            $result = $this->supabase->updateTable('users', $userId, $data);
+            $result = $this->supabase->updateTable('users', 'user_id', $userId, $data);
             
             \Log::info('Account locked successfully', ['result' => $result]);
             

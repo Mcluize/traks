@@ -26,7 +26,7 @@
                 <div class="search-container">
                     <div class="search-header">Search ID</div>
                     <div class="search-filter-container">
-                        <input type="text" class="search-input" placeholder="Enter tourist ID">
+                        <input type="text" class="search-input"  placeholder="Enter tourist ID">
                         <select class="filter-select">
                             <option value="all">All Time</option>
                             <option value="day">Day</option>
