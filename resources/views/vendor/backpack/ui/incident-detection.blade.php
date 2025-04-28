@@ -48,13 +48,20 @@
                         </div>
                     </div>
                 
-                    <!-- Search Bar -->
+                    <!-- Search Bar with Date Search -->
                     <div class="row mb-4">
                         <div class="col-md-6">
                             <div class="search-container">
                                 <i class="la la-search search-icon"></i>
                                 <input type="text" id="incident-search" class="form-control search-input" 
                                        placeholder="Search by Tourist ID" value="{{ $search ?? '' }}">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="search-container">
+                                <i class="la la-calendar search-icon"></i>
+                                <input type="date" id="date-search" class="form-control search-input" 
+                                       placeholder="Search by Date">
                             </div>
                         </div>
                     </div>
@@ -82,6 +89,7 @@ $(document).ready(function() {
     const ITEMS_PER_PAGE = 5;
     let currentFilter = "{{ $filter ?? 'all' }}";
     let currentSearch = "{{ $search ?? '' }}";
+    let searchDate = ''; // New variable for date search
     let currentPage = {{ $currentPage ?? 1 }};
     let allIncidents = [];
 
@@ -92,7 +100,6 @@ $(document).ready(function() {
             type: "GET",
             data: { filter: filter },
             success: function(response) {
-                // Parse the table rows into a JavaScript array
                 allIncidents = $(response).find('tbody tr').map(function() {
                     const cells = $(this).find('td');
                     return {
@@ -115,50 +122,53 @@ $(document).ready(function() {
     }
 
     function updateTable() {
-    let filteredIncidents = applyFilters(allIncidents);
-    const totalItems = filteredIncidents.length;
-    const totalPages = Math.max(1, Math.ceil(totalItems / ITEMS_PER_PAGE));
-    currentPage = Math.min(currentPage, totalPages) || 1;
+        let filteredIncidents = applyFilters(allIncidents);
+        const totalItems = filteredIncidents.length;
+        const totalPages = Math.max(1, Math.ceil(totalItems / ITEMS_PER_PAGE));
+        currentPage = Math.min(currentPage, totalPages) || 1;
 
-    const start = (currentPage - 1) * ITEMS_PER_PAGE;
-    const end = Math.min(start + ITEMS_PER_PAGE, totalItems);
-    const paginatedIncidents = filteredIncidents.slice(start, end);
+        const start = (currentPage - 1) * ITEMS_PER_PAGE;
+        const end = Math.min(start + ITEMS_PER_PAGE, totalItems);
+        const paginatedIncidents = filteredIncidents.slice(start, end);
 
-    const tbody = $('#incidents-table tbody');
-    tbody.empty();
-    if (paginatedIncidents.length > 0) {
-        paginatedIncidents.forEach(incident => {
-            tbody.append(`
-                <tr class="incident-row">
-                    <td>${incident.user_id}</td>
-                    <td>${incident.date}</td>
-                    <td>${incident.time}</td>
-                    <td>${incident.latitude}</td>
-                    <td>${incident.longitude}</td>
-                    <td>${incident.status}</td>
-                </tr>
-            `);
-        });
-    } else {
-        // Apply .error-message class to the dynamically inserted message
-        tbody.append('<tr><td colspan="6" class="text-center error-message">No incidents found.</td></tr>');
+        const tbody = $('#incidents-table tbody');
+        tbody.empty();
+        if (paginatedIncidents.length > 0) {
+            paginatedIncidents.forEach(incident => {
+                tbody.append(`
+                    <tr class="incident-row">
+                        <td>${incident.user_id}</td>
+                        <td>${incident.date}</td>
+                        <td>${incident.time}</td>
+                        <td>${incident.latitude}</td>
+                        <td>${incident.longitude}</td>
+                        <td>${incident.status}</td>
+                    </tr>
+                `);
+            });
+        } else {
+            tbody.append('<tr><td colspan="6" class="text-center error-message">No incidents found</td></tr>');
+        }
+
+        updatePagination(totalItems, totalPages);
+        $('.dataTables_info').text(`Showing ${end - start} of ${totalItems} entries`);
     }
-
-    // Update no data message (optional, if used elsewhere)
-    $('#noIncidentResultMessage').toggle(totalItems === 0 && currentSearch !== '');
-
-    updatePagination(totalItems, totalPages);
-    $('.dataTables_info').text(`Showing ${end - start} of ${totalItems} entries`);
-}
 
     // Apply filters client-side
     function applyFilters(incidents) {
         let filtered = [...incidents];
 
-        // Apply search filter
+        // Apply search filter by tourist ID
         if (currentSearch) {
             filtered = filtered.filter(incident => 
                 incident.user_id.toLowerCase().includes(currentSearch.toLowerCase())
+            );
+        }
+
+        // Apply date filter
+        if (searchDate) {
+            filtered = filtered.filter(incident => 
+                incident.date === searchDate
             );
         }
 
@@ -184,14 +194,12 @@ $(document).ready(function() {
         const pagination = $('.pagination');
         pagination.empty();
 
-        // Previous button
         pagination.append(`
             <li class="page-item ${currentPage <= 1 ? 'disabled' : ''}">
                 <a class="page-link" href="javascript:void(0)" data-page="${currentPage - 1}">Previous</a>
             </li>
         `);
 
-        // Page numbers (simplified to show all for now)
         for (let i = 1; i <= totalPages; i++) {
             pagination.append(`
                 <li class="page-item ${currentPage === i ? 'active' : ''}">
@@ -200,14 +208,12 @@ $(document).ready(function() {
             `);
         }
 
-        // Next button
         pagination.append(`
             <li class="page-item ${currentPage >= totalPages ? 'disabled' : ''}">
                 <a class="page-link" href="javascript:void(0)" data-page="${currentPage + 1}">Next</a>
             </li>
         `);
 
-        // Bind pagination events
         $('.page-link').off('click').on('click', function(e) {
             e.preventDefault();
             if (!$(this).parent().hasClass('disabled')) {
@@ -220,9 +226,15 @@ $(document).ready(function() {
         });
     }
 
-    // Search input handler
+    // Search input handlers
     $('#incident-search').on('keyup', function() {
         currentSearch = $(this).val();
+        currentPage = 1;
+        updateTable();
+    });
+
+    $('#date-search').on('change', function() {
+        searchDate = $(this).val();
         currentPage = 1;
         updateTable();
     });
@@ -233,7 +245,7 @@ $(document).ready(function() {
         $(this).addClass('active');
         currentFilter = $(this).data('filter');
         currentPage = 1;
-        loadAllIncidents(currentFilter); // Reload data for new filter
+        loadAllIncidents(currentFilter);
     });
 
     // Export button placeholder
