@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
+use Carbon\Carbon;
 
 class SupabaseService
 {
@@ -15,17 +16,34 @@ class SupabaseService
         $this->key = config('services.supabase.key');
     }
 
-    public function fetchTable($table, $filters = [])
+    public function fetchTable($table, $filters = [], $count = false)
     {
         \Log::info("Final Supabase URL: {$this->url}/rest/v1/{$table}");
 
-        $query = Http::withHeaders([
+        $headers = [
             'apikey' => $this->key,
             'Authorization' => 'Bearer ' . $this->key
-        ])
-        ->get("{$this->url}/rest/v1/{$table}", $filters);
+        ];
 
-        return $query->successful() ? $query->json() : null;
+        if ($count) {
+            $headers['Prefer'] = 'count=exact';
+        }
+
+        $query = Http::withHeaders($headers)
+            ->get("{$this->url}/rest/v1/{$table}", $filters);
+
+        if ($query->successful()) {
+            if ($count) {
+                $contentRange = $query->header('Content-Range');
+                if ($contentRange) {
+                    [, $total] = explode('/', $contentRange);
+                    return (int) $total;
+                }
+                return 0;
+            }
+            return $query->json();
+        }
+        return null;
     }
     
     public function insertIntoTable($table, $data)
@@ -79,4 +97,52 @@ class SupabaseService
             throw $e;
         }
     }
+    public function getIncidentReports($filter)
+{
+    $now = Carbon::now();
+    $filters = [];
+
+    switch ($filter) {
+        case 'today':
+            $localStart = Carbon::today(); // Start of today in local timezone
+            $localEnd = $localStart->copy()->addDay(); // Start of tomorrow
+            $start = $localStart->toIso8601String();
+            $end = $localEnd->toIso8601String();
+            break;
+
+        case 'this_week':
+            $localStart = $now->copy()->startOfWeek(); // Monday of current week
+            $localEnd = $localStart->copy()->addWeek(); // Monday of next week
+            $start = $localStart->toIso8601String();
+            $end = $localEnd->toIso8601String();
+            break;
+
+        case 'this_month':
+            $localStart = $now->copy()->startOfMonth(); // First day of current month
+            $localEnd = $localStart->copy()->addMonth(); // First day of next month
+            $start = $localStart->toIso8601String();
+            $end = $localEnd->toIso8601String();
+            break;
+
+        case 'all_time':
+            $start = null;
+            $end = null;
+            break;
+
+        default:
+            return response()->json(['error' => 'Invalid filter'], 400);
+    }
+
+    if ($start && $end) {
+        $filters = [
+            'and' => "(timestamp.gte.{$start},timestamp.lt.{$end})",
+        ];
+    }
+
+    $count = $this->fetchTable('emergency_reports', $filters, true);
+    if ($count === null) {
+        return response()->json(['error' => 'Failed to fetch data'], 500);
+    }
+    return response()->json(['count' => $count]);
+}
 }

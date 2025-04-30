@@ -7,6 +7,7 @@ use App\Http\Controllers\UserPinController;
 use App\Http\Controllers\Admin\AdminAccountController;
 use App\Http\Controllers\Admin\IncidentController;
 use App\Http\Controllers\Admin\SuperAdminContactController;
+use App\Http\Controllers\Admin\DashboardController;
 
 Route::group([
     'prefix' => config('backpack.base.route_prefix', 'admin'),
@@ -47,4 +48,6 @@ Route::group([
     Route::patch('/admin/lock/{userId}', [AdminAccountController::class, 'lockAccount'])->name('admin.lock');
     Route::get('admin/incidents/table-data', [App\Http\Controllers\Admin\IncidentController::class, 'tableData'])
     ->name('admin.incidents.table-data');
+    Route::get('api/tourist-arrivals/{filter}', [DashboardController::class, 'getTouristArrivals']);
+    Route::get('api/incident-reports/{filter}', [DashboardController::class, 'getIncidentReports']);
 });

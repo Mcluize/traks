@@ -86,7 +86,6 @@ body {
 .header-right {
     position: absolute;
     right: 10px;
-    top: 10px;
 }
 
 .header-right .btn {
@@ -94,9 +93,9 @@ body {
     margin: 0;
 }
 
-/* Stats Card Styling - Tourist Arrivals */
+
 .tourist-arrivals {
-    width: 220px;
+    width: 228px; 
     height: 170px;
     top: 194px;
     left: 283px;
@@ -119,7 +118,7 @@ body {
 }
 
 .tourist-arrivals .stats-number {
-    width: 116px;
+    width: 100%;
     height: 78px;
     margin: 0 auto;
     font-family: 'Poppins', sans-serif;
@@ -133,48 +132,17 @@ body {
     padding-top: 10px;
 }
 
-/* Active Tracking Card */
-.active-tracking {
-    width: 220px;
-    height: 170px;
-    top: 194px;
-    left: 519px;
-    border-radius: 10px;
+.tourist-arrivals .stats-number.loading {
+    font-size: 24px; 
+    padding-top: 20px; 
 }
 
-.active-tracking .card-header {
-    width: 146px;
-    height: 21px;
-    font-family: 'Poppins', sans-serif;
-    font-weight: 700;
-    font-size: 14px;
-    line-height: 150%;
-    letter-spacing: 0;
-    vertical-align: middle;
-    color: #484A58;
-}
 
-.active-tracking .stats-number {
-    width: 102px;
-    height: 78px;
-    margin: 0 auto;
-    font-family: 'Poppins', sans-serif;
-    font-weight: 700;
-    font-size: 52px;
-    line-height: 150%;
-    letter-spacing: 0;
-    vertical-align: middle;
-    color: #484A58;
-    text-align: center;
-    padding-top: 10px;
-}
-
-/* Incident Alerts Card */
 .incidents-card {
-    width: 456px;
-    height: 228px;
-    top: 379px;
-    left: 283px;
+    width: 228px;
+    height: 170px; 
+    top: 194px; 
+    left: 527px;
     border-radius: 10px;
 }
 
@@ -183,7 +151,7 @@ body {
     height: 27px;
     font-family: 'Poppins', sans-serif;
     font-weight: 700;
-    font-size: 18px;
+    font-size: 16px;
     line-height: 150%;
     letter-spacing: 0;
     vertical-align: middle;
@@ -196,12 +164,14 @@ body {
     justify-content: space-between;
     gap: 20px;
     flex-wrap: nowrap;
+    flex-direction: column; 
+    align-items: center;
 }
 
 .incident {
     flex: 1;
     min-width: 120px;
-    padding: 15px;
+    padding: 5px; 
     border-radius: 5px;
     text-align: center;
     position: relative;
@@ -209,14 +179,14 @@ body {
 
 .incident-number {
     width: 62px;
-    height: 78px;
+    height: auto; 
     font-family: 'Poppins', sans-serif;
     font-weight: 700;
-    font-size: 52px;
+    font-size: 24px; 
     line-height: 150%;
     letter-spacing: 0;
     vertical-align: middle;
-    margin: 0 auto 8px;
+    margin: 0 auto 2px; /* Reduced margin */
     text-align: center;
 }
 
@@ -225,12 +195,12 @@ body {
     height: 20px;
     font-family: 'Poppins', sans-serif;
     font-weight: 700;
-    font-size: 13px;
+    font-size: 12px; /* Slightly reduced from 13px */
     line-height: 150%;
     letter-spacing: 0;
     vertical-align: middle;
     color: #484A58;
-    margin: 0 auto 5px;
+    margin: 0 auto 2px; /* Reduced margin */
     display: inline-block;
     white-space: nowrap;
 }
@@ -242,22 +212,13 @@ body {
 }
 
 .incident-description {
-    width: 86px;
-    height: 24px;
-    font-family: 'Poppins', sans-serif;
-    font-weight: 300;
-    font-size: 8px;
-    line-height: 150%;
-    letter-spacing: 0;
-    vertical-align: middle;
-    color: #666666;
-    margin-left: 8px;
+    display: none; /* Hidden to fit smaller height; could use tooltip instead */
 }
 
 .incident-icon-container {
     position: absolute;
-    top: 18px;
-    right: 18px;
+    top: 10px;
+    right: 10px;
 }
 
 .incident::after {
@@ -341,61 +302,12 @@ body {
     overflow: hidden;
 }
 
-/* Tourist Logs Card */
-.logs-card {
-    width: 233px;
-    height: 414px;
-    top: 194px;
-    left: 1181px;
-    border-radius: 10px;
-}
-
-.logs-card .card-header {
-    width: 115px;
-    height: 21px;
-    font-family: 'Poppins', sans-serif;
-    font-weight: 700;
-    font-size: 14px;
-    line-height: 150%;
-    letter-spacing: 0;
-    vertical-align: middle;
-    color: #484A58;
-}
-
-.log-entries {
-    overflow-y: auto;
-    max-height: 340px;
-    padding: 10px;
-    border-radius: 5px;
-    margin: 0 5px;
-    flex: 1;
-}
-
-.log-entry {
-    width: 146px;
-    height: 27px;
-    padding-bottom: 60px;
-    border-bottom: none;
-    font-size: 12px;
-    margin: 0 auto 18px;
-}
-
-.log-time {
-    color: #666;
-    margin-bottom: 4px;
-}
-
-.log-description {
-    color: #333;
-    font-weight: bold;
-}
-
-/* Manage Tourist Card */
+/* Manage Tourist Card (Moved and Resized) */
 .manage-card {
-    width: 598px;
-    height: 373px;
-    top: 625px;
-    left: 283px;
+    width: 472px; 
+    height: 228px; 
+    top: 379px; 
+    left: 283px; 
     border-radius: 10px;
 }
 
@@ -414,8 +326,9 @@ body {
 
 .tourist-table-container {
     flex: 1;
+    overflow-x: auto; /* Added horizontal scrolling for smaller width */
     overflow-y: auto;
-    max-height: 290px;
+    max-height: 145px; /* Adjusted for smaller height */
     margin: 10px;
     border-radius: 5px;
     padding: 5px;
@@ -448,12 +361,12 @@ body {
     font-size: 13px;
 }
 
-/* Analytics Card */
+/* Analytics Card (Expanded) */
 .analytics-card {
-    width: 520px;
+    width: 1131px; /* Spans from left:283px to right:1414px (map card's right edge) */
     height: 373px;
     top: 625px;
-    left: 895px;
+    left: 283px; /* Starts at original Manage Tourist left position */
     border-radius: 10px;
 }
 
@@ -492,7 +405,7 @@ body {
 }
 
 .chart-container {
-    width: 476px;
+    width: 1087px; /* Adjusted to fit new width (1131px - padding) */
     height: 283px;
     position: relative;
     padding: 10px;
@@ -747,6 +660,105 @@ h2.header-container small {
     color: #FF7E3F;
 }
 
+/* Header Right Container - Fixed */
+.header-right {
+    position: absolute;
+    right: 10px;
+    display: flex;
+    align-items: center;
+}
+
+.header-right .btn {
+    padding: 0;
+    margin: 0;
+    background: transparent;
+    border: none;
+}
+
+.dropdown-menu.custom-dropdown {
+    position: absolute;
+    min-width: 120px;
+    max-width: 150px;
+    width: auto;
+    padding: 0;
+    margin-left: -80px;
+    background-color: #fff;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.dropdown-menu.custom-dropdown .dropdown-item {
+    padding: 8px 12px;
+    margin: 0;
+    text-align: center;
+    white-space: nowrap;
+    color: #484A58;
+    font-size: 14px;
+    font-family: 'Poppins', sans-serif;
+}
+
+.dropdown-menu.custom-dropdown .dropdown-item:hover {
+    color: #FF7E3F;
+    background-color: transparent;
+}
+
+.dropdown-menu {
+    position: absolute;
+    width: fit-content !important;
+    background-color: #fff;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    padding: 0;
+}
+
+.dropdown-item {
+    margin: 0;
+    display: block;
+    text-align: center;
+    padding: 0; 
+}
+
+.btn-link:focus, .btn-link:active {
+    box-shadow: none;
+    outline: none;
+    text-decoration: none;
+}
+
+
+.incidents-card .stats-number {
+    width: 100%;
+    height: 78px;
+    margin: 0 auto;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 700;
+    font-size: 52px;
+    line-height: 150%;
+    letter-spacing: 0;
+    vertical-align: middle;
+    color: #484A58;
+    text-align: center;
+    padding-top: 10px;
+}
+
+.incidents-card .stats-number.loading {
+    font-size: 24px; 
+    padding-top: 20px; 
+    text-align: center; 
+    color: #666; 
+}
+
+.stats-number.loading {
+    animation: pulse 1.5s infinite ease-in-out;
+}
+
+@keyframes pulse {
+    0% { opacity: 0.6; }
+    50% { opacity: 1; }
+    100% { opacity: 0.6; }
+}
+
 /* Ensure all cards and content resize properly */
 @media (max-width: 1440px) {
     .dashboard-container {
@@ -824,7 +836,6 @@ h2.header-container small {
     }
 
     .tourist-arrivals,
-    .active-tracking,
     .incidents-card,
     .map-card,
     .logs-card,
@@ -852,7 +863,6 @@ h2.header-container small {
     }
     
     .tourist-arrivals,
-    .active-tracking,
     .incidents-card {
         width: 100% !important;
     }

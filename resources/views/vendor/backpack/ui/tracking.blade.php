@@ -1,7 +1,7 @@
 @extends(backpack_view('blank'))
 
 @section('header')
-<div class="container-fluid">
+<div class="container-fluid p-0">
     <div class="justify-content-between align-items-left">
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb bg-transparent p-0">
@@ -12,6 +12,24 @@
     </div>
 </div>
 @endsection
+
+@push('after_styles')
+<style>
+    .app-body .content-wrapper {
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+    .container-fluid {
+        padding: 0 !important;
+    }
+    .content-header {
+        padding: 0 !important;
+    }
+    .content {
+        padding: 0 !important;
+    }
+</style>
+@endpush
 
 @section('content')
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -26,10 +44,10 @@
                 <div class="search-container">
                     <div class="search-header">Search ID</div>
                     <div class="search-filter-container">
-                        <input type="text" class="search-input"  placeholder="Enter tourist ID">
+                        <input type="text" class="search-input" placeholder="Enter tourist ID">
                         <select class="filter-select">
                             <option value="all">All Time</option>
-                            <option value="day">Day</option>
+                            <option value="day">Today</option>
                             <option value="week">Week</option>
                             <option value="month">Month</option>
                         </select>
@@ -74,10 +92,19 @@ const supabase = window.supabase.createClient(
 );
 
 // Initialize Leaflet map
-const map = L.map('map').setView([7.0767, 125.8259], 13);
+const map = L.map('map', {
+    zoomControl: true,
+    attributionControl: true,
+}).setView([7.0767, 125.8259], 13);
+
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
 }).addTo(map);
+
+// Ensure the map fills its container fully
+setTimeout(function() {
+    map.invalidateSize();
+}, 100);
 
 // Fetch check-ins from Supabase with filter
 async function fetchCheckins(touristId, filter) {
@@ -324,8 +351,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     searchInput.addEventListener('change', fetchAndDisplayData);
     filterSelect.addEventListener('change', fetchAndDisplayData);
 
-    setTimeout(() => map.invalidateSize(), 500);
-    window.addEventListener('resize', () => map.invalidateSize());
+    // Make sure map resizes correctly when the window resizes
+    window.addEventListener('resize', () => {
+        map.invalidateSize();
+    });
+
+    // Force map to render properly after DOM is fully loaded
+    setTimeout(() => map.invalidateSize(), 100);
 
     $('#checkinModal').on('shown.bs.modal', function() {
         $(this).css({

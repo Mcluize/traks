@@ -8,6 +8,7 @@
 body {
     font-family: 'Poppins', Arial, sans-serif;
     background-color: #f8f9fa;
+    overflow: hidden; /* Prevent scrollbars from appearing */
 }
 
 /* Breadcrumb Section */
@@ -16,7 +17,7 @@ body {
     top: 0;
     z-index: 1030;
     background-color: transparent;
-    padding: 20px 0 0 20px;
+    padding: 10px 0 0 20px; /* Reduced top padding */
     max-width: max-content;
     width: 50%;
 }
@@ -29,7 +30,7 @@ body {
     font-size: 14px;
     line-height: 150%;
     letter-spacing: 0;
-    margin-top: -83px;
+    margin-top: -80px; /* Adjusted to reduce space */
     margin-bottom: -30px;
 }
 
@@ -108,6 +109,7 @@ body {
     padding: 0;
     font-family: 'Poppins', sans-serif;
     height: calc(100vh - 71px);
+    margin: 0; /* Remove any margin */
 }
 
 /* Map section styling */
@@ -115,6 +117,7 @@ body {
     position: relative;
     width: 100%;
     height: calc(100vh - 71px);
+    margin: 0; /* Remove any margin */
 }
 
 .map-container {
@@ -122,6 +125,8 @@ body {
     overflow: hidden;
     height: 100%;
     width: 100%;
+    margin: 0; /* Remove any margin */
+    padding: 0; /* Remove any padding */
 }
 
 #map {
@@ -131,6 +136,7 @@ body {
     height: 100%;
     width: 100%;
     z-index: 1;
+    margin: 0; /* Remove any margin */
 }
 
 /* Tourist info section as overlay */
@@ -399,6 +405,12 @@ body {
 
 .close:hover {
     opacity: 1;
+}
+
+/* Eliminate any remaining space between parent elements */
+.content-wrapper, .content {
+    padding: 0 !important;
+    margin: 0 !important;
 }
 
 /* Responsive adjustments */
