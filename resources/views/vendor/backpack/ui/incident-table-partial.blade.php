@@ -37,6 +37,21 @@
     <div class="col-md-6">
         <nav aria-label="Page navigation">
             <ul class="pagination justify-content-end">
+                @if ($currentPage > 1)
+                    <li class="page-item">
+                        <a class="page-link" href="javascript:void(0)" data-page="{{ $currentPage - 1 }}">Previous</a>
+                    </li>
+                @endif
+                @for ($i = 1; $i <= $lastPage; $i++)
+                    <li class="page-item {{ $i == $currentPage ? 'active' : '' }}">
+                        <a class="page-link" href="javascript:void(0)" data-page="{{ $i }}">{{ $i }}</a>
+                    </li>
+                @endfor
+                @if ($currentPage < $lastPage)
+                    <li class="page-item">
+                        <a class="page-link" href="javascript:void(0)" data-page="{{ $currentPage + 1 }}">Next</a>
+                    </li>
+                @endif
             </ul>
         </nav>
     </div>

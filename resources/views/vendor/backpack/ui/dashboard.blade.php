@@ -130,42 +130,33 @@
 
     <!-- Manage Tourist Card -->
     <div class="card manage-card">
-        <div class="card-header">Manage <span>Tourist</span></div>
+        <div class="card-header">
+            <div class="header-left">
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M9 9C11.0711 9 12.75 7.32107 12.75 5.25C12.75 3.17893 11.0711 1.5 9 1.5C6.92893 1.5 5.25 3.17893 5.25 5.25C5.25 7.32107 6.92893 9 9 9Z" stroke="#484A58" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M15.4425 16.5C15.4425 13.5975 12.5775 11.25 9 11.25C5.4225 11.25 2.5575 13.5975 2.5575 16.5" stroke="#484A58" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                Manage <span>Tourist</span>
+            </div>
+        </div>
         <div class="card-body">
             <div class="tourist-table-container">
+                <div class="loading-overlay">
+                    <div class="loading-spinner"></div>
+                    <div class="loading-text">Loading tourists...</div>
+                </div>
                 <table class="tourist-table">
                     <thead>
                         <tr>
-                            <th>Tourist No.</th>
-                            <th>Date Created</th>
-                            <th>Contact No.</th>
-                            <th>Account Type</th>
+                            <th>Tourist ID</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        <tr>
-                            <td>T-1001</td>
-                            <td>Apr 01, 2025</td>
-                            <td>+639 12 345 6789</td>
-                            <td>Premium</td>
-                        </tr>
-                        <tr>
-                            <td>T-1002</td>
-                            <td>Apr 02, 2025</td>
-                            <td>+639 12 345 6789</td>
-                            <td>Standard</td>
-                        </tr>
-                        <tr>
-                            <td>T-1003</td>
-                            <td>Apr 03, 2025</td>
-                            <td>+639 12 345 6789</td>
-                            <td>Premium</td>
-                        </tr>
+                    <tbody id="touristTableBody">
                     </tbody>
                 </table>
             </div>
             <div class="see-more-container">
-                <button class="see-more-button">See More <i class="las la-arrow-right"></i></button>
+                <button class="see-more-button" onclick="window.location.href='{{ backpack_url('manage-tourists') }}'">See More <i class="las la-arrow-right"></i></button>
             </div>
         </div>
     </div>
@@ -198,9 +189,45 @@ document.addEventListener('DOMContentLoaded', function() {
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
     }).addTo(map);
+
+    // Initialize a layer group for markers
+    var markerLayer = L.layerGroup().addTo(map);
+
     setTimeout(function() {
         map.invalidateSize();
     }, 500);
+
+    // Function to update map markers
+    function updateMap(filter) {
+        markerLayer.clearLayers();
+        fetch(`/admin/api/checkins-by-spot/${filter}`)
+            .then(response => {
+                if (!response.ok) throw new Error('Network response was not ok');
+                return response.json();
+            })
+            .then(data => {
+                data.forEach(spot => {
+                    L.marker([spot.latitude, spot.longitude]).addTo(markerLayer)
+                        .bindPopup(`<b>${spot.name}</b><br>Check-ins: ${spot.count}`);
+                });
+            })
+            .catch(error => {
+                console.error('Error fetching check-ins:', error);
+            });
+    }
+
+    // Map dropdown functionality
+    const mapDropdownItems = document.querySelectorAll('.dropdown-menu[aria-labelledby="mapDropdown"] .dropdown-item');
+    mapDropdownItems.forEach(item => {
+        item.addEventListener('click', function(e) {
+            e.preventDefault();
+            const filter = this.textContent.toLowerCase().replace(' ', '_');
+            updateMap(filter);
+        });
+    });
+
+    // Initial load for map with 'today'
+    updateMap('today');
 
     var ctx = document.getElementById('analyticsChart').getContext('2d');
     var chartConfig = {
@@ -357,6 +384,37 @@ document.addEventListener('DOMContentLoaded', function() {
         .catch(error => {
             incidentStatsNumber.classList.remove('loading');
             incidentStatsNumber.textContent = 'Error';
+        });
+
+    // Fetch and display latest tourists with loading state
+    const tableContainer = document.querySelector('.tourist-table-container');
+    const loadingOverlay = tableContainer.querySelector('.loading-overlay');
+    const tbody = document.getElementById('touristTableBody');
+
+    // Initially, loading overlay is visible
+    fetch('/admin/api/latest-tourists')
+        .then(response => {
+            if (!response.ok) throw new Error('Network response was not ok');
+            return response.json();
+        })
+        .then(data => {
+            // Hide loading overlay
+            loadingOverlay.style.display = 'none';
+            tbody.innerHTML = '';
+            if (data.tourists && data.tourists.length > 0) {
+                data.tourists.forEach(id => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `<td style="text-align: center;">${id}</td>`;
+                    tbody.appendChild(row);
+                });
+            } else {
+                tbody.innerHTML = '<tr><td colspan="1" style="text-align: center;">No tourists found</td></tr>';
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching tourists:', error);
+            loadingOverlay.style.display = 'none';
+            tbody.innerHTML = '<tr><td colspan="1" style="text-align: center; color: #ff4d4f;">Unable to load tourist data</td></tr>';
         });
 });
 

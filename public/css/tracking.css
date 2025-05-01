@@ -406,6 +406,76 @@ body {
 .close:hover {
     opacity: 1;
 }
+/* Map Legend Styling */
+.map-legend {
+    position: absolute;
+    bottom: 30px;
+    left: 30px;
+    z-index: 999;
+    background-color: rgba(255, 255, 255, 0.9);
+    padding: 15px;
+    border-radius: 6px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    max-width: 220px;
+    font-family: 'Poppins', sans-serif;
+    pointer-events: auto;
+}
+
+.map-legend h4 {
+    margin: 0 0 10px;
+    font-size: 14px;
+    font-weight: 700;
+    color: #333;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.legend-item:last-child {
+    margin-bottom: 0;
+}
+
+.legend-marker {
+    width: 24px;
+    height: 24px;
+    margin-right: 10px;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+.legend-item span {
+    font-size: 12px;
+    color: #666;
+}
+
+.first-checkin {
+    background-image: url('https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png');
+}
+
+.intermediate-checkin {
+    background-image: url('https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png');
+}
+
+.last-checkin {
+    background-image: url('https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png');
+}
+
+
+
+
+/* Adjust legend positioning for smaller screens */
+@media (max-width: 768px) {
+    .legend {
+        top: auto;
+        bottom: 60px; /* Position above tourist-info-section on mobile */
+        left: 10px;
+        width: calc(100% - 20px);
+    }
+}
 
 /* Eliminate any remaining space between parent elements */
 .content-wrapper, .content {

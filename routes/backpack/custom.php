@@ -50,4 +50,6 @@ Route::group([
     ->name('admin.incidents.table-data');
     Route::get('api/tourist-arrivals/{filter}', [DashboardController::class, 'getTouristArrivals']);
     Route::get('api/incident-reports/{filter}', [DashboardController::class, 'getIncidentReports']);
+    Route::get('api/latest-tourists', [DashboardController::class, 'getLatestTourists']);
+    Route::get('api/checkins-by-spot/{filter}', [DashboardController::class, 'getCheckinsBySpot']);
 });

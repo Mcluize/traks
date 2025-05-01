@@ -34,10 +34,10 @@
                         <div class="row align-items-center">
                             <div class="col-md-6">
                                 <div class="btn-group filter-buttons" role="group">
-                                    <button type="button" class="btn btn-filter {{ ($filter ?? 'all') == 'all' ? 'active' : '' }}" data-filter="all">All Time</button>
-                                    <button type="button" class="btn btn-filter {{ ($filter ?? '') == 'monthly' ? 'active' : '' }}" data-filter="monthly">Monthly</button>
-                                    <button type="button" class="btn btn-filter {{ ($filter ?? '') == 'weekly' ? 'active' : '' }}" data-filter="weekly">Weekly</button>
-                                    <button type="button" class="btn btn-filter {{ ($filter ?? '') == 'daily' ? 'active' : '' }}" data-filter="daily">Daily</button>
+                                    <button type="button" class="btn btn-filter {{ ($filter ?? 'all_time') == 'all_time' ? 'active' : '' }}" data-filter="all_time">All Time</button>
+                                    <button type="button" class="btn btn-filter {{ ($filter ?? '') == 'this_month' ? 'active' : '' }}" data-filter="this_month">This Month</button>
+                                    <button type="button" class="btn btn-filter {{ ($filter ?? '') == 'this_week' ? 'active' : '' }}" data-filter="this_week">This Week</button>
+                                    <button type="button" class="btn btn-filter {{ ($filter ?? '') == 'today' ? 'active' : '' }}" data-filter="today">Today</button>
                                 </div>
                             </div>
                             <div class="col-md-6 text-right">
@@ -61,7 +61,7 @@
                             <div class="search-container">
                                 <i class="la la-calendar search-icon"></i>
                                 <input type="date" id="date-search" class="form-control search-input" 
-                                       placeholder="Search by Date">
+                                       placeholder="Search by Date" value="{{ $search_date ?? '' }}">
                             </div>
                         </div>
                     </div>
@@ -86,33 +86,24 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
 $(document).ready(function() {
-    const ITEMS_PER_PAGE = 5;
-    let currentFilter = "{{ $filter ?? 'all' }}";
+    let currentFilter = "{{ $filter ?? 'all_time' }}";
     let currentSearch = "{{ $search ?? '' }}";
-    let searchDate = ''; // New variable for date search
+    let searchDate = "{{ $search_date ?? '' }}";
     let currentPage = {{ $currentPage ?? 1 }};
-    let allIncidents = [];
 
-    // Fetch all incidents initially
-    function loadAllIncidents(filter) {
+    function updateTable() {
         $.ajax({
             url: "{{ route('admin.incidents.table-data') }}",
             type: "GET",
-            data: { filter: filter },
+            data: {
+                filter: currentFilter,
+                search_id: currentSearch,
+                search_date: searchDate,
+                page: currentPage
+            },
             success: function(response) {
-                allIncidents = $(response).find('tbody tr').map(function() {
-                    const cells = $(this).find('td');
-                    return {
-                        user_id: cells.eq(0).text(),
-                        date: cells.eq(1).text(),
-                        time: cells.eq(2).text(),
-                        latitude: cells.eq(3).text(),
-                        longitude: cells.eq(4).text(),
-                        status: cells.eq(5).text(),
-                        timestamp: new Date(cells.eq(1).text() + ' ' + cells.eq(2).text()).getTime()
-                    };
-                }).get();
-                updateTable();
+                $('#incident-table-container').html(response);
+                attachPaginationHandlers();
             },
             error: function(xhr) {
                 console.error('Error:', xhr.status, xhr.responseText);
@@ -121,103 +112,12 @@ $(document).ready(function() {
         });
     }
 
-    function updateTable() {
-        let filteredIncidents = applyFilters(allIncidents);
-        const totalItems = filteredIncidents.length;
-        const totalPages = Math.max(1, Math.ceil(totalItems / ITEMS_PER_PAGE));
-        currentPage = Math.min(currentPage, totalPages) || 1;
-
-        const start = (currentPage - 1) * ITEMS_PER_PAGE;
-        const end = Math.min(start + ITEMS_PER_PAGE, totalItems);
-        const paginatedIncidents = filteredIncidents.slice(start, end);
-
-        const tbody = $('#incidents-table tbody');
-        tbody.empty();
-        if (paginatedIncidents.length > 0) {
-            paginatedIncidents.forEach(incident => {
-                tbody.append(`
-                    <tr class="incident-row">
-                        <td>${incident.user_id}</td>
-                        <td>${incident.date}</td>
-                        <td>${incident.time}</td>
-                        <td>${incident.latitude}</td>
-                        <td>${incident.longitude}</td>
-                        <td>${incident.status}</td>
-                    </tr>
-                `);
-            });
-        } else {
-            tbody.append('<tr><td colspan="6" class="text-center error-message">No incidents found</td></tr>');
-        }
-
-        updatePagination(totalItems, totalPages);
-        $('.dataTables_info').text(`Showing ${end - start} of ${totalItems} entries`);
-    }
-
-    // Apply filters client-side
-    function applyFilters(incidents) {
-        let filtered = [...incidents];
-
-        // Apply search filter by tourist ID
-        if (currentSearch) {
-            filtered = filtered.filter(incident => 
-                incident.user_id.toLowerCase().includes(currentSearch.toLowerCase())
-            );
-        }
-
-        // Apply date filter
-        if (searchDate) {
-            filtered = filtered.filter(incident => 
-                incident.date === searchDate
-            );
-        }
-
-        // Apply time filter
-        if (currentFilter !== 'all') {
-            const now = Date.now();
-            filtered = filtered.filter(incident => {
-                const diff = (now - incident.timestamp) / 1000; // Difference in seconds
-                switch (currentFilter) {
-                    case 'daily': return diff <= 86400; // 24 hours
-                    case 'weekly': return diff <= 604800; // 7 days
-                    case 'monthly': return diff <= 2592000; // 30 days
-                    default: return true;
-                }
-            });
-        }
-
-        return filtered;
-    }
-
-    // Update pagination controls
-    function updatePagination(totalItems, totalPages) {
-        const pagination = $('.pagination');
-        pagination.empty();
-
-        pagination.append(`
-            <li class="page-item ${currentPage <= 1 ? 'disabled' : ''}">
-                <a class="page-link" href="javascript:void(0)" data-page="${currentPage - 1}">Previous</a>
-            </li>
-        `);
-
-        for (let i = 1; i <= totalPages; i++) {
-            pagination.append(`
-                <li class="page-item ${currentPage === i ? 'active' : ''}">
-                    <a class="page-link" href="javascript:void(0)" data-page="${i}">${i}</a>
-                </li>
-            `);
-        }
-
-        pagination.append(`
-            <li class="page-item ${currentPage >= totalPages ? 'disabled' : ''}">
-                <a class="page-link" href="javascript:void(0)" data-page="${currentPage + 1}">Next</a>
-            </li>
-        `);
-
+    function attachPaginationHandlers() {
         $('.page-link').off('click').on('click', function(e) {
             e.preventDefault();
-            if (!$(this).parent().hasClass('disabled')) {
-                currentPage = parseInt($(this).data('page'));
+            const page = $(this).data('page');
+            if (page) {
+                currentPage = page;
                 updateTable();
                 $('html, body').animate({
                     scrollTop: $('#incident-table-container').offset().top - 100
@@ -226,7 +126,6 @@ $(document).ready(function() {
         });
     }
 
-    // Search input handlers
     $('#incident-search').on('keyup', function() {
         currentSearch = $(this).val();
         currentPage = 1;
@@ -239,22 +138,19 @@ $(document).ready(function() {
         updateTable();
     });
 
-    // Filter button handler
     $('.btn-filter').click(function() {
         $('.btn-filter').removeClass('active');
         $(this).addClass('active');
         currentFilter = $(this).data('filter');
         currentPage = 1;
-        loadAllIncidents(currentFilter);
+        updateTable();
     });
 
-    // Export button placeholder
     $('.btn-export').click(function() {
         alert('Export functionality will be implemented later');
     });
 
-    // Initial load
-    loadAllIncidents(currentFilter);
+    updateTable();
 });
 </script>
 @endpush

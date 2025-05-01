@@ -40,16 +40,32 @@
     <div class="map-section">
         <div class="map-container">
             <div id="map"></div>
+            <!-- Map Legend -->
+            <div class="map-legend">
+                <h4>Check-in Legend</h4>
+                <div class="legend-item">
+                    <div class="legend-marker first-checkin"></div>
+                    <span>First Check-in</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-marker intermediate-checkin"></div>
+                    <span>Intermediate Check-in</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-marker last-checkin"></div>
+                    <span>Last Check-in</span>
+                </div>
+            </div>
             <div class="tourist-info-section">
                 <div class="search-container">
                     <div class="search-header">Search ID</div>
                     <div class="search-filter-container">
                         <input type="text" class="search-input" placeholder="Enter tourist ID">
                         <select class="filter-select">
-                            <option value="all">All Time</option>
-                            <option value="day">Today</option>
-                            <option value="week">Week</option>
-                            <option value="month">Month</option>
+                            <option value="all_time">All Time</option>
+                            <option value="today">Today</option>
+                            <option value="this_week">This Week</option>
+                            <option value="this_month">This Month</option>
                         </select>
                     </div>
                 </div>
@@ -101,6 +117,31 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
 }).addTo(map);
 
+// Define marker icons
+const greenIcon = L.icon({
+    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41]
+});
+
+const redIcon = L.icon({
+    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41]
+});
+
+const blueIcon = L.icon({
+    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41]
+});
+
 // Ensure the map fills its container fully
 setTimeout(function() {
     map.invalidateSize();
@@ -123,15 +164,18 @@ async function fetchCheckins(touristId, filter) {
             .order('timestamp', { ascending: true });
 
         const now = new Date();
-        if (filter === 'day') {
-            const startDate = new Date(now.setDate(now.getDate() - 1)).toISOString();
-            query = query.gte('timestamp', startDate);
-        } else if (filter === 'week') {
-            const startDate = new Date(now.setDate(now.getDate() - 7)).toISOString();
-            query = query.gte('timestamp', startDate);
-        } else if (filter === 'month') {
-            const startDate = new Date(now.setMonth(now.getMonth() - 1)).toISOString();
-            query = query.gte('timestamp', startDate);
+        if (filter === 'today') {
+            const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
+            query = query.gte('timestamp', startOfDay);
+        } else if (filter === 'this_week') {
+            const dayOfWeek = now.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+            const startOfWeek = new Date(now);
+            startOfWeek.setDate(now.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1)); // Set to Monday
+            startOfWeek.setHours(0, 0, 0, 0);
+            query = query.gte('timestamp', startOfWeek.toISOString());
+        } else if (filter === 'this_month') {
+            const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+            query = query.gte('timestamp', startOfMonth);
         }
 
         const { data, error } = await query;
@@ -183,19 +227,21 @@ function plotCheckins(checkins) {
     const pathCoordinates = [];
     checkins.forEach((checkin, index) => {
         const { latitude, longitude, name } = checkin.tourist_spots;
-        const marker = L.marker([latitude, longitude])
+        let markerIcon;
+        
+        // Determine which icon to use based on position in the checkins array
+        if (index === 0) {
+            markerIcon = greenIcon; // First check-in
+        } else if (index === checkins.length - 1) {
+            markerIcon = redIcon; // Last check-in
+        } else {
+            markerIcon = blueIcon; // Intermediate check-ins
+        }
+        
+        const marker = L.marker([latitude, longitude], { icon: markerIcon })
             .addTo(map)
             .bindPopup(`<b>${name}</b><br>Check-in: ${new Date(checkin.timestamp).toLocaleString()}`);
-
-        if (index === checkins.length - 1) {
-            marker.setIcon(L.icon({
-                iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
-                iconSize: [25, 41],
-                iconAnchor: [12, 41],
-                popupAnchor: [1, -34],
-                shadowSize: [41, 41]
-            }));
-        }
+        
         pathCoordinates.push([latitude, longitude]);
     });
 

@@ -93,7 +93,6 @@ body {
     margin: 0;
 }
 
-
 .tourist-arrivals {
     width: 228px; 
     height: 170px;
@@ -136,7 +135,6 @@ body {
     font-size: 24px; 
     padding-top: 20px; 
 }
-
 
 .incidents-card {
     width: 228px;
@@ -302,37 +300,42 @@ body {
     overflow: hidden;
 }
 
-/* Manage Tourist Card (Moved and Resized) */
+/* Manage Tourist Card */
 .manage-card {
     width: 472px; 
     height: 228px; 
     top: 379px; 
     left: 283px; 
     border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
 }
 
 .manage-card .card-header {
-    width: 145px;
-    height: 27px;
-    font-family: 'Poppins', sans-serif;
-    font-weight: 700;
-    font-size: 18px;
-    line-height: 150%;
-    letter-spacing: 0;
-    vertical-align: middle;
-    color: #484A58;
-    padding-left: 27px;
+    display: flex;
+    align-items: center;
+    padding: 8px 10px 0;
+    border-bottom: none;
+}
+
+.manage-card .card-header .header-left {
+    display: flex;
+    align-items: center;
+}
+
+.manage-card .card-header svg {
+    margin-right: 8px;
+}
+
+.manage-card .card-header span {
+    margin-left: 4px;
+    color: #FF7E3F;
 }
 
 .tourist-table-container {
-    flex: 1;
-    overflow-x: auto; /* Added horizontal scrolling for smaller width */
-    overflow-y: auto;
-    max-height: 145px; /* Adjusted for smaller height */
-    margin: 10px;
-    border-radius: 5px;
-    padding: 5px;
-    margin-bottom: 15px;
+    margin-top: -20px;
+    height: 100%;
+    overflow: hidden;
+    position: relative;
 }
 
 .tourist-table {
@@ -341,24 +344,57 @@ body {
 }
 
 .tourist-table th {
-    padding: 8px 12px;
-    text-align: left;
+    padding: 10px 15px;
     font-family: 'Poppins', sans-serif;
-    font-weight: 700;
-    font-size: 12px;
-    line-height: 150%;
-    letter-spacing: 0;
-    vertical-align: middle;
-    color: #666666;
-    position: sticky;
-    top: 0;
-    background-color: white;
+    font-weight: 600;
+    font-size: 14px;
+    color: #484A58;
+    text-align: center;
+    border-bottom: 1px solid #f1f1f1;
 }
 
 .tourist-table td {
-    padding: 8px 12px;
-    border-bottom: none;
-    font-size: 13px;
+    padding: 12px 15px;
+    text-align: center;
+    font-family: 'Poppins', sans-serif;
+    font-size: 14px;
+    color: #484A58;
+}
+
+.loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background-color: rgba(255, 255, 255, 0.8);
+    z-index: 1;
+}
+
+.loading-spinner {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #FF7E3F;
+    animation: spin 1s linear infinite;
+    margin-bottom: 10px;
+}
+
+.loading-text {
+    font-family: 'Poppins', sans-serif;
+    font-size: 14px;
+    color: #484A58;
+    font-weight: 500;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
 
 /* Analytics Card (Expanded) */
@@ -637,27 +673,40 @@ h2.header-container small {
     color: #FF7E3F;
 }
 
-/* Style See More button container */
 .see-more-container {
     display: flex;
     justify-content: flex-end;
-    margin-top: 10px;
+    padding-right: 15px;
+    background-color: transparent !important;
+    position: absolute; 
+    bottom: 10px; 
+    right: 0; 
+    width: auto; 
+    z-index: 2;
+    margin-top: 0; 
 }
 
-/* Style See More button */
 .see-more-button {
-    background-color: transparent;
+    background: transparent;
     border: none;
-    color: #333;
+    color: #484A58;
     font-family: 'Poppins', sans-serif;
     font-weight: 600;
     font-size: 14px;
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    transition: color 0.2s;
+    padding: 5px 10px; 
 }
 
-.see-more-button:hover,
-.see-more-button:active {
+.see-more-button:hover {
     color: #FF7E3F;
+}
+
+.see-more-button i {
+    margin-left: 5px;
+    font-size: 12px;
 }
 
 /* Header Right Container - Fixed */
@@ -725,7 +774,6 @@ h2.header-container small {
     outline: none;
     text-decoration: none;
 }
-
 
 .incidents-card .stats-number {
     width: 100%;
