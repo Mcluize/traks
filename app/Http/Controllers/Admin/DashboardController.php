@@ -195,4 +195,31 @@ class DashboardController extends Controller
             return response()->json(['error' => 'Server error fetching tourists: ' . $e->getMessage()], 500);
         }
     }
+
+    public function getAccountCounts()
+    {
+        try {
+            $supabase = new SupabaseService();
+            $users = $supabase->fetchTable('users');
+            
+            if ($users === null || !is_array($users)) {
+                Log::warning('Supabase returned null or invalid data for account counts');
+                return response()->json(['touristCount' => 0, 'adminCount' => 0], 200);
+            }
+
+            $activeUsers = array_filter($users, fn($user) => $user['status'] !== 'locked');
+            $touristCount = count(array_filter($activeUsers, fn($user) => $user['user_type'] === 'user'));
+            $adminCount = count(array_filter($activeUsers, fn($user) => $user['user_type'] === 'admin'));
+
+            Log::info('Account counts retrieved', ['touristCount' => $touristCount, 'adminCount' => $adminCount]);
+
+            return response()->json([
+                'touristCount' => $touristCount,
+                'adminCount' => $adminCount
+            ], 200);
+        } catch (\Exception $e) {
+            Log::error('Error in getAccountCounts: ' . $e->getMessage());
+            return response()->json(['touristCount' => 0, 'adminCount' => 0, 'error' => 'Server error fetching account counts'], 500);
+        }
+    }
 }

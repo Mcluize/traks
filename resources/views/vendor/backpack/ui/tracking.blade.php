@@ -117,9 +117,10 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
 }).addTo(map);
 
-// Define marker icons
+// Define marker icons with local paths to icons
 const greenIcon = L.icon({
-    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+    iconUrl: '{{ asset('images/marker-icon-2x-green.png') }}',
+    shadowUrl: '{{ asset('images/marker-shadow.png') }}',
     iconSize: [25, 41],
     iconAnchor: [12, 41],
     popupAnchor: [1, -34],
@@ -127,7 +128,8 @@ const greenIcon = L.icon({
 });
 
 const redIcon = L.icon({
-    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+    iconUrl: '{{ asset('images/marker-icon-2x-red.png') }}',
+    shadowUrl: '{{ asset('images/marker-shadow.png') }}',
     iconSize: [25, 41],
     iconAnchor: [12, 41],
     popupAnchor: [1, -34],
@@ -135,7 +137,8 @@ const redIcon = L.icon({
 });
 
 const blueIcon = L.icon({
-    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
+    iconUrl: '{{ asset('images/marker-icon-2x-blue.png') }}',
+    shadowUrl: '{{ asset('images/marker-shadow.png') }}',
     iconSize: [25, 41],
     iconAnchor: [12, 41],
     popupAnchor: [1, -34],

@@ -52,4 +52,6 @@ Route::group([
     Route::get('api/incident-reports/{filter}', [DashboardController::class, 'getIncidentReports']);
     Route::get('api/latest-tourists', [DashboardController::class, 'getLatestTourists']);
     Route::get('api/checkins-by-spot/{filter}', [DashboardController::class, 'getCheckinsBySpot']);
+    Route::get('api/accounts/count', [DashboardController::class, 'getAccountCounts']);
+    Route::get('api/account-counts', [AdminAccountController::class, 'getAccountCounts']);
 });

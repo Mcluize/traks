@@ -136,4 +136,18 @@ class AdminAccountController extends Controller
             ], 500);
         }
     }
+    public function getAccountCounts()
+{
+    $users = $this->supabase->fetchTable('users');
+    $activeUsers = array_filter($users, fn($user) => $user['status'] !== 'locked');
+    $totalAccounts = count($activeUsers);
+    $touristAccounts = count(array_filter($activeUsers, fn($user) => $user['user_type'] === 'user'));
+    $adminAccounts = count(array_filter($activeUsers, fn($user) => $user['user_type'] === 'admin'));
+    
+    return response()->json([
+        'totalAccounts' => $totalAccounts,
+        'touristAccounts' => $touristAccounts,
+        'adminAccounts' => $adminAccounts,
+    ]);
+}
 }

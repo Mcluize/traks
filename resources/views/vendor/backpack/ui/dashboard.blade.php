@@ -96,7 +96,7 @@
             </div>
         </div>
         <div class="card-body">
-            <div class="stats-number loading">Loading...</div>
+            <div class="stats-number loading" style="color:#FF7E3F;">Loading...</div>
         </div>
     </div>
 
@@ -128,38 +128,45 @@
         </div>
     </div>
 
-    <!-- Manage Tourist Card -->
-    <div class="card manage-card">
-        <div class="card-header">
-            <div class="header-left">
-                <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M9 9C11.0711 9 12.75 7.32107 12.75 5.25C12.75 3.17893 11.0711 1.5 9 1.5C6.92893 1.5 5.25 3.17893 5.25 5.25C5.25 7.32107 6.92893 9 9 9Z" stroke="#484A58" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M15.4425 16.5C15.4425 13.5975 12.5775 11.25 9 11.25C5.4225 11.25 2.5575 13.5975 2.5575 16.5" stroke="#484A58" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-                Manage <span>Tourist</span>
-            </div>
-        </div>
-        <div class="card-body">
-            <div class="tourist-table-container">
-                <div class="loading-overlay">
-                    <div class="loading-spinner"></div>
-                    <div class="loading-text">Loading tourists...</div>
-                </div>
-                <table class="tourist-table">
-                    <thead>
-                        <tr>
-                            <th>Tourist ID</th>
-                        </tr>
-                    </thead>
-                    <tbody id="touristTableBody">
-                    </tbody>
-                </table>
-            </div>
-            <div class="see-more-container">
-                <button class="see-more-button" onclick="window.location.href='{{ backpack_url('manage-tourists') }}'">See More <i class="las la-arrow-right"></i></button>
-            </div>
+    <!-- Manage Accounts Card -->
+<div class="card manage-card">
+    <div class="card-header">
+        <div class="header-left">
+            <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+                <rect width="22" height="22" fill="url(#pattern0_10_4)"/>
+                <defs>
+                <pattern id="pattern0_10_4" patternContentUnits="objectBoundingBox" width="1" height="1">
+                <use xlink:href="#image0_10_4" transform="scale(0.00195312)"/>
+                </pattern>
+                <image id="image0_10_4" width="512" height="512" preserveAspectRatio="none" xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAgAAAAIACAYAAAD0eNT6AAAAAXNSR0IArs4c6QAAIABJREFUeAHt3Qe4NVdZL/A/gRRqAoRepEdAFOl4KSK9RECBCCIglyYIeLkUFZSmGAtVUUEQBBIFVFCkKE2QFgQCEqlB6SX0khAg4d79kv3hyZdT9tlnZu+ZNb95nvN85zt779kzv/Wutd5payUWAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIEFirwIWTXCfJHZPcL8lvJnlKkmfNf45N8pIkf7Xhb09K8n+T3CvJ7ZJcNcm517oXvpwAAQIECBDYVOD8SW6Z5JFJXpjk+CTfSvL/Ovz5QpI3JXlmkvsnuW6SAzfdGn8kQIAAAQIEehG4YJJfSPLsJCckOb3Djn43ScMpSd6cpM4a3GT270G97K2VEiBAgACBCQtccX4K/+1JTltTh79TcvCNJC9Lcs8kh024rOw6AQIECBDYk8BFkzwiyXsG2uFvlxCcmuQfkhyV5OA9KfgwAQIECBCYgMDZ5tfz/252xP/dEXb8myUFX0zy5CRHTKD87CIBAgQIENiVQF0/v8f8mv5mnWgLf/t+ktcmOXJXMt5MgAABAgQaFDhnkocl+XwjR/uLJirvSHKrBsvTLhEgQIAAgW0F6hG6ByX5zMQ6/v0ThLckufG2Ul4kQIAAAQKNCNys8VP9+3fyi/z/FbMxDC7fSPnaDQIECBAgcCaBy84G0Hn1xI/4t0sG6smBJyY55Exq/kOAAAECBEYqcMB8KN5v6vwXGp3wxNkAQz8z0rK22QQIECBA4AcCdVq7Bu/Z7sjXa2f1qScGnuFsgFpEgAABAmMUqMf6anQ8HfzyBh9IcvUxFr5tJkCAAIHpCZwryYt0/J0lPt9Ocp/phZE9JkCAAIExCVxhNv3u+3T+nXX+G8+evCBJjZtgIUCAAAECgxKoGfG+ovPvpfPflwjU/RQXHlSp2xgCBAgQmLRAzYD3HZ1/r53/viTgv5JcedLRZucJECBAYBACj0lSd63v66D8279FnWn5X4MofRtBgAABApMUeLyOf22Jz8lJbj7JqLPTBAgQILA2gZq29+k6/7V1/vvOstQTArddWxT4YgIECBCYnMDROv+1d/77koC69+LWk4tAO0yAAAECKxd4gs5/MJ3/viSgLgfcaOWR4AsJECBAYDICD9b5D67z35cEfDXJVScTiXaUAAECBFYmcJskp0kABpsAVCLw6SSXXFlE+CICBAgQaF7gGkm+pfMfdOe/70zAu5LUcMwWAgQIECCwJ4ELJKnBZ/Z1MP4dvsUxeypxHyZAgACByQsckOTVOv9RJj8Pmnz0AiBAgACBpQUM9DP8o/2tzsjU44HXXrrkfZAAAQIEJitQQ8266W+8CUAlBicmOe9kI9iOEyBAgMCuBc7nuv8oT/tvdjbgObsufR8gQIAAgckKPNt1/2YSgEoKjpxsJNtxAgQIEFhY4MZm92uq868E4BMuBSwc/95IgACBSQockuQjjv6bSwAqCXjaJCPaThMgQIDAQgKP0fk32flXAlA3dF5toSjwJgIECBCYlMBFknxdAtBsAlBJwOsnFdF2lgABAgQWEniezr/pzr8SgPr52YWiwZsIECBAYBICV0ryPQnAJBKAE5LUCI8WAgQIECCQF+v8J9H57zsLcJSYJ0CAAAECdWPY6RKASSUAH3QWQMUnQIAAgRfq/CfV+e87C3BHoU+AAAEC0xW4RJKaNGZfp+Df6Vi8Zbphb88JECBA4Gid/6STn+upAgQIECAwPYGDkpwkAZh0AvD86YW9PSZAgACBuhPcKf9pG5yS5PyqAgECBAhMS+B1EgAJ0Ows0AOnFfb2lgABAtMWuJhH/3T+8wTwbdOuCvaeAAEC0xL4NUf/EoB5DHw/yWWmFf72lgABAtMVeLsEQAKwIQYePt2qYM8JECAwHYE6/V9HfW4AZLAvBt46nfC3pwQIEJiuwC/r/CU/+8XAaUkuMN0qYc8JECAwDYGX7Nf47zsK9O+0zwjcZRrhby8JECAwTYGaBvbLEgBnADaJgedOs0rYawIECExDoGb+c6TPYLMY+PA0qoC9JECAwDQF7i8BkABtEwMXnWa1sNcECBBoX6DGft/s6M/fuFQM3KH9KmAPCRAgME2B90sAJEDbxMATplkt7DUBAgTaFqjZ/76zTePvLICzAC9ruwrYOwIECExT4Cd0/o7+d4iBE6dZNew1AQIE2hYw/a8j/J3O8pye5JC2q4G9I0CAwPQEfn2Ho7+dOgevTyOBOGJ6VcMeEyBAoG2BP5cAuASwQAzcsu1qYO8IECAwPYHXLND4O8qfxlH+duX8gOlVDXtMgACBtgWOlwA4A7BADDy27Wpg7wgQIDA9gU8t0Phvd2TotWmcHXjG9KqGPSZAgEDbAqdIAJwBWCAGjmm7Gtg7AgQITEugBgFyBM9gkRh45bSqhr0lQIBA2wLnkQBIgBaMgde1XRXsHQECBKYlcIEFG/9FjhC9p+0zCW+eVtWwtwQIEGhboKZ51XEzWCQGjmu7Ktg7AgQITEvgwhIACdCCMfC2aVUNe0uAAIG2BQ5bsPFf5AjRe9o+k/DGtquCvSNAgMC0BM4lAXAGYMEY+OdpVQ17S4AAgbYFDkhSM705emewUwy8vO2qYO8IECAwPYEvSwAkQAvEwHOmVzXsMQECBNoW+PACjf9OR4deb/8MwtFtVwN7R4AAgekJ1N3dOnAGO8XAI6dXNewxAQIE2hZ4qQRAArRADNyt7Wpg7wgQIDA9gT9YoPHf6ejQ6+2fQbj+9KqGPSZAgEDbAg+UADgDsEAM1KiRFgIECBBoSOAWCzT+jvDbP8Lfroy/meRsDcW8XSFAgACBJBeXADgDsEMMvENNIUCAAIE2BU7aoQPY7ujQa+2fHXh2m2FvrwgQIEDgDRIAZwG2iYGHqCIECBAg0KbA723T+DvCb/8If6cyvk6bYW+vCBAgQOBICYAzAFvEwClJDlJFCBAgQKBNgQsm+f4WHcBOR4deb/sMQV0eshAgQIBAwwL/IQFwFmCTGHhswzFv1wgQIEAgiREB2z6SX/ZMjev/mgcCBAg0LnCTTY7+lu00fK6NZOKLSQ5oPO7tHgECBCYvUDd6fVUS4DLAhhh44eRrBQACBAhMROD5Gxp/R/FtHMXvpRzr6RALAQIECExA4NYSAGcA5jFQZ4MOnkDM20UCBAgQSHJgki9JAiQBSZ6nRhAgQIDAtASeJgGQACS50bTC3t4SIECAwJUlAJNPAD5s+l8NAQECBKYp8FZJwKSTgEdMM+ztNQECBAgcJQGYbALwrSQ1NLSFAAECBCYocPYkH5METDIJqHtALAQIECAwYYGHSgAmlwCcluSyE455u06AAAECSc6Z5DOSgEklATUQlIUAAQIECMRZgOmMBvjdJJcX8wQIECBAoAQOSfIpZwEmcRbg2UKeAAECBAhsFLinBKD5BOCbSS6+sdD9ToAAAQIEzpbkOElA00nAbwhzAgQIECCwmcBPJfm+JKDJJOC/5pd6Nit3fyNAgAABAqlrxHuZWtZnh+l3O7FNgAABAgS2Ezg0yaclAU0lQS/arsC9RoAAAQIE9gncQQLQTAJwUpIL7StY/xIgQIAAgZ0EnisJaCIJ+NmdCtrrBAgQIEBgo8C5k9R0sa7pj9fgmRsL1O8ECBAgQGBRgWslOVUSMMok6H3zYZ4XLWvvI0CAAAECZxK4rwRgdAnAV5Nc4Uyl6D8ECBAgQGAJgb+QBIwmCTg9iUf+lghyHyFAgACBswocmOT1koBRJAGPPGvx+QsBAgQIEFhe4AJJPiQJGHQSUGdqLAQIECBAoHOByyX5rCRgkEnAK5Kco/MSt0ICBAgQIDAXOCLJ5yUBg0oC3uCOf/WTAAECBFYhcM0kX5MEDCIJeHuS86yi0H3HlgLnT1IDLt1vTT+3T3LBLbfOCwQIEOhY4BpJvigJWGsS8OYk5+u4XK1ucYHqdOu+i+8OoB58L8nzklx48c33TgIECCwvcOUknxlA4zfF0QrrtL8j/+Vjd6+fvHSSEwcY+x9Pcvm97pzPEyBAYBGBGnDmIwNsCFtOCo5NcvAiheM9vQicPcm7Bxzz/5GkHt21ECBAoHeBekTwTQNuEFtKBp6e5IDeS9QXbCfwSyOI9bofwUKAAIGVCBwyO/X4whE0jGNNBr6d5F4rKUlfspPAq0YQ52/caSe8ToAAga4F6sjjOyNoIMeUCHwqyXW7LijrW1qgymPo8XPS0nvngwQIENiDwE/NjlbrZqShN5Jj2L5XJjl8D2Xho90LfH0EsV1PBVgIECCwFoF6PM0lgeWToDrl/yjX+9cSuzt9qQRgJyGvEyBAYPao1N2TfGkER0xDOhvwziQ/JnoGKyABGGzR2DACBIYmUE8JPEsSsOMlkZPnR/31mJlluAISgOGWjS0jQGCgArdI8gGJwKaJwIuT1OAyluELSACGX0a2kACBAQrUjHUPnv18WSLwg0SgBpS50QDLySZtLSAB2NrGKwQIENhRoIaxrZvcvjrRRKDOhNwjidP9O4bK4N4gARhckdggAgTGKFD3Bzx+QhMLHZ/kru7uH2Oo/nCbJQA/pPALAQIE9i5wriS/kuRDDZ4ROH02kM+rk9xs70zWMAABCcAACsEmECDQpsA1508NfGvkycBnkxyd5HJtFtNk90oCMNmit+MECKxKoM4K3DnJK0Y0vHDd3PiC2WxxRyapGx4t7QlIANorU3tEgMCABc6f5Kgkz0vyuQGdGfh+kvfOj/R/Wqc/4AjqbtMkAN1ZWhMBAgR2JXC2JFdJct8kz5/fN3DaipKCU5K8I8lTktwxyUV2teXe3IKABKCFUrQPBAg0I1CXC66V5N5JnpTk2CRvT/Lp2eOGNa7+bob6/UaSjyZ5fZLnJHl0kjvN1nklj+01Ey972REJwF70fJYAAQIrFqhxB34kyZVn9xTUTYb1c/0Nv19+duPhxWbJw0Er3i5fNz4BCcD4yswWEyBAgACBPQtIAPZMaAUECBAgQGB8AhKA8ZWZLSZAgAABAnsWkADsmdAKCBAgQIDAOARqTIebJPmj2U2h39vlTaW7uQG1q/fW46lPTXLTJAeOg9hWEiBAgACBYQgcOp+3oZ4o+coIOv2tkoeacOuvk9xtlhTUPlkIECBAgACB/QQOSHKDRoai3iwhOHU2hsZLjFS5X6n7LwECBAhMVuAyszEenpjkEyM+0t+sw9/ub5+c73Ptu4UAAQIECExK4CfnczeM4br+dp35Xl6r2Sprvo3rTark7SwBAgQITE6ghpK+XZI3Tuhof9EE4Q1JbpOkjCwECBAgQKAZgZvNOv936fh3HBr73+dPEDRT8HaEAAECBKYpcNX5zW+LHgl73xnzZ7w2yTWmGTL2mgABAgTGLHDxJMckqevcOvXlDMquDMvSQoAAAQIEBi1Q17Dvl2QMo/aNJTH51mxmzUeZEXPQcW/jCBAgMGmBH59PBT2WjnVs2/meJNeedITZeQIECBA4k0A9RvbwJEcnedh8quUzvaHn/9SQt787kqF6x9bp77+99djkk9YwzPDVk/zaPMYekeR/eWKh51pl9QQIENhG4LpJ3rvFNfa3zUfW2+bjnbx0+STv2GIb9u+8/H+5ewE2czsuSdn3vVSMvXmL8j1hngj0vQ3WT4AAAQIbBG47uy787S0a5n0dRk1M8zdJLr3hc13++kuu9a/1BsdvJLlHlwW6YV114+ELklQM7Yunzf79ziwJvcOGz/mVAAECBHoUuFSSmmhmswZ5s7+dPNuWxyU5V0fbdM5557DZd/nb4uXSldULk1SZdLEckuQ3k3xzF/FVicjluvhy6yBAgACB7QVqUpllOo9Pz48Y9zLaXB0Z1unnZb7fZ/pzO76DMz1HJvnYkmX7j9uHrFcJECBAYK8CdfPVTqdld+poqwNfZvz5Gr9/SpP27OQ4tNc/u2S5Xnn2udcs2fFvNLjVXoPb5wkQIEBgc4GzJ6lHwTY2usv+XoPMPCfJRTb/qrP8tea03+meg2W3xee6KdNyrDK6+1lKb/M/HD4r/z9LclpHMfWBNTydsPme+SsBAgQaE7h/Rw31xg63Bpmp+wMO3sbqgUb06yTp2uje5+91hqgeC91qOcd8sKYv9hBPD93qS/2dAAECBJYTOF+Sz/XQYO/riD6a5M6bbFqNQLfvPf4dl0WNC7H/ctMk7++xTL+SpM4sWAgQIECgI4Gn9Nhob+zYX5/kavNBXv5gRd+58fv93m2S8cwkB8zmFLjiCidl+tOOYt5qCBAgMHmBI5LU89ar6hxrtLm3rvD7VrVfU/2eGhRqlfFT9xTUsNAWAgQIENijwKt0xitLfqaaJHS932/YY8z7OAECAxCom8Pq2e86LfzT81G/6lpx/dSsb/XzoPlsZXW9uI+fB2/4rvvOv/uWSa6fpOabr4FxagCTFpca8a/rxtn6mK4iBn6+xQppnwi0IlCjh10lSXUy1Yn/4axDfel8bPeP73I0sFU0KDt9R42OV48ivWk+j3pNUHOfJHXjU41UVnc/j2mpSXY+JAGQAI00BmrMiK5GnxxTvbWtBAYlUB1fdfRHzWcSe0WS6uB36lBbe72ug74vyV/PZq579Oz3Oyb5kUGV1Jk3pmb2a60M7M+0yrTqmYUAgRUK1Cn7OkX/1PmwrafqSLbtSL8wm2f9lbPyqefhb5OkHrlb93KhXY73r2OdVsc6lvKueSj6moxq3XXU9xMYhMBlZs+I1yAxL0ry3zr7bTv7RRrOuov53UmeNj9LcNgaSvlZynHP5bhIWXtP/4lTzSpoIUCgI4E6pX+D2Y1vNdDHuzoYG14juH0jWAlBOZd3uddz1X0uV+9weFZlu33Z8unfp0YmrHpjIUBgSYE6LV1jfP/DbJjPGr5Vw7Uegxo+9bxLluGiH/tX5Su+G4uBSqD7TpwXrV/eR2AUAnWXfk3RWafQdPrr6fD3T7Qe0XPk3KWxhn9/P/8fRhyvoxzu2XPdsXoCoxeoLPkWSV6c5BSdwaCOBOtmwT4fa6qEzz0c0+0g19Epr/I7Pz+QG2xH30nYgfYELjYfROdjOv1BdfobG8jNJlfpMhJ/W9kPtuw3xoHfl0/SntRlhbEuAmMWONts0J1bza/r1/jrGpbhGtSNTDWhSl/LJVzmEf8TaANqLI4+61Ff9dN6CXQmUMPr3jvJCROo8K0kNe/orPQ3X9ExYkECMJEY+PvNq4C/Emhb4NDZ4C4PnQ1P++mJVPRWOv/ajzo939dScxrUGYaWvOyL8twuBuo+JwuBSQjUqG41zr47+cfbKF63p0itmz6P0/lLfiYWA/85wrk5emoCrLZVgXpevGbH+9rEKvd2mf8YX/vubA6Fg3oK0roUNEYT26zc9hoDNQGZhUBzAueZd/w1O91eK4nPr9/wP3qK0EoQPytG1JGJxsBXklywp7pltQRWLnD2JA9IctJEK3SryUqNydDH8nviROc/8Rh4eh8VyzoJrFrgJkneO/HK3GoC0EcjVRMMfUO8SAAmHgM12Nnhq26sfR+BrgRqqssaqrfVzs9+JY/pKlg2rKema2bLQAycMcfJhqrhVwLDF6ibwurRsFM15M13ZA/vIRwfLW6ajxud+2IJ3hN7qF9WSaA3gZ+czxevgi9Wwcfu9Os9RJIEYBqxM/bYX8X2P6GH+mWVBDoXqLv7n5bkdEdvkzp6+63OIyn5OTE0qRhaRUc61u+4Ww/1yyoJdCrwM0k+rtGeZKP9J51G0hkrO7ebANcSSzUKZz3W+fYkr53/1O/1NyN0rv6szMlJaoRUC4FBCpxjtlWPS3Kazn8tDfYQjmr+oafIrEsLQ9i/VrehRpur5O2uswm36rJdJV07LfWeaySpo9JnJvmAMuo1RvscYnunsvY6gW0FftS1/l4r/1g6nr4GAqpxI16ig+k0xmpY5Rph7qLb1uzdvVhTdf9qkncqq07L6uWGA95dIHr36gTuYez+Tiv7WDr7zbazzv7U/R99LDUXwG8kqeehN/tuf9vZpZ7E+bMklbD3vVx5llz8uad/9hSrVV6PTVIJsIXAoASqof8bjfGeKniLndaNe47SyyR5qbjbVdxVR/LkJHWEvurlErNr10+dJW81v32L8d7XPtVR/xVWXVi+j8AiAldKcoIKrUHbJAbqPpBVLJVoHL/J9/fVII91vW9IUkfj616qM3uN8tqxzfjQ7BLKbdZdWL6fwFYCt01i8h5HM1t1iH3dB7BZPNap0fubU2LTTqVm1qyb+oa23D3J1yUCZymzL8/vn6ibqS0EBidQ12BrJKrvq7xnqbxbdYZT/XudIVrlUvMFHO168w/j8t0DP31cl3HeoR35QXnVWCk1RPqFVllhfBeB3QgcnOSvVdgfNrBT7dgX3e+63ryOpW5ue9XE47Q6k6qvQ19qG1808bJ6XZIfG3pB2b5pC9Q81P828Yq6aMfnfWdcGqlTvOdbY7W52UTvUanZGOtM3ViWsyX5/Qm2LZ9MUk9PWQgMWuCIJCdOsILqyPd+j8Mj1hzZB85GEHxYkroWPoXyHPNAMbXtUyijmta6BrUawxmaNVdfX79ugRsmqRtTplAx7WP35Vw3itbZo3UvF0hSR8Ytj1BZI/GNfXlKw21N3TdVA1ldauyFZPunIXBrA65IfDpokP94QNXl6o0+NnjsyE77bxUSdemixfuMapjla2+10/5OYGgCRyb5dgeNv6Pq7o+qx2ZadzjX5FBDWf62sbiusTjONRTcDrbjkCTvbayM6qZUC4FRCPxiku81VgHH1mm2tr2fmE0NXY/pDWH5bEOx/a3ZaeWrDAG1422oR0jrWnkr9aBuiDWUb8dBYnXdC9w3SR2xtVLx7MdwyvKNSQ7qPmR3tcYrNhbb99vV3o/rzTW4U0v198fHxW9rpyZQjYkBftpqdIbWgNbEMOtc7t1Qp1Kz7Y3pcb/dlnvt29saKq8H7hbA+wmsSuBOjd8hPbSOcMrbUzPR1bPf61ie20iHUk8z1A2NrS8/2VC7dEzrhWX/xinwc675N3WqcQzJxbPWNLf5expJAJ4/zqZmqa2ufR1DTO+0jR9cau99iECPAjc3dnoTjctOjc8QX3/TbF76i/QY2/uvuk4pn9JAZ1L36LR449/+5bXv/zW0cwv3JdWN1Qb/2Veq/l27QA3y00KDOMTOzTYtdtRWTwes6hHBmoq2hXKpwWSmtry4kbK72tQKzv4OU6CG9zXCXxsdwtg7tbrx9DmzkfrO33NVuX0jnciNenYa4uprn8ce57X9Rw0R1zZNS+DwJB9ppEK10CjYhzMa90pIH9rj89K/2UDMf3yNN1Cus5Wsm0Y/1kD5PWGdiL6bwDkbe7RG59nGkdHGcjy+p3nRW3gCYModSO37xjgZ4+81ZLOFwFoEKouuR1HGWHFs87TK7ZI91JBXNxD71+jBZSyrvGYD5VeDYVkIrEXgdxqoQBKBaSQCdaaq6+V9I4//mllxysPJ1lMcY79v6UNdB7X1EVhE4GeN8ufMx0g6wBrfvo/lpJHs/1ZJ7sv6QBnZOv9+5GVY8xtYCKxUoCbW+NrIK85WjaK/t3dGoG5063qpOQjG/iz5o7pGGeH6HtlAO3buEbrb5JEKnCdJzUWto2Qwlhio0fq6Xi7RQB24Q9coI1xfnckcSxxvtZ2XG6G7TR6hQN3018oAGltVJn8ff4O4fxm+pYe61sIsgDUi3tSXMtg/Xsb2/6tOvRDt/2oEHtRAZRlb5ba9e2+gX99D9agR2MZcNjVY0rqnUu6hWHa9ygMbuJfp2rveax8gsEuBKyc5eeSN3pgbbNu+fIdbj+t1vVxn5HWh6rLlDIG6SXTM9auGYLcQ6E2gJpyowVTGXEls+3TL7+U91IyxDyX7+R5MxrrKz428basJ2CwEehP4o5FXEJ3/dDv/KvvRSoC+AAAV70lEQVSX9lAzbjHyOnFiDyZjXeWHR16WdSOjhUAvAjdu4HEnCcC0E4C/7aFm3GzkncZ/92Ay1lWOfU6A240V3nYPW+C8ST458oZO5z/tzr/K/xU9VLMbjLxefKkHk7Gu8osjL8ubjhXedg9b4E9GXjF0/jr/ioF/7qGaXWvkdePUHkzGusqyGHNb8VNjhbfdwxW4nlP/o24Uxtygdb3tfUyYUs9ed72dq15fneGb+lIGq3bv+vumPKHT1OO3l/2v54ON9jf+hqHrhmas63trD7Xk8g10HDUb3tSXFmYErEe0LQQ6E3h8A43bWDsr29194vX+zmrG/6zowg3Ukbv9z+5M9re7NlCOl5ps6dnxzgWOSPKdBiqFjrT7jnSspp/tvJYkNZXsd0deT2o676kvTxx5GRrRceoR3PH+v2rkFWKsnZTt7i9hqY665rHoevnUyOvKv3YNMsL1vWnkZfiFEZrb5IEKjP3ZZp1of53o2G3P10OdO27knUed6ZvyVLLnSjL2JwDe20NcW+UEBc6R5ISRN2hj76Rsf38JTB9Tpr6sgfpSIxpOdbllA+X3mqkWnv3uVuAhDVQGHWh/HehYbev0/1OS1NFe18szG6gzz+kaZUTre24D5Vf7YCGwJ4ELJPlyA5VhrJ2U7e4ncalZAPuc876FpPnrPSVHe2qQVvDhQ5J8rYE275ErsPIVjQs8qYGKoBPtpxMdo2vNdHePFdTZGoJ1jD77b3M9Cje1pYXH/6ocbzu1grO/3QpcKMk3G2nI9m/Y/L+NDmo35fj3SeqM1iqWizVSb97T01MSqyiDZb/jnY2U3WWWBfA5AiXw5EYqwm46Ce9tLzGo56GPzhnP56+yZrdy6axuiJvKcutG2rxvrSHepxIjk9jPOoI5uZHKoFNvr1NftExPS3L3NdXYf2uk/rxlTX6r/toaD6KGhl40tob8vjqLYSGwtMAfN1IRhlxJbVu/jW09y377pWvA3j/Y0hm0KdwL8IsNtXk1W6uFwFICF21gEAyda7+d69B967T/Ly0V/d196Oca6lA+l+TQ7mgGt6aa+e8zDZXXFBK2wQVRKxtU44APvYG3fcpouxiocdzXvdSkQJWIbLedY3rtT9cN2uP3176NqSx22tZL92hl1Q0L1KAoX2qsMuxUWbzeVuP35gHdAPXhxupSi0eWd2qsjD7ecP9k13oW+NXGKoPOva3OfafyrAFchnT0U6Pp7bTNY3q9fPsYOrnnZm3L1de+tDDoz8YYOnbLvfUCgW0Ezp7ko401WBsrht/b6ow2K89f2Sa+V/nSgUkeOvv5aoP16SNJ6vLG2JcLJvlAg+VTjwA+bvboa41oaCGwsEBLNy1t1jn4W9sJQDXmNXHVupeaObP1ybNqtsMxzxZ4ziStPKa5Vbv2yRWNernu+ub7OxJ4bYPZ8FaVw9/bSwbu2FE9WHY1RyR51YTq0D+PNAmoxKVmyptKG1Dt+o8tG9Q+Nw2ByyY5fUKVYiqVfyr7WZeuDlhTVT1sPtLg2OePXyZWasCZGjJ8LEsNBV0DGy2zr2P+TLXtLxhZWY0lpprYTpP+TK9RGHODtv+2P3gNtbDumblfkpMm2KFs9P9gkjr7MfSltrG2deO2T+33Gp66bvQewqWyocfLZLavgqGlQTCmVqmnvr/fXeEkP/sahRvPRhk8fuKdyca4q0nDaiS9oS4/3+Dd/hv9d/v7h5LcZqiFZbtWK1DXTncbQN7PbCgx8C8rrC41w9pL1Jct24u/SnL4Cstjp6+qyxO1TUOJ1aFtx8uTXGEnRK+3LfBPKogGYsQxUKc0+15qgKx6tOqUETutqvP5yvwRyLpEsq6lJva5R5IvKq8d27Y6g/b0JOdbV2H53vUJVLZeAbCqxsH3sO46Bn6ix+pTHcmdk9Toal1vd+vrq0chqxNe5fXmuhH0yNnPu5XXruO1kqUau2KdiVuPVdmqNxOom5hab4jsX7tlXIOe9NXBXDzJ69SPPbcPNXDQQ3oePKhO9dd31Hep73szeFOSS27WWfhbewKe/d9bZdHYrNfv7T1VyTozVjdKKd/uDOpM4ytmZ1Pu1dFwzTXkc62r1uksZnflVDF/YpKL9FS3rHYgApU1f08jp5EfcQz8TU91qZ6Z1vn3a1BjNzw/yaOS1I3IV01SZ102Xouu3+tv9Vq9p977PEOWryQ2X9xT3bLagQg8UCO3koqkI+mvI/nDHurSJZKcpm6oGxOPgZrK+vI91C+rHIjAGyYe4Drm/jrmVdk+uoe6VKeVV7X9vof1kGPgAT3UL6scgECdWnPdTOMz5MZnkW2rU8JdL4+VAEiAxMAPYqBGiLU0KGDmP53/Ih3s0N/z8B7q5iM0/hIAMfCDGPitHuqXVQ5A4C8EuEaugRh4Yg916aYNuAw9cbN94zgAMVxwDw3MEFb5CY2cBKCBGPjzHipTDYTysQZsdLLj6GSHWk41P8xBPdQvq1yzwNU0bjr/RmKgngHvY/nlRnyG2rnYruEnJw/qo2JZ5/oFXOMcfuXTQC5WRv/dU3WqIWWPkwRIlCcaA//Z4wibPVVZq11UwOQ/i3UuOuHhO9WzyoctGvi7fN/1k9T6xQGDqcXALXZZV7x9JAI1ucmXNWoa9YZi4NY91r1jGnKaWidmf5dL3P6ux/pk1WsWuIoGTeffWAw8o8c6VaMC1oRDOhMGU4iB7yS5Yo/1yarXLHAfjZnGvLEYqDv268xWX8tvN+Y1hY7MPi6XsP1uX5XIeochUJNvqBwMWouBG/VYvc6ZpG42bM3M/ijTjTHw+f0mYuqxSln1ugTMl63Sb6z0rfz+op4r1F0kABKgxmPgHj3XIatfs8Ch7mrWiDXaiJ2a5FI9169/bdSulSTQfix/cPOuJPXoq6VhgRtqwCQADcdAH6MCbmwOrm6aYPWnwfpTj7reYGOg+71NgV9pMHhl/ctn/a3Z1eyWfc9f/ix1SBLQWAy8oM3uzl7tL1BHSK01+vZHmW6MgZftH/Qd//9CSb6qHmlHGomBk5NcuuM6YnUDFXhbI0G7scH3uwRg/xi4Zc/172HqkQSgkRh4dM91xeoHIlDPSX+9kaDdv8H3f0nAxhioccwP7LHe1bo/pC5JAkYeA/+V5JAe64lVD0ig7pDe2Ej6nUfLMdD3TGY3V5+0JyOPgZ8fUP9kU3oWqIFSWm7w7Zvy3RgDX0lywZ7r1CvVKW3KSGPgDT3XDasfmMA9RxqoGxt1v+vkdxMDfc4RUNX7Cklq/IHdbJP38lp3DJyW5CcG1j/ZnJ4FHquh0lBPLAaqobtaz/XqyRMzXXfn5fv3nkD9ac91wuoHKPA8DZUEYIIx8Pqe6+JhSU5aoWsN5f2EJDXmgc5w3AaVoP5Okg+usCzr0tjhPdcJqx+gwBtXGGQapnE3TK2V3+17ro/3W0HdqimJH5fk4Pm+3DbJKSv43tZiYSj7U9Pu3mleludIUjH0xRWU50N7rgtWP1CBeuRjKMFvO5TFKmPgxA0dZx/Vs8ZQ//ee6lcN01ojtV10kw2vG3s92ju+ulSD72w2VsUFkjy9x+GmP9Dz47GbhKg/DUWggm6Vja7v4j2kGHhUzxXxxj3Ur7ckueYO232tFR05Dqksx7wtdQr++juUad2gV3fpd72fmyUdO2yKl1sQqPnMuw4m62M6phj4RpKL9VyZX9JRPft0kpqatQbvWmSp+Q9O6Oi7x1SmY9vWjya5yiIFOn/PkUk+1lG5/uMuvtdbGxO4ZEdBNLYKZ3slKRtj4C97rtc12NZezrTVNf2jk5xnie08b5KXq+eDPdD5l9np/fMvUa4HzeaeqOv2e7nUU/cbXGmJ7/aRRgRqGtONDaHfeUwxBk5Pcp2e63Tdob+M7SuSXGaP21ZnDOpGwWW+32f6c6sZJPc6NPXFZ2ewaj0Vw7stqz/YY1z5+MgFbrpE0Ow2yLx/9xWT2erNakKsRU+tL1Pt63Lb+3dR396d5IbLfNE2n/mFJF/bxTaIw37isJ7cuNc25bTMS9dLctwuyrbmrDj3Ml/kM+0IHLWLgNEY9NMYcB2O6y/2XLXrSL6e19+uzD+f5D6zZ/rrCYI+lssmMfvn9mWwXfns9bV39XjavRLYukfkMzvEWD35VaNVWiYuUA3NXgPa5xm2EgOfWsFRUV2T//0kX96v7n1hPpDPoStok+r58rokUQPOtFJ2Q9+PemzzD5PUtfu+l7pX5LeSfG6/8q0nDWqEylXEWN/7aP0dCNTMaEOvOLZPGa0yBqpjXMVS135rOOKbJfnRHo/4t9uXG5i+eCXtXx1xVzmveqmzSEckqUu99QjhKpKPVe+j79uDwP+RAKykAVhlB+a79pYwfbuDm+72UCVX/tFKRGoshNpvsdOtwffmA/gs8/TGygPBF05P4NdVeo2eGDhLDNRz+1Nb6prwa8XCWWJh2aSobuKswZgsBAYr8NsqfGcVftmGwue6PerqyvOnB1tr+9uwuonsbrMbyQwPvnxM1mBNfd7E2V/pW/PkBGrGqa4aTOth2VIMvDfJ2SfXIpyxw3VZoCah2f8mspbKt+t9qRvs6lJKPe5pITAKgbobueuKYH1MW4mB6gSnvNQTC3VT5F5Gm2slFrbaj2/On+pYZjS/KceWfR+AwLKjk21VGfxd599SDNSjejUT29SXSgRq2NlPOGD44QFTPbZZoytecOrBYf/HK/AIFfqHFbqljsu+dJeI1TSsljME6tJADTTzvgm3Gx+cX+M/WFAQGLvAAyZckXWS3XWSLVvWGOv1vLzlzAI1HXElR1+aQBtSj0jWkyH1LH+fw0WfWdj/CPQscLsJVN6WOyf7tpokpu6K9yz35o1R3fR291mS9LrGRhasxO9N8zH7lf3mZe+vIxe4ogTAJQAxsFAM/NnI6/oqNr/ul7hzkheM9MbBmna5xkKo+x1qlj0LgaYFakzwmhPakSQDMbBzDDys6dag252ra+S3SnLqCNqXOtqvs6Ee4es2BqxtBALvGEEF1Tnt3Dkx6t+oJnTpe8bAETQZu9rEMTxCWEP2WghMUuD3JADOgIiBhWOgbgi7wyRbiuV2WgKwnJtPEViJwM01/gs3/o6y+z/KHoNxTaP7kJXUzvF/iQRg/GVoDxoWqCkip/Aozxg6Fts4rgTjGUmG8Dx4PZ8/1EUCMNSSsV0E5gLPdBbAWQAxsFQMnJDk2mtqSa40m3Hun5J8LMkN17QNO32tBGAnIa8TWLPAdTT+SzX+jtjHdcTeV3nVTWRHJzlsRfX4wrPvelqS726ot7UNv5ukzugNaZEADKk0bAuBLQT+bUNj0ldDab06zJZj4GuzkeIePxshr6+JYerZ9KckOXmbulrD9F59izq+jj9LANah7jsJ7FLg1ts0Ki032vZNUtJ1DFSn99wkdYPtXqcUrnsMbp/k2Nl0s/UEwiLbWmcDKlGoSXzWvUgA1l0Cvp/AggLGBFisgV2kEfYelhUDNWvc85I8MMl1Z5cKDtmhLtaws3U9/9fmnX6dVVg2lj49H5lvh6/s9WUJQK+8Vk6gO4FrNTae97INp88t3+mw296urtt/btYx/+dscpm3zIeefWuSmmXu80lqVLquDV8zm8zmKt01E7takwRgV1zeTGC9Ap4I6L4B7rpBtz5ltNsYqMSiZrS7zIqbFwnAisF9HYG9CNR1w4/0cBSy2wbL+3VyYqD7GKgbCOtpgUP30kjs4rMSgF1geSuBIQhcLUnNjKUBZiAG2oyBb8yeVnh6kov23OBIAHoGtnoCfQjcWwIgARIDzcfAN5P8UZKL9dGIjGRaYJMB9VT4VjtugcfoAJrvABzht3mEv9tyrUcM+xhS2BmAcfcBtn7iAk+VBEgCxMAkYqCPUQQlABPvQOz++AUepQOYRAew26NG72/r7IEEYPxttT0g0IvA/ZJ8RyIgERADzcZAHzMbfnUE8VLtmoUAgR0ErpnkxBFUaEembR2ZKs/VlGcfQweP4ZHiT+3Q7nmZAIG5QM14VkObfl8i0OyRoA53NR3u0Jz7eCTwr0bQTrxY606AwO4EbpCkZh4bWiNme5SJGFguBvqYRbDaiaGXR03aZCFAYJcCByS5S5L3jqCSD70Rsn3D7yhaLqPTktx4l/V/0bf/5YDbh2MW3QnvI0Bgc4GzJbllkqpMRhDUkbXcUba2bzVj4BOSXHrzqt3JX+vmwjrNPjS7lyU5Vyd7aCUECPxA4HxJfiHJs5N8dICVfmiNkO0ZXsfQcpnUqHfvTPL4JNdLcvYVtVt1kHDnJG/racbDRcus7l06LsldZwa1TRYCBHoUODxJXQf837PG5omzSUhqYKG/mM9MVrOT+WEgBrqPgWNnw/s+K8nRs8d3f2M23fBRSWqOjz6e9d9t81FH3ZdNcrk1/Jx7txvr/QQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIEBiUwP8HNYhnId0FHxkAAAAASUVORK5CYII="/>
+                </defs>
+                </svg>                
+            Manage <span>Accounts</span>
         </div>
     </div>
+    <div class="card-body">
+        <div class="accounts-container">
+            <div class="loading-overlay">
+                <div class="loading-spinner"></div>
+                <div class="loading-text">Loading accounts...</div>
+            </div>
+            <div class="accounts-row">
+                <div class="account-column tourist-column">
+                    <h3>Total Tourist Accounts</h3>
+                    <div class="account-count" id="touristCount">0</div>
+                </div>
+                <div class="account-column-divider"></div>
+                <div class="account-column admin-column">
+                    <h3>Total Admin Accounts</h3>
+                    <div class="account-count" id="adminCount">0</div>
+                </div>
+            </div>
+        </div>
+        <div class="see-more-container">
+            <button class="see-more-button" onclick="window.location.href='{{ backpack_url('manage-tourists') }}'">See More <i class="las la-arrow-right"></i></button>
+        </div>
+    </div>
+</div>
 
     <!-- Analytics Card -->
     <div class="card analytics-card">
@@ -184,135 +191,135 @@
 <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    var map = L.map('map').setView([7.0767, 125.8259], 13);  
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-    }).addTo(map);
-
-    // Initialize a layer group for markers
-    var markerLayer = L.layerGroup().addTo(map);
-
-    setTimeout(function() {
-        map.invalidateSize();
-    }, 500);
-
-    // Function to update map markers
-    function updateMap(filter) {
-        markerLayer.clearLayers();
-        fetch(`/admin/api/checkins-by-spot/${filter}`)
-            .then(response => {
-                if (!response.ok) throw new Error('Network response was not ok');
-                return response.json();
-            })
-            .then(data => {
-                data.forEach(spot => {
-                    L.marker([spot.latitude, spot.longitude]).addTo(markerLayer)
-                        .bindPopup(`<b>${spot.name}</b><br>Check-ins: ${spot.count}`);
-                });
-            })
-            .catch(error => {
-                console.error('Error fetching check-ins:', error);
+    document.addEventListener('DOMContentLoaded', function() {
+        // Map setup
+        var map = L.map('map').setView([7.0767, 125.8259], 13);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+    
+        var markerLayer = L.layerGroup().addTo(map);
+        setTimeout(function() { map.invalidateSize(); }, 500);
+    
+        // Track current selected map filter
+        let currentMapFilter = 'today';
+    
+        function updateMap(filter, showLoading = false) {
+            // Optional loading indicator could be added here
+            
+            fetch(`/admin/api/checkins-by-spot/${filter}`)
+                .then(response => {
+                    if (!response.ok) throw new Error('Network response was not ok');
+                    return response.json();
+                })
+                .then(data => {
+                    // Clear existing markers
+                    markerLayer.clearLayers();
+                    
+                    // Add new markers
+                    data.forEach(spot => {
+                        L.marker([spot.latitude, spot.longitude]).addTo(markerLayer)
+                            .bindPopup(`<b>${spot.name}</b><br>Check-ins: ${spot.count}`);
+                    });
+                })
+                .catch(error => console.error('Error fetching check-ins:', error));
+        }
+        
+        const mapDropdownItems = document.querySelectorAll('.dropdown-menu[aria-labelledby="mapDropdown"] .dropdown-item');
+        mapDropdownItems.forEach(item => {
+            item.addEventListener('click', function(e) {
+                e.preventDefault();
+                const filter = this.textContent.toLowerCase().replace(' ', '_');
+                currentMapFilter = filter; // Update the current filter
+                updateMap(filter, true);  // Update with loading indicator
             });
-    }
-
-    // Map dropdown functionality
-    const mapDropdownItems = document.querySelectorAll('.dropdown-menu[aria-labelledby="mapDropdown"] .dropdown-item');
-    mapDropdownItems.forEach(item => {
-        item.addEventListener('click', function(e) {
-            e.preventDefault();
-            const filter = this.textContent.toLowerCase().replace(' ', '_');
-            updateMap(filter);
         });
-    });
-
-    // Initial load for map with 'today'
-    updateMap('today');
-
-    var ctx = document.getElementById('analyticsChart').getContext('2d');
-    var chartConfig = {
-        type: 'bar',
-        data: {
-            labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
-            datasets: [{
-                label: '',
-                data: [30, 40, 35, 45],
-                backgroundColor: document.body.classList.contains('dark-mode') ? '#8b8dff' : '#333',
-                barThickness: 10,
-                borderRadius: 2,
-                borderWidth: 0
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false },
-                tooltip: { enabled: true }
+        
+        // Initial map load
+        updateMap('today', true);
+    
+        // Chart setup
+        var ctx = document.getElementById('analyticsChart').getContext('2d');
+        var chartConfig = {
+            type: 'bar',
+            data: {
+                labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+                datasets: [{
+                    label: '',
+                    data: [30, 40, 35, 45],
+                    backgroundColor: document.body.classList.contains('dark-mode') ? '#8b8dff' : '#333',
+                    barThickness: 10,
+                    borderRadius: 2,
+                    borderWidth: 0
+                }]
             },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    grid: { color: document.body.classList.contains('dark-mode') ? '#3a3a55' : '#eee' },
-                    ticks: { color: document.body.classList.contains('dark-mode') ? '#b0b0b0' : '#666' }
-                },
-                x: {
-                    grid: { display: false },
-                    ticks: { color: document.body.classList.contains('dark-mode') ? '#b0b0b0' : '#666' }
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false }, tooltip: { enabled: true } },
+                scales: {
+                    y: { beginAtZero: true, grid: { color: document.body.classList.contains('dark-mode') ? '#3a3a55' : '#eee' }, ticks: { color: document.body.classList.contains('dark-mode') ? '#b0b0b0' : '#666' } },
+                    x: { grid: { display: false }, ticks: { color: document.body.classList.contains('dark-mode') ? '#b0b0b0' : '#666' } }
                 }
             }
+        };
+        var analyticsChart = new Chart(ctx, chartConfig);
+        setTimeout(function() { analyticsChart.resize(); }, 500);
+    
+        function updateChartColors(isDarkMode) {
+            analyticsChart.data.datasets[0].backgroundColor = isDarkMode ? '#8b8dff' : '#333';
+            analyticsChart.options.scales.y.grid.color = isDarkMode ? '#3a3a55' : '#eee';
+            analyticsChart.options.scales.y.ticks.color = isDarkMode ? '#b0b0b0' : '#666';
+            analyticsChart.options.scales.x.ticks.color = isDarkMode ? '#b0b0b0' : '#666';
+            analyticsChart.update();
         }
-    };
+        if (document.body.classList.contains('dark-mode')) updateChartColors(true);
     
-    var analyticsChart = new Chart(ctx, chartConfig);
-    setTimeout(function() {
-        analyticsChart.resize();
-    }, 500);
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                if (mutation.attributeName === 'class') {
+                    const isDarkMode = document.body.classList.contains('dark-mode');
+                    updateChartColors(isDarkMode);
+                }
+            });
+        });
+        observer.observe(document.body, { attributes: true });
     
-    function updateChartColors(isDarkMode) {
-        analyticsChart.data.datasets[0].backgroundColor = isDarkMode ? '#8b8dff' : '#333';
-        analyticsChart.options.scales.y.grid.color = isDarkMode ? '#3a3a55' : '#eee';
-        analyticsChart.options.scales.y.ticks.color = isDarkMode ? '#b0b0b0' : '#666';
-        analyticsChart.options.scales.x.ticks.color = isDarkMode ? '#b0b0b0' : '#666';
-        analyticsChart.update();
-    }
-
-    if (document.body.classList.contains('dark-mode')) {
-        updateChartColors(true);
-    }
-
-    const observer = new MutationObserver((mutations) => {
-        mutations.forEach((mutation) => {
-            if (mutation.attributeName === 'class') {
+        window.addEventListener('storage', function(e) {
+            if (e.key === 'backpack_theme' || e.key === 'darkMode' || e.key === 'theme') {
                 const isDarkMode = document.body.classList.contains('dark-mode');
                 updateChartColors(isDarkMode);
             }
         });
-    });
-
-    observer.observe(document.body, { attributes: true });
-
-    window.addEventListener('storage', function(e) {
-        if (e.key === 'backpack_theme' || e.key === 'darkMode' || e.key === 'theme') {
-            const isDarkMode = document.body.classList.contains('dark-mode');
-            updateChartColors(isDarkMode);
-        }
-    });
+        window.addEventListener('resize', function() {
+            map.invalidateSize();
+            analyticsChart.resize();
+        });
     
-    window.addEventListener('resize', function() {
-        map.invalidateSize();
-        analyticsChart.resize();
-    });
-
-    // Tourist Arrivals functionality
-    const touristDropdownItems = document.querySelectorAll('.dropdown-menu[aria-labelledby="touristArrivalsDropdown"] .dropdown-item');
-    const touristStatsNumber = document.querySelector('.tourist-arrivals .stats-number');
-
-    touristDropdownItems.forEach(item => {
-        item.addEventListener('click', function(e) {
-            e.preventDefault();
-            const filter = this.getAttribute('data-filter');
-            touristStatsNumber.classList.add('loading');
+        // Tourist Arrivals
+        const touristDropdownItems = document.querySelectorAll('.dropdown-menu[aria-labelledby="touristArrivalsDropdown"] .dropdown-item');
+        const touristStatsNumber = document.querySelector('.tourist-arrivals .stats-number');
+        
+        // Track current selected filter
+        let currentTouristFilter = 'today';
+        
+        touristDropdownItems.forEach(item => {
+            item.addEventListener('click', function(e) {
+                e.preventDefault();
+                const filter = this.getAttribute('data-filter');
+                currentTouristFilter = filter;
+                touristStatsNumber.classList.add('loading');
+                updateTouristArrivals(filter, true);
+            });
+        });
+        
+        // Function to update tourist arrivals
+        function updateTouristArrivals(filter, showLoading = false) {
+            // Only show loading state if explicitly requested (e.g., for dropdown clicks)
+            if (showLoading) {
+                touristStatsNumber.classList.add('loading');
+            }
+            
             fetch(`/admin/api/tourist-arrivals/${filter}`)
                 .then(response => {
                     if (!response.ok) throw new Error('Network response was not ok');
@@ -326,34 +333,35 @@ document.addEventListener('DOMContentLoaded', function() {
                     touristStatsNumber.classList.remove('loading');
                     touristStatsNumber.textContent = 'Error';
                 });
+        }
+        
+        // Initial load with loading state
+        touristStatsNumber.classList.add('loading');
+        updateTouristArrivals('today', true);
+    
+        // Incident Reports
+        const incidentDropdownItems = document.querySelectorAll('.dropdown-menu[aria-labelledby="incidentDropdown"] .dropdown-item');
+        const incidentStatsNumber = document.querySelector('.incidents-card .stats-number');
+        
+        // Track current selected filter
+        let currentIncidentFilter = 'today';
+        
+        incidentDropdownItems.forEach(item => {
+            item.addEventListener('click', function(e) {
+                e.preventDefault();
+                const filter = this.getAttribute('data-filter');
+                currentIncidentFilter = filter;
+                updateIncidentReports(filter, true);
+            });
         });
-    });
-
-    // Initial load for Tourist Arrivals with 'today'
-    touristStatsNumber.classList.add('loading');
-    fetch('/admin/api/tourist-arrivals/today')
-        .then(response => {
-            if (!response.ok) throw new Error('Network response was not ok');
-            return response.json();
-        })
-        .then(data => {
-            touristStatsNumber.classList.remove('loading');
-            touristStatsNumber.textContent = data.count;
-        })
-        .catch(error => {
-            touristStatsNumber.classList.remove('loading');
-            touristStatsNumber.textContent = 'Error';
-        });
-
-    // Incident Reports functionality
-    const incidentDropdownItems = document.querySelectorAll('.dropdown-menu[aria-labelledby="incidentDropdown"] .dropdown-item');
-    const incidentStatsNumber = document.querySelector('.incidents-card .stats-number');
-
-    incidentDropdownItems.forEach(item => {
-        item.addEventListener('click', function(e) {
-            e.preventDefault();
-            const filter = this.getAttribute('data-filter');
-            incidentStatsNumber.classList.add('loading');
+        
+        // Function to update incident reports
+        function updateIncidentReports(filter, showLoading = false) {
+            // Only show loading state if explicitly requested
+            if (showLoading) {
+                incidentStatsNumber.classList.add('loading');
+            }
+            
             fetch(`/admin/api/incident-reports/${filter}`)
                 .then(response => {
                     if (!response.ok) throw new Error('Network response was not ok');
@@ -367,72 +375,64 @@ document.addEventListener('DOMContentLoaded', function() {
                     incidentStatsNumber.classList.remove('loading');
                     incidentStatsNumber.textContent = 'Error';
                 });
-        });
-    });
-
-    // Initial load for Incident Reports with 'today'
-    incidentStatsNumber.classList.add('loading');
-    fetch('/admin/api/incident-reports/today')
-        .then(response => {
-            if (!response.ok) throw new Error('Network response was not ok');
-            return response.json();
-        })
-        .then(data => {
-            incidentStatsNumber.classList.remove('loading');
-            incidentStatsNumber.textContent = data.count;
-        })
-        .catch(error => {
-            incidentStatsNumber.classList.remove('loading');
-            incidentStatsNumber.textContent = 'Error';
-        });
-
-    // Fetch and display latest tourists with loading state
-    const tableContainer = document.querySelector('.tourist-table-container');
-    const loadingOverlay = tableContainer.querySelector('.loading-overlay');
-    const tbody = document.getElementById('touristTableBody');
-
-    // Initially, loading overlay is visible
-    fetch('/admin/api/latest-tourists')
-        .then(response => {
-            if (!response.ok) throw new Error('Network response was not ok');
-            return response.json();
-        })
-        .then(data => {
-            // Hide loading overlay
-            loadingOverlay.style.display = 'none';
-            tbody.innerHTML = '';
-            if (data.tourists && data.tourists.length > 0) {
-                data.tourists.forEach(id => {
-                    const row = document.createElement('tr');
-                    row.innerHTML = `<td style="text-align: center;">${id}</td>`;
-                    tbody.appendChild(row);
-                });
-            } else {
-                tbody.innerHTML = '<tr><td colspan="1" style="text-align: center;">No tourists found</td></tr>';
+        }
+        
+        // Initial load with loading state
+        incidentStatsNumber.classList.add('loading');
+        updateIncidentReports('today', true);
+    
+        // Manage Accounts
+        const loadingOverlay = document.querySelector('.manage-card .loading-overlay');
+        
+        // Function to update account counts
+        function updateAccountCounts(showLoading = false) {
+            // Only show loading overlay on initial load
+            if (showLoading) {
+                loadingOverlay.style.display = 'flex';
             }
-        })
-        .catch(error => {
-            console.error('Error fetching tourists:', error);
-            loadingOverlay.style.display = 'none';
-            tbody.innerHTML = '<tr><td colspan="1" style="text-align: center; color: #ff4d4f;">Unable to load tourist data</td></tr>';
-        });
-});
-
-$(document).ready(function() {
-    $('#mapDropdown').on('show.bs.dropdown', function() {
-        $('.dropdown-menu').css({
-            'width': 'auto',
-            'min-width': '0',
-            'padding': '0',
-            'margin': '0'
+            
+            fetch('/admin/api/accounts/count')
+                .then(response => {
+                    if (!response.ok) throw new Error('Network response was not ok');
+                    return response.json();
+                })
+                .then(data => {
+                    document.getElementById('touristCount').textContent = data.touristCount || 0;
+                    document.getElementById('adminCount').textContent = data.adminCount || 0;
+                    loadingOverlay.style.display = 'none';
+                })
+                .catch(error => {
+                    console.error('Error fetching account counts:', error);
+                    document.getElementById('touristCount').textContent = 0;
+                    document.getElementById('adminCount').textContent = 0;
+                    loadingOverlay.style.display = 'none';
+                });
+        }
+        
+        // Initial load with loading state
+        updateAccountCounts(true);
+    
+        // jQuery dropdown styling
+        $('#mapDropdown').on('show.bs.dropdown', function() {
+            $('.dropdown-menu').css({
+                'width': 'auto',
+                'min-width': '0',
+                'padding': '0',
+                'margin': '0'
+            });
+            $('.dropdown-item').css({
+                'padding': '8px 2px',
+                'margin': '0',
+                'text-align': 'center'
+            });
         });
         
-        $('.dropdown-item').css({
-            'padding': '8px 2px',
-            'margin': '0',
-            'text-align': 'center'
-        });
+        // Set intervals for silent real-time updates (every 5 seconds)
+        // These updates will not show loading states
+        setInterval(() => updateTouristArrivals(currentTouristFilter, false), 5000);
+        setInterval(() => updateIncidentReports(currentIncidentFilter, false), 5000);
+        setInterval(() => updateAccountCounts(false), 5000);
+        setInterval(() => updateMap(currentMapFilter, false), 5000);
     });
-});
-</script>
+    </script>
 @endsection

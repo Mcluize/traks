@@ -32,15 +32,15 @@
     <div class="account-summary-row">
         <div class="account-card total-accounts-card">
             <div class="account-card-title">Total Accounts</div>
-            <div class="account-card-number">{{ $totalAccounts }}</div>
+            <div class="account-card-number" id="totalAccounts">{{ $totalAccounts }}</div>
         </div>
         <div class="account-card destination-accounts-card">
             <div class="account-card-title">Total Tourist Accounts</div>
-            <div class="account-card-number">{{ $touristAccounts }}</div>
+            <div class="account-card-number" id="touristAccounts">{{ $touristAccounts }}</div>
         </div>
         <div class="account-card pending-accounts-card">
             <div class="account-card-title">Total Admin Accounts</div>
-            <div class="account-card-number">{{ $adminAccounts }}</div>
+            <div class="account-card-number" id="adminAccounts">{{ $adminAccounts }}</div>
         </div>
     </div>
 
@@ -873,6 +873,25 @@ document.addEventListener('DOMContentLoaded', function () {
         
         createComplexPagination(tableType, totalPages, currentPage);
     }
+
+    // Real-time account counts update
+    function updateAccountCounts() {
+        $.ajax({
+            url: '/admin/api/account-counts',
+            method: 'GET',
+            success: function(data) {
+                $('#totalAccounts').text(data.totalAccounts);
+                $('#touristAccounts').text(data.touristAccounts);
+                $('#adminAccounts').text(data.adminAccounts);
+            },
+            error: function(xhr) {
+                console.error('Error fetching account counts:', xhr);
+            }
+        });
+    }
+
+    // Update counts every 5 seconds
+    setInterval(updateAccountCounts, 5000);
 });
 </script>
 @endpush

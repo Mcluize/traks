@@ -126,7 +126,7 @@ body {
     line-height: 150%;
     letter-spacing: 0;
     vertical-align: middle;
-    color: #8484FF !important;
+    color: #0BC8CA !important;
     text-align: center;
     padding-top: 10px;
 }
@@ -203,37 +203,7 @@ body {
     white-space: nowrap;
 }
 
-.incident-type {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
 
-.incident-description {
-    display: none; /* Hidden to fit smaller height; could use tooltip instead */
-}
-
-.incident-icon-container {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-}
-
-.incident::after {
-    content: none;
-}
-
-.high-risk .incident-number {
-    color: #FF0000;
-}
-
-.medium-risk .incident-number {
-    color: #FF7700;
-}
-
-.resolved .incident-number {
-    color: #1EAF01;
-}
 
 .map-card {
     width: 652px;
@@ -300,7 +270,7 @@ body {
     overflow: hidden;
 }
 
-/* Manage Tourist Card */
+/* Manage Accounts Card */
 .manage-card {
     width: 472px; 
     height: 228px; 
@@ -331,34 +301,57 @@ body {
     color: #FF7E3F;
 }
 
-.tourist-table-container {
-    margin-top: -20px;
-    height: 100%;
-    overflow: hidden;
+.accounts-container {
+    margin-top: 10px;
+    height: 120px;
     position: relative;
+    padding: 0 15px;
 }
 
-.tourist-table {
-    width: 100%;
-    border-collapse: collapse;
+.accounts-row {
+    display: flex;
+    height: 100%;
+    justify-content: space-between;
+    align-items: center;
 }
 
-.tourist-table th {
-    padding: 10px 15px;
+.account-column {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.account-column h3 {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 500;
+    font-size: 14px;
+    color: #484A58;
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+.account-count {
     font-family: 'Poppins', sans-serif;
     font-weight: 600;
-    font-size: 14px;
+    font-size: 32px;
     color: #484A58;
-    text-align: center;
-    border-bottom: 1px solid #f1f1f1;
 }
 
-.tourist-table td {
-    padding: 12px 15px;
-    text-align: center;
-    font-family: 'Poppins', sans-serif;
-    font-size: 14px;
-    color: #484A58;
+.tourist-column .account-count {
+    color: #0BC8CA;
+}
+
+.admin-column .account-count {
+    color: #FF7E3F;
+}
+
+.account-column-divider {
+    width: 1px;
+    height: 70%;
+    background-color: #e0e0e0;
+    margin: 0 15px;
 }
 
 .loading-overlay {
@@ -395,6 +388,42 @@ body {
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
+}
+
+.see-more-container {
+    display: flex;
+    justify-content: flex-end;
+    padding-right: 15px;
+    background-color: transparent !important;
+    position: absolute; 
+    bottom: 10px; 
+    right: 0; 
+    width: auto; 
+    z-index: 2;
+    margin-top: 0; 
+}
+
+.see-more-button {
+    background: transparent;
+    border: none;
+    color: #484A58;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    transition: color 0.2s;
+    padding: 5px 10px; 
+}
+
+.see-more-button:hover {
+    color: #FF7E3F;
+}
+
+.see-more-button i {
+    margin-left: 5px;
+    font-size: 12px;
 }
 
 /* Analytics Card (Expanded) */
@@ -562,7 +591,7 @@ h2.header-container small {
     width: 80px;
     height: 29px;
     border-radius: 15px;
-    background-color: #370BDC;
+    background-color: #0BC8CA;
     color: white;
     font-family: 'Poppins', sans-serif;
     font-weight: 700;
@@ -673,41 +702,6 @@ h2.header-container small {
     color: #FF7E3F;
 }
 
-.see-more-container {
-    display: flex;
-    justify-content: flex-end;
-    padding-right: 15px;
-    background-color: transparent !important;
-    position: absolute; 
-    bottom: 10px; 
-    right: 0; 
-    width: auto; 
-    z-index: 2;
-    margin-top: 0; 
-}
-
-.see-more-button {
-    background: transparent;
-    border: none;
-    color: #484A58;
-    font-family: 'Poppins', sans-serif;
-    font-weight: 600;
-    font-size: 14px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    transition: color 0.2s;
-    padding: 5px 10px; 
-}
-
-.see-more-button:hover {
-    color: #FF7E3F;
-}
-
-.see-more-button i {
-    margin-left: 5px;
-    font-size: 12px;
-}
 
 /* Header Right Container - Fixed */
 .header-right {
