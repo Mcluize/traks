@@ -17,29 +17,27 @@ class DashboardController extends Controller
         $localTomorrow = $localToday->copy()->addDay();
         $utcTodayStart = $localToday->copy()->utc();
         $utcTomorrowStart = $localTomorrow->copy()->utc();
-        $filters = [];
+        $filters = [
+            'select' => 'tourist_id'
+        ];
 
         \Log::info('Filter: ' . $filter);
 
         switch ($filter) {
             case 'today':
-                $start = $utcTodayStart->toIso8601String(); // e.g., 2025-04-30T00:00:00+00:00
-                $end = $utcTomorrowStart->toIso8601String(); // e.g., 2025-05-01T00:00:00+00:00
-                $filters = [
-                    'and' => "(timestamp.gte.{$start},timestamp.lt.{$end})",
-                ];
+                $start = $utcTodayStart->toIso8601String();
+                $end = $utcTomorrowStart->toIso8601String();
+                $filters['and'] = "(timestamp.gte.{$start},timestamp.lt.{$end})";
                 break;
 
             case 'this_week':
-                $localStartOfWeek = $now->copy()->startOfWeek(); // Monday of current week
-                $localEndOfWeek = $localStartOfWeek->copy()->addWeek(); // Monday of next week
+                $localStartOfWeek = $now->copy()->startOfWeek();
+                $localEndOfWeek = $localStartOfWeek->copy()->addWeek();
                 $utcStartOfWeek = $localStartOfWeek->utc();
                 $utcEndOfWeek = $localEndOfWeek->utc();
                 $start = $utcStartOfWeek->toIso8601String();
                 $end = $utcEndOfWeek->toIso8601String();
-                $filters = [
-                    'and' => "(timestamp.gte.{$start},timestamp.lt.{$end})",
-                ];
+                $filters['and'] = "(timestamp.gte.{$start},timestamp.lt.{$end})";
                 break;
 
             case 'this_month':
@@ -49,26 +47,53 @@ class DashboardController extends Controller
                 $utcEndOfMonth = $localEndOfMonth->utc();
                 $start = $utcStartOfMonth->toIso8601String();
                 $end = $utcEndOfMonth->toIso8601String();
-                $filters = [
-                    'and' => "(timestamp.gte.{$start},timestamp.lt.{$end})",
-                ];
+                $filters['and'] = "(timestamp.gte.{$start},timestamp.lt.{$end})";
                 break;
 
             case 'all_time':
-                // No filters needed
-                $filters = [];
+                // No time filters
                 break;
 
             default:
                 return response()->json(['error' => 'Invalid filter'], 400);
         }
 
-        \Log::info('Filters: ' . json_encode($filters));
+        \Log::info('Checkins Filters: ' . json_encode($filters));
 
-        $count = $supabase->fetchTable('checkins', $filters, true);
-        if ($count === null) {
-            return response()->json(['error' => 'Failed to fetch data'], 500);
+        // Step 1: Fetch tourist_ids from checkins
+        $checkinsData = $supabase->fetchTable('checkins', $filters, false);
+        if ($checkinsData === null) {
+            \Log::error('Failed to fetch checkins data');
+            return response()->json(['error' => 'Failed to fetch checkins data'], 500);
         }
+
+        // Extract tourist_ids
+        $touristIds = array_column($checkinsData, 'tourist_id');
+        $touristIds = array_filter($touristIds, fn($id) => !is_null($id)); // Remove null values
+        if (empty($touristIds)) {
+            return response()->json(['count' => 0]);
+        }
+
+        // Step 2: Fetch users with user_type = 'user' for the tourist_ids
+        $userFilters = [
+            'select' => 'user_id',
+            'user_type' => 'eq.user',
+            'user_id' => 'in.(' . implode(',', $touristIds) . ')'
+        ];
+
+        \Log::info('Users Filters: ' . json_encode($userFilters));
+
+        $usersData = $supabase->fetchTable('users', $userFilters, false);
+        if ($usersData === null) {
+            \Log::error('Failed to fetch users data');
+            return response()->json(['error' => 'Failed to fetch users data'], 500);
+        }
+
+        // Extract unique tourist_ids that are actual tourists
+        $touristUserIds = array_column($usersData, 'user_id');
+        $uniqueTouristIds = array_unique($touristUserIds);
+        $count = count($uniqueTouristIds);
+
         return response()->json(['count' => $count]);
     }
 

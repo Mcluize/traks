@@ -53,7 +53,6 @@ body {
     letter-spacing: 0;
 }
 
-
 .header-container{
     font-family: 'Poppins', sans-serif ;
     font-weight: 800 !important;
@@ -67,6 +66,10 @@ body {
     position: relative;
     top: 0;
     left: 0;
+}
+
+.day-bold {
+    font-weight: 600;
 }
 
 /* Navigation link styles */
@@ -118,4 +121,273 @@ body {
 .nav-link:hover,
 .nav-link.active {
     color: #292D32 !important;
+}
+
+/* Analytics Container */
+.analytics-container {
+    padding: 20px;
+}
+
+/* Stat Cards */
+.stat-card {
+    display: flex;
+    align-items: center;
+    background-color: #fff;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    height: 100%;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+}
+
+.stat-icon {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 60px;
+    height: 60px;
+    border-radius: 12px;
+    margin-right: 15px;
+    color: #fff;
+    font-size: 24px;
+}
+
+.stat-icon.tourist {
+    background-color: #4ECDC4;
+}
+
+.stat-icon.incident {
+    background-color: #FF6B6B;
+}
+
+.stat-icon.tourist-account {
+    background-color: #5D78FF;
+}
+
+.stat-icon.admin-account {
+    background-color: #FFAA5A;
+}
+
+.stat-content {
+    flex: 1;
+}
+
+.stat-content h3 {
+    font-size: 14px;
+    font-weight: 600;
+    color: #6c757d;
+    margin-bottom: 5px;
+}
+
+.stat-number {
+    font-size: 32px;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 5px;
+}
+
+.stat-change {
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+}
+
+.stat-change i {
+    margin-right: 5px;
+}
+
+.stat-change.increase {
+    color: #28a745;
+}
+
+.stat-change.decrease {
+    color: #dc3545;
+}
+
+.stat-change.neutral {
+    color: #6c757d;
+}
+
+/* Chart Cards */
+.chart-card, .data-card, .map-card {
+    background-color: #fff;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    height: 100%;
+}
+
+.chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    border-bottom: 1px solid #eee;
+}
+
+.chart-header h3 {
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0;
+    color: #333;
+}
+
+.chart-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.chart-body {
+    padding: 20px;
+}
+
+/* Metric Highlight */
+.metric-highlight {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.metric-value {
+    font-size: 36px;
+    font-weight: 700;
+    color: #4ECDC4;
+}
+
+.metric-label {
+    font-size: 14px;
+    color: #6c757d;
+}
+
+/* Map Container */
+.map-container {
+    height: 400px;
+    width: 100%;
+}
+
+/* Spots List */
+.spots-list {
+    padding: 10px 0;
+}
+
+.spot-item {
+    display: flex;
+    align-items: center;
+    padding: 15px 20px;
+    border-bottom: 1px solid #f0f0f0;
+    transition: background-color 0.2s ease;
+}
+
+.spot-item:last-child {
+    border-bottom: none;
+}
+
+.spot-item:hover {
+    background-color: #f8f9fa;
+}
+
+.spot-rank {
+    font-size: 18px;
+    font-weight: 700;
+    color: #333;
+    width: 30px;
+    text-align: center;
+}
+
+.spot-details {
+    flex: 1;
+    padding: 0 15px;
+}
+
+.spot-details h4 {
+    font-size: 14px;
+    font-weight: 600;
+    margin: 0 0 5px;
+    color: #333;
+}
+
+.spot-details p {
+    font-size: 12px;
+    color: #6c757d;
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 200px;
+}
+
+.spot-visits {
+    font-size: 12px;
+    font-weight: 600;
+    color: #4ECDC4;
+}
+
+/* Table Styles */
+.table {
+    margin-bottom: 0;
+}
+
+.table th {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: #6c757d;
+    border-top: none;
+    padding: 15px;
+}
+
+.table td {
+    font-size: 13px;
+    padding: 15px;
+    vertical-align: middle;
+}
+
+.badge {
+    font-weight: 500;
+    padding: 5px 10px;
+    border-radius: 4px;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .row {
+        margin-bottom: 20px;
+    }
+    
+    .col-md-3, .col-md-4, .col-md-6, .col-md-8, .col-12 {
+        margin-bottom: 20px;
+    }
+    
+    .map-container {
+        height: 300px;
+    }
+    
+    .table-responsive {
+        margin-bottom: 0;
+    }
+}
+
+/* Custom Chart Tooltip */
+.chartjs-tooltip {
+    background-color: rgba(0, 0, 0, 0.8);
+    border-radius: 6px;
+    color: white;
+    padding: 8px 12px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 12px;
+}
+
+/* Custom Map Marker */
+.custom-div-icon {
+    background: transparent;
+    border: none;
+}
+
+.leaflet-div-icon {
+    background: transparent;
+    border: none;
 }

@@ -75,7 +75,7 @@
     </div>
 </div>
 
-<!-- Modal for Table View - Centered with no backdrop and semi-transparent background -->
+<!-- Modal for Table View -->
 <div class="modal fade" id="checkinModal" tabindex="-1" role="dialog" aria-labelledby="checkinModalLabel" aria-hidden="true" data-backdrop="false">
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
@@ -117,7 +117,7 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
 }).addTo(map);
 
-// Define marker icons with local paths to icons
+// Define marker icons
 const greenIcon = L.icon({
     iconUrl: '{{ asset('images/marker-icon-2x-green.png') }}',
     shadowUrl: '{{ asset('images/marker-shadow.png') }}',
@@ -145,19 +145,20 @@ const blueIcon = L.icon({
     shadowSize: [41, 41]
 });
 
-// Ensure the map fills its container fully
+// Ensure map fills container
 setTimeout(function() {
     map.invalidateSize();
 }, 100);
 
-// Fetch check-ins from Supabase with filter
+// Fetch check-ins from Supabase with corrected query
 async function fetchCheckins(touristId, filter) {
     try {
         let query = supabase
             .from('checkins')
             .select(`
                 timestamp,
-                tourist_spots (
+                tourist_spots:spot_id (
+                    spot_id,
                     name,
                     latitude,
                     longitude
@@ -171,9 +172,9 @@ async function fetchCheckins(touristId, filter) {
             const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
             query = query.gte('timestamp', startOfDay);
         } else if (filter === 'this_week') {
-            const dayOfWeek = now.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+            const dayOfWeek = now.getDay();
             const startOfWeek = new Date(now);
-            startOfWeek.setDate(now.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1)); // Set to Monday
+            startOfWeek.setDate(now.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
             startOfWeek.setHours(0, 0, 0, 0);
             query = query.gte('timestamp', startOfWeek.toISOString());
         } else if (filter === 'this_month') {
@@ -191,7 +192,7 @@ async function fetchCheckins(touristId, filter) {
     }
 }
 
-// Function to create a curved path using quadratic Bezier curve points
+// Create curved path using quadratic Bezier curve
 function createCurvedPath(coords) {
     const curvedCoords = [];
     const curveHeightFactor = 0.8;
@@ -219,7 +220,7 @@ function createCurvedPath(coords) {
     return curvedCoords;
 }
 
-// Plot check-ins on the map with curved, dashed lines
+// Plot check-ins on the map
 function plotCheckins(checkins) {
     map.eachLayer(layer => {
         if (layer instanceof L.Marker || layer instanceof L.Polyline) {
@@ -227,24 +228,33 @@ function plotCheckins(checkins) {
         }
     });
 
+    const spotCounts = {};
+    checkins.forEach(checkin => {
+        const spotId = checkin.tourist_spots.spot_id;
+        if (!spotCounts[spotId]) {
+            spotCounts[spotId] = 0;
+        }
+        spotCounts[spotId]++;
+    });
+
     const pathCoordinates = [];
     checkins.forEach((checkin, index) => {
-        const { latitude, longitude, name } = checkin.tourist_spots;
+        const { latitude, longitude, name, spot_id } = checkin.tourist_spots;
         let markerIcon;
-        
-        // Determine which icon to use based on position in the checkins array
+
         if (index === 0) {
-            markerIcon = greenIcon; // First check-in
+            markerIcon = greenIcon;
         } else if (index === checkins.length - 1) {
-            markerIcon = redIcon; // Last check-in
+            markerIcon = redIcon;
         } else {
-            markerIcon = blueIcon; // Intermediate check-ins
+            markerIcon = blueIcon;
         }
-        
+
+        const count = spotCounts[spot_id];
         const marker = L.marker([latitude, longitude], { icon: markerIcon })
             .addTo(map)
-            .bindPopup(`<b>${name}</b><br>Check-in: ${new Date(checkin.timestamp).toLocaleString()}`);
-        
+            .bindPopup(`<b>${name}</b><br>Check-in Time: ${new Date(checkin.timestamp).toLocaleString()}<br>Total Check-ins at this spot: ${count}`);
+
         pathCoordinates.push([latitude, longitude]);
     });
 
@@ -400,12 +410,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     searchInput.addEventListener('change', fetchAndDisplayData);
     filterSelect.addEventListener('change', fetchAndDisplayData);
 
-    // Make sure map resizes correctly when the window resizes
     window.addEventListener('resize', () => {
         map.invalidateSize();
     });
 
-    // Force map to render properly after DOM is fully loaded
     setTimeout(() => map.invalidateSize(), 100);
 
     $('#checkinModal').on('shown.bs.modal', function() {

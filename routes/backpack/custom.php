@@ -1,57 +1,87 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Services\SupabaseService;
 use App\Http\Controllers\Admin\MyAccountController;
-use App\Http\Controllers\UserPinController;
 use App\Http\Controllers\Admin\AdminAccountController;
 use App\Http\Controllers\Admin\IncidentController;
 use App\Http\Controllers\Admin\SuperAdminContactController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\AnalyticsController;
+use App\Http\Controllers\UserPinController;
 
 Route::group([
-    'prefix' => config('backpack.base.route_prefix', 'admin'),
+    'prefix'     => config('backpack.base.route_prefix', 'admin'),
     'middleware' => array_merge(
         (array) config('backpack.base.web_middleware', 'web'),
         (array) config('backpack.base.middleware_key', 'admin')
     ),
-    'namespace' => 'App\Http\Controllers\Admin',
 ], function () {
-    
+
+    // Tracking (static view)
     Route::get('tracking', function () {
-        return view('vendor.backpack.ui.tracking'); 
+        return view('vendor.backpack.ui.tracking');
     })->name('backpack.tracking');
-    
-    Route::get('manage-tourists', [AdminAccountController::class, 'manageTourists']);
 
-    Route::get('incidents', [IncidentController::class, 'index'])->name('incidents.index');
+    // Manage Tourists
+    Route::get('manage-tourists', [AdminAccountController::class, 'manageTourists'])
+         ->name('admin.manage-tourists');
 
-    Route::get('analytics', function () {
-        return view('vendor.backpack.ui.analytics');
-    })->name('backpack.analytics');
+    // Incidents listing
+    Route::get('incidents', [IncidentController::class, 'index'])
+         ->name('incidents.index');
 
+    // **Analytics dashboard**
+    Route::get('analytics', [AnalyticsController::class, 'index'])
+         ->name('backpack.analytics');
+
+    // AJAX endpoint for incident-status filters
+    Route::get('analytics/incident-status', [AnalyticsController::class, 'getIncidentStatus'])
+         ->name('analytics.incident-status');
+
+    // Notifications (static view)
     Route::get('notification', function () {
         return view('vendor.backpack.ui.notification');
     })->name('notifications.index');
-    
+
+    // Settings redirect → account info
     Route::get('setting', function () {
         return redirect()->route('backpack.account.info');
     })->name('backpack.setting');
 
-    Route::get('edit-account-info', 'MyAccountController@getAccountInfoForm')->name('backpack.account.info');
-    Route::post('edit-account-info', 'MyAccountController@postAccountInfoForm')->name('backpack.account.info.store');
-    Route::post('change-password', 'MyAccountController@postChangePasswordForm')->name('backpack.account.password');
-    Route::post('update-super-admin-contact', 'SuperAdminContactController@updateContactDetails')->name('superadmin.contact.update');
-    Route::post('/pin/verify', [UserPinController::class, 'verify']);
-    Route::post('/pin/update', [UserPinController::class, 'update']);  
-    Route::post('create-admin-account', 'AdminAccountController@create')->name('backpack.create-admin-account');
-    Route::patch('/admin/lock/{userId}', [AdminAccountController::class, 'lockAccount'])->name('admin.lock');
-    Route::get('admin/incidents/table-data', [App\Http\Controllers\Admin\IncidentController::class, 'tableData'])
-    ->name('admin.incidents.table-data');
+    // Profile & password
+    Route::get('edit-account-info', [MyAccountController::class, 'getAccountInfoForm'])
+         ->name('backpack.account.info');
+    Route::post('edit-account-info', [MyAccountController::class, 'postAccountInfoForm'])
+         ->name('backpack.account.info.store');
+    Route::post('change-password', [MyAccountController::class, 'postChangePasswordForm'])
+         ->name('backpack.account.password');
+
+    // Super-admin contacts
+    Route::post('update-super-admin-contact', [SuperAdminContactController::class, 'updateContactDetails'])
+         ->name('superadmin.contact.update');
+
+    // PIN operations
+    Route::post('pin/verify', [UserPinController::class, 'verify'])
+         ->name('pin.verify');
+    Route::post('pin/update', [UserPinController::class, 'update'])
+         ->name('pin.update');
+
+    // Admin account creation & locking
+    Route::post('create-admin-account', [AdminAccountController::class, 'create'])
+         ->name('backpack.create-admin-account');
+    Route::patch('admin/lock/{userId}', [AdminAccountController::class, 'lockAccount'])
+         ->name('admin.lock');
+
+    // Incident table data (for AJAX datatables, etc.)
+    Route::get('admin/incidents/table-data', [IncidentController::class, 'tableData'])
+         ->name('admin.incidents.table-data');
+
+    // Dashboard API endpoints
     Route::get('api/tourist-arrivals/{filter}', [DashboardController::class, 'getTouristArrivals']);
     Route::get('api/incident-reports/{filter}', [DashboardController::class, 'getIncidentReports']);
-    Route::get('api/latest-tourists', [DashboardController::class, 'getLatestTourists']);
-    Route::get('api/checkins-by-spot/{filter}', [DashboardController::class, 'getCheckinsBySpot']);
-    Route::get('api/accounts/count', [DashboardController::class, 'getAccountCounts']);
-    Route::get('api/account-counts', [AdminAccountController::class, 'getAccountCounts']);
+    Route::get('api/latest-tourists',            [DashboardController::class, 'getLatestTourists']);
+    Route::get('api/checkins-by-spot/{filter}',  [DashboardController::class, 'getCheckinsBySpot']);
+    Route::get('api/accounts/count',             [DashboardController::class, 'getAccountCounts']);
+    Route::get('api/account-counts',             [AdminAccountController::class, 'getAccountCounts']);
+
 });

@@ -18,7 +18,7 @@ class SupabaseService
 
     public function fetchTable($table, $filters = [], $count = false)
     {
-        \Log::info("Final Supabase URL: {$this->url}/rest/v1/{$table}");
+        \Log::info("Final Supabase URL: {$this->url}/rest/v1/{$table}", ['filters' => $filters]);
 
         $headers = [
             'apikey' => $this->key,
@@ -42,10 +42,16 @@ class SupabaseService
                 return 0;
             }
             return $query->json();
+        } else {
+            \Log::error('Supabase fetchTable failed', [
+                'status' => $query->status(),
+                'body' => $query->body(),
+                'headers' => $query->headers()
+            ]);
+            return $count ? 0 : [];
         }
-        return null;
     }
-    
+
     public function insertIntoTable($table, $data)
     {
         try {
@@ -97,52 +103,53 @@ class SupabaseService
             throw $e;
         }
     }
+
     public function getIncidentReports($filter)
-{
-    $now = Carbon::now();
-    $filters = [];
+    {
+        $now = Carbon::now();
+        $filters = [];
 
-    switch ($filter) {
-        case 'today':
-            $localStart = Carbon::today(); // Start of today in local timezone
-            $localEnd = $localStart->copy()->addDay(); // Start of tomorrow
-            $start = $localStart->toIso8601String();
-            $end = $localEnd->toIso8601String();
-            break;
+        switch ($filter) {
+            case 'today':
+                $localStart = Carbon::today();
+                $localEnd = $localStart->copy()->addDay();
+                $start = $localStart->toIso8601String();
+                $end = $localEnd->toIso8601String();
+                break;
 
-        case 'this_week':
-            $localStart = $now->copy()->startOfWeek(); // Monday of current week
-            $localEnd = $localStart->copy()->addWeek(); // Monday of next week
-            $start = $localStart->toIso8601String();
-            $end = $localEnd->toIso8601String();
-            break;
+            case 'this_week':
+                $localStart = $now->copy()->startOfWeek();
+                $localEnd = $localStart->copy()->addWeek();
+                $start = $localStart->toIso8601String();
+                $end = $localEnd->toIso8601String();
+                break;
 
-        case 'this_month':
-            $localStart = $now->copy()->startOfMonth(); // First day of current month
-            $localEnd = $localStart->copy()->addMonth(); // First day of next month
-            $start = $localStart->toIso8601String();
-            $end = $localEnd->toIso8601String();
-            break;
+            case 'this_month':
+                $localStart = $now->copy()->startOfMonth();
+                $localEnd = $localStart->copy()->addMonth();
+                $start = $localStart->toIso8601String();
+                $end = $localEnd->toIso8601String();
+                break;
 
-        case 'all_time':
-            $start = null;
-            $end = null;
-            break;
+            case 'all_time':
+                $start = null;
+                $end = null;
+                break;
 
-        default:
-            return response()->json(['error' => 'Invalid filter'], 400);
+            default:
+                return response()->json(['error' => 'Invalid filter'], 400);
+        }
+
+        if ($start && $end) {
+            $filters = [
+                'and' => "(timestamp.gte.{$start},timestamp.lt.{$end})",
+            ];
+        }
+
+        $count = $this->fetchTable('emergency_reports', $filters, true);
+        if ($count === null) {
+            return response()->json(['error' => 'Failed to fetch data'], 500);
+        }
+        return response()->json(['count' => $count]);
     }
-
-    if ($start && $end) {
-        $filters = [
-            'and' => "(timestamp.gte.{$start},timestamp.lt.{$end})",
-        ];
-    }
-
-    $count = $this->fetchTable('emergency_reports', $filters, true);
-    if ($count === null) {
-        return response()->json(['error' => 'Failed to fetch data'], 500);
-    }
-    return response()->json(['count' => $count]);
-}
 }

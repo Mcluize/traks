@@ -90,8 +90,16 @@ $(document).ready(function() {
     let currentSearch = "{{ $search ?? '' }}";
     let searchDate = "{{ $search_date ?? '' }}";
     let currentPage = {{ $currentPage ?? 1 }};
+    let isLoading = false;
 
-    function updateTable() {
+    function updateTable(showLoading = true) {
+        if (isLoading) return;
+        isLoading = true;
+
+        if (showLoading) {
+            $('#incident-table-container').html('<div class="text-center p-3"><i class="la la-spinner la-spin"></i> Loading incidents...</div>');
+        }
+
         $.ajax({
             url: "{{ route('admin.incidents.table-data') }}",
             type: "GET",
@@ -107,7 +115,12 @@ $(document).ready(function() {
             },
             error: function(xhr) {
                 console.error('Error:', xhr.status, xhr.responseText);
-                $('#incident-table-container').html('<div class="alert alert-danger">Failed to load data. Please try again.</div>');
+                if (showLoading) {
+                    $('#incident-table-container').html('<div class="alert alert-danger">Failed to load data. Please try again.</div>');
+                }
+            },
+            complete: function() {
+                isLoading = false;
             }
         });
     }
@@ -118,7 +131,7 @@ $(document).ready(function() {
             const page = $(this).data('page');
             if (page) {
                 currentPage = page;
-                updateTable();
+                updateTable(true);
                 $('html, body').animate({
                     scrollTop: $('#incident-table-container').offset().top - 100
                 }, 300);
@@ -129,13 +142,13 @@ $(document).ready(function() {
     $('#incident-search').on('keyup', function() {
         currentSearch = $(this).val();
         currentPage = 1;
-        updateTable();
+        updateTable(true);
     });
 
     $('#date-search').on('change', function() {
         searchDate = $(this).val();
         currentPage = 1;
-        updateTable();
+        updateTable(true);
     });
 
     $('.btn-filter').click(function() {
@@ -143,14 +156,18 @@ $(document).ready(function() {
         $(this).addClass('active');
         currentFilter = $(this).data('filter');
         currentPage = 1;
-        updateTable();
+        updateTable(true);
     });
 
     $('.btn-export').click(function() {
         alert('Export functionality will be implemented later');
     });
 
-    updateTable();
+    // Initial load with loading indicator
+    updateTable(true);
+
+    // Periodic update every 5 seconds without loading indicator
+    setInterval(() => updateTable(false), 5000);
 });
 </script>
 @endpush
