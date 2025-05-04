@@ -38,6 +38,10 @@ Route::group([
     Route::get('analytics/incident-status', [AnalyticsController::class, 'getIncidentStatus'])
          ->name('analytics.incident-status');
 
+    // Popular Spots Modal Data
+    Route::get('analytics/popular-spots/{filter}', [AnalyticsController::class, 'getPopularSpots'])
+         ->name('analytics.popular-spots');
+
     // Notifications (static view)
     Route::get('notification', function () {
         return view('vendor.backpack.ui.notification');
@@ -83,5 +87,5 @@ Route::group([
     Route::get('api/checkins-by-spot/{filter}',  [DashboardController::class, 'getCheckinsBySpot']);
     Route::get('api/accounts/count',             [DashboardController::class, 'getAccountCounts']);
     Route::get('api/account-counts',             [AdminAccountController::class, 'getAccountCounts']);
-
+    Route::get('/admin/analytics/map-data/{activityFilter}/{timeFilter}', [AnalyticsController::class, 'getMapData']);
 });

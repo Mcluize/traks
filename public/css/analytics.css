@@ -269,6 +269,29 @@ body {
     width: 100%;
 }
 
+#mapLegend {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    background: white;
+    padding: 5px;
+    border-radius: 5px;
+    z-index: 1000;
+}
+
+#mapLegend p {
+    margin: 0;
+    font-size: 12px;
+}
+
+#mapLegend span {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-right: 5px;
+}
+
 /* Spots List */
 .spots-list {
     padding: 10px 0;
@@ -350,6 +373,11 @@ body {
     font-weight: 500;
     padding: 5px 10px;
     border-radius: 4px;
+}
+
+/* Modal Styles */
+.modal-content {
+    border-radius: 12px;
 }
 
 /* Responsive Adjustments */

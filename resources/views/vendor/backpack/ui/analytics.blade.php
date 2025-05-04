@@ -28,6 +28,17 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.min.css" />
 
+<style>
+    .leaflet-control-legend {
+        background: rgba(255, 255, 255, 0.8);
+        padding: 10px;
+        border-radius: 5px;
+        box-shadow: 0 0 15px rgba(0,0,0,0.2);
+    }
+    .legend-item { display: flex; align-items: center; margin-bottom: 5px; }
+    .legend-color { width: 12px; height: 12px; border-radius: 50%; margin-right: 5px; }
+</style>
+
 <div class="analytics-container">
     <!-- Top Stats Cards -->
     <div class="row mb-4">
@@ -40,7 +51,7 @@
                     <h3>Tourist Arrivals</h3>
                     <div class="stat-number">{{ $touristArrivals }}</div>
                     <div class="stat-change {{ $touristChangeClass }}">
-                        <i class="fas {{ $touristChangeIcon }}"></i> {{ $touristChange }}% from last week
+                        <i class="fas {{ $touristChangeIcon }}"></i> {{ $touristChange }}% from yesterday
                     </div>
                 </div>
             </div>
@@ -114,7 +125,7 @@
                 <div class="chart-header">
                     <h3>Weekly Analytics</h3>
                     <div class="chart-actions">
-                        <button class="btn btn-sm btn-outline-secondary">Export</button>
+                        <button class="btn btn-sm btn-outline-secondary export-btn">Export</button>
                     </div>
                 </div>
                 <div class="chart-body">
@@ -180,7 +191,13 @@
                 <div class="chart-header">
                     <h3>Popular Tourist Spots</h3>
                     <div class="chart-actions">
-                        <button class="btn btn-sm btn-outline-secondary">View All</button>
+                        <select class="form-select form-select-sm" id="spotsFilterChart">
+                            <option value="today">Today</option>
+                            <option value="this_week">This Week</option>
+                            <option value="this_month">This Month</option>
+                            <option value="all_time" selected>All Time</option>
+                        </select>
+                        <button class="btn btn-sm btn-outline-secondary view-all-spots">View All</button>
                     </div>
                 </div>
                 <div class="chart-body">
@@ -197,7 +214,7 @@
                 <div class="chart-header">
                     <h3>Latest Incident Reports</h3>
                     <div class="chart-actions">
-                        <button class="btn btn-sm btn-outline-secondary">View All Reports</button>
+                        <button class="btn btn-sm btn-outline-secondary view-all-reports">View All Reports</button>
                     </div>
                 </div>
                 <div class="table-responsive">
@@ -229,17 +246,41 @@
             </div>
         </div>
     </div>
+
+    <!-- Popular Spots Modal -->
+    <div class="modal fade" id="spotsModal" tabindex="-1" aria-labelledby="spotsModalLabel" aria-hidden="true" data-bs-backdrop="false">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="spotsModalLabel">All Tourist Spots</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <select id="spotsFilter" class="form-select mb-3">
+                        <option value="today" selected>Today</option>
+                        <option value="this_week">This Week</option>
+                        <option value="this_month">This Month</option>
+                        <option value="all_time">All Time</option>
+                    </select>
+                    <table class="table">
+                        <thead><tr><th>Spot Name</th><th>Visits</th></tr></thead>
+                        <tbody id="spotsTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
-<!-- Scripts (moved to the end for better performance) -->
+<!-- Scripts -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.min.js"></script>
 <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
     $(document).ready(function() {
-        // Check if Leaflet and heatLayer are defined
         if (typeof L === 'undefined') {
             console.error('Leaflet library is not loaded.');
             return;
@@ -269,12 +310,11 @@
             }
         });
 
-        // Filter Incident Status by Time Period
         $('.time-filter').click(function() {
             $('.time-filter').removeClass('active');
             $(this).addClass('active');
             var period = $(this).data('period');
-            $.get('/analytics/incident-status?period=' + period, function(data) {
+            $.get('/admin/analytics/incident-status?period=' + period, function(data) {
                 statusChart.data.labels = data.labels;
                 statusChart.data.datasets[0].data = data.values;
                 statusChart.update();
@@ -391,26 +431,38 @@
             }
         });
 
+        // Update Popular Spots Chart based on filter
+        $('#spotsFilterChart').change(function() {
+            var filter = $(this).val();
+            $.get(`/admin/analytics/popular-spots/${filter}`, function(data) {
+                var topSpots = data.sort((a, b) => b.visits - a.visits).slice(0, 4);
+                var labels = topSpots.map(item => item.spot);
+                var values = topSpots.map(item => item.visits);
+                popularSpotsChart.data.labels = labels;
+                popularSpotsChart.data.datasets[0].data = values;
+                popularSpotsChart.update();
+            }).fail(function(xhr, status, error) {
+                console.error('Failed to fetch popular spots:', error);
+            });
+        });
+
         // Initialize Map
         var map = L.map('activityMap').setView([7.08, 125.6], 11);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        var tileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© OpenStreetMap contributors'
         }).addTo(map);
+        map.tileLayer = tileLayer; // Store reference to tile layer
 
         var spots = {!! json_encode($touristSpots) !!};
         var incidents = {!! json_encode($incidents) !!};
         var checkins = {!! json_encode($checkins) !!};
+        var users = {!! json_encode($users) !!};
 
-        // Add tourist spot markers
-        spots.forEach(function(spot) {
-            L.marker([spot.latitude, spot.longitude])
-                .addTo(map)
-                .bindPopup(spot.name);
-        });
-
-        // Add incident markers
         function getIncidentIcon(status) {
-            var color = status === 'Pending' ? '#FFC107' : (status === 'Cancelled' ? '#DC3545' : '#6C757D');
+            var color = status === 'Pending' ? '#FFC107' :
+                        status === 'Cancelled' ? '#DC3545' :
+                        status === 'Resolved' ? '#28A745' :
+                        status === 'Ignored' ? '#6C757D' : '#6C757D';
             return L.divIcon({
                 className: 'custom-div-icon',
                 html: `<div style="background-color: ${color}; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white;"></div>`,
@@ -419,43 +471,159 @@
             });
         }
 
+        // Initial map setup
+        spots.forEach(function(spot) {
+            var checkinCount = checkins.filter(c => c.spot_id === spot.spot_id).length;
+            L.marker([spot.latitude, spot.longitude], {
+                icon: L.divIcon({
+                    className: 'custom-div-icon',
+                    html: `<div style="background:#4ECDC4; width:12px; height:12px; border-radius:50%; border:2px solid white;"></div>`,
+                    iconSize: [12, 12],
+                    iconAnchor: [6, 6]
+                })
+            }).addTo(map).bindPopup(`<b>${spot.name}</b><br>Check-ins: ${checkinCount}`);
+        });
+
         incidents.forEach(function(incident) {
             L.marker([incident.latitude, incident.longitude], {icon: getIncidentIcon(incident.status)})
                 .addTo(map)
-                .bindPopup("Incident - " + incident.status);
+                .bindPopup(`Incident - ${incident.status}<br>Tourist ID: ${incident.user_id}`);
         });
 
-        // Add check-in heat layer
         var heatPoints = checkins.map(function(checkin) {
             var spot = spots.find(s => s.spot_id === checkin.spot_id);
             return spot ? [spot.latitude, spot.longitude, 1] : null;
         }).filter(Boolean);
         var heat = L.heatLayer(heatPoints, {radius: 25}).addTo(map);
 
-        // Map filter functionality
+        // Create a custom legend control
+        var LegendControl = L.Control.extend({
+            options: { position: 'bottomright' },
+            onAdd: function(map) {
+                var div = L.DomUtil.create('div', 'leaflet-control-legend');
+                div.innerHTML = `
+                    <div class="legend-item"><div class="legend-color" style="background:#4ECDC4;"></div> Check-ins</div>
+                    <div class="legend-item"><div class="legend-color" style="background:#FFC107;"></div> Pending Incidents</div>
+                    <div class="legend-item"><div class="legend-color" style="background:#DC3545;"></div> Cancelled Incidents</div>
+                    <div class="legend-item"><div class="legend-color" style="background:#28A745;"></div> Resolved Incidents</div>
+                    <div class="legend-item"><div class="legend-color" style="background:#6C757D;"></div> Ignored Incidents</div>
+                `;
+                return div;
+            }
+        });
+
+        // Add the legend to the map
+        new LegendControl().addTo(map);
+
         $('#mapFilter').change(function() {
-            map.eachLayer(function(layer) {
-                if (layer !== map.tileLayer) map.removeLayer(layer);
-            });
-            heat.addTo(map);
             var filter = $(this).val();
+            
+            // Remove all layers except the tile layer and legend
+            map.eachLayer(function(layer) {
+                if (layer !== map.tileLayer && !(layer instanceof LegendControl)) {
+                    map.removeLayer(layer);
+                }
+            });
+            
+            // Ensure tile layer is present
+            if (!map.hasLayer(map.tileLayer)) {
+                map.tileLayer.addTo(map);
+            }
+            
+            // Add heatmap layer
+            heat.addTo(map);
+            
             if (filter === 'all' || filter === 'checkins') {
-                spots.forEach(function(spot) {
-                    L.marker([spot.latitude, spot.longitude]).addTo(map).bindPopup(spot.name);
-                });
-                heatPoints = checkins.map(c => {
-                    var spot = spots.find(s => s.spot_id === c.spot_id);
-                    return spot ? [spot.latitude, spot.longitude, 1] : null;
-                }).filter(Boolean);
-                heat.setLatLngs(heatPoints);
+                if (checkins.length > 0) {
+                    spots.forEach(function(spot) {
+                        var checkinCount = checkins.filter(c => c.spot_id === spot.spot_id).length;
+                        L.marker([spot.latitude, spot.longitude], {
+                            icon: L.divIcon({
+                                className: 'custom-div-icon',
+                                html: `<div style="background:#4ECDC4; width:12px; height:12px; border-radius:50%; border:2px solid white;"></div>`,
+                                iconSize: [12, 12],
+                                iconAnchor: [6, 6]
+                            })
+                        }).addTo(map).bindPopup(`<b>${spot.name}</b><br>Check-ins: ${checkinCount}`);
+                    });
+                    heatPoints = checkins.map(c => {
+                        var spot = spots.find(s => s.spot_id === c.spot_id);
+                        return spot ? [spot.latitude, spot.longitude, 1] : null;
+                    }).filter(Boolean);
+                    heat.setLatLngs(heatPoints);
+                } else {
+                    console.log('No check-ins data available');
+                }
             }
+            
             if (filter === 'all' || filter === 'incidents') {
-                incidents.forEach(function(incident) {
-                    L.marker([incident.latitude, incident.longitude], {icon: getIncidentIcon(incident.status)})
-                        .addTo(map)
-                        .bindPopup("Incident - " + incident.status);
-                });
+                if (incidents.length > 0) {
+                    incidents.forEach(function(incident) {
+                        L.marker([incident.latitude, incident.longitude], {icon: getIncidentIcon(incident.status)})
+                            .addTo(map)
+                            .bindPopup(`Incident - ${incident.status}<br>Tourist ID: ${incident.user_id}`);
+                    });
+                } else {
+                    console.log('No incidents data available');
+                }
             }
+        });
+
+        // Export Button
+        $('.export-btn').click(function() {
+            var csv = "Day,Tourist Activities,Incident Reports\n";
+            var labels = {!! json_encode($weeklyLabels) !!};
+            var checkinsData = {!! json_encode($weeklyCheckinsData) !!};
+            var incidentsData = {!! json_encode($weeklyIncidentsData) !!};
+            for (var i = 0; i < labels.length; i++) {
+                csv += `${labels[i]},${checkinsData[i]},${incidentsData[i]}\n`;
+            }
+            var blob = new Blob([csv], {type: 'text/csv'});
+            var link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'weekly_analytics.csv';
+            link.click();
+        });
+
+        // View All Spots Modal
+        $('.view-all-spots').click(function() {
+            $('#spotsModal').modal('show');
+            updateSpotsTable('today');
+        });
+
+        $('#spotsFilter').change(function() {
+            updateSpotsTable($(this).val());
+        });
+
+        function updateSpotsTable(filter) {
+            $.get(`/admin/analytics/popular-spots/${filter}`, function(data) {
+                $('#spotsTableBody').empty();
+                data.forEach(spot => {
+                    $('#spotsTableBody').append(`<tr><td>${spot.spot}</td><td>${spot.visits}</td></tr>`);
+                });
+            }).fail(function(xhr, status, error) {
+                console.error('Failed to fetch popular spots:', error);
+                $('#spotsModal').modal('hide');
+                $('.modal-backdrop').remove();
+            });
+        }
+
+        // Make backdrop clickable to close modal
+        $('#spotsModal').on('shown.bs.modal', function () {
+            $('.modal-backdrop').on('click', function () {
+                $('#spotsModal').modal('hide');
+            });
+        });
+
+        // Handle navigation back to clean up modal
+        window.onpopstate = function(event) {
+            $('#spotsModal').modal('hide');
+            $('.modal-backdrop').remove();
+        };
+
+        // View All Reports (Redirect or Modal can be implemented here)
+        $('.view-all-reports').click(function() {
+            window.location.href = '/admin/incidents';
         });
     });
 </script>

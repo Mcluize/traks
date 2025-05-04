@@ -280,7 +280,6 @@ body {
     font-size: 14px;
     color: #666666;
     margin-bottom: 15px;
-    
 }
 
 .checkins-table th, .checkins-table td {
@@ -354,14 +353,12 @@ body {
 
 .modal-body {
     padding: 20px;
-    
 }
 
 .modal-footer {
     border-top: none;
     padding: 15px;
     background-color: transparent;
-
 }
 
 .modal-footer .btn-secondary {
@@ -406,6 +403,7 @@ body {
 .close:hover {
     opacity: 1;
 }
+
 /* Map Legend Styling */
 .map-legend {
     position: absolute;
@@ -464,14 +462,266 @@ body {
     background-image: url('https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png');
 }
 
+/* Warning Control Styles */
+.warning-control {
+    position: absolute;
+    top: 20px;
+    right: 420px; /* Positioned to the left of the tourist-info-section */
+    z-index: 999;
+}
 
+.warning-btn {
+    background-color: #FF7E3F;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 15px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+}
 
+.warning-btn:hover {
+    background-color: #E56E33;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.warning-btn::before {
+    content: "⚠️";
+    margin-right: 8px;
+    font-size: 16px;
+}
+
+/* Warning Zone Legend Styles */
+.legend-section.warning-zones-legend {
+    background-color: rgba(255, 255, 255, 0.9);
+    border-radius: 5px;
+    padding: 10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    position: absolute;
+    bottom: 180px; /* Adjusted to be above Check-in Legend */
+    left: 30px; /* Aligned with Check-in Legend */
+    z-index: 1000;
+    max-width: 180px;
+}
+
+.legend-separator {
+    height: 1px;
+    background-color: #ccc;
+    margin: 8px 0;
+}
+
+/* Warning zone marker styles */
+.legend-marker.danger-zone {
+    background-color: transparent;
+    border-radius: 0;
+}
+
+.legend-marker.high-risk {
+    background-color: transparent;
+    border-radius: 0;
+}
+
+.legend-marker.flood-area {
+    background-color: transparent;
+    border-radius: 0;
+}
+
+.legend-marker.security-concern {
+    background-color: transparent;
+    border-radius: 0;
+}
+
+.legend-marker.other-warning {
+    background-color: #CC00CC;
+    border-radius: 50%;
+    width: 12px;
+    height: 12px;
+}
+
+/* Icon indicators */
+.legend-icon {
+    width: 20px;
+    height: 20px;
+    display: inline-block;
+    margin-right: 8px;
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.legend-icon.marker-icon {
+    background-image: url('public/images/warning-danger.png');
+}
+
+.legend-icon.circle-icon {
+    border: 2px solid #FF0000;
+    border-radius: 50%;
+    background-color: rgba(255, 0, 0, 0.2);
+}
+
+/* Drawing Options Styles */
+.drawing-options {
+    display: flex;
+    gap: 20px;
+    margin: 10px 0;
+}
+
+.radio-container {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    margin-bottom: 10px;
+}
+
+.radio-label {
+    margin-left: 5px;
+    font-size: 14px;
+}
+
+/* Circle Radius Container */
+#circle-radius-container {
+    margin: 15px 0;
+}
+
+#circle-radius {
+    width: 100%;
+    margin: 10px 0;
+}
+
+#radius-value {
+    font-size: 14px;
+    font-weight: 600;
+    color: #666;
+}
+
+/* Instructions */
+.instructions {
+    background-color: #f8f9fa;
+    border-left: 4px solid #0BC8CA;
+    padding: 10px 15px;
+    margin: 15px 0;
+    font-size: 13px;
+    color: #666;
+}
+
+/* Warning Details Modal */
+.warning-details-content h4 {
+    color: #333;
+    margin-bottom: 15px;
+    font-weight: 700;
+    font-size: 18px;
+}
+
+.warning-details-content p {
+    margin-bottom: 10px;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.warning-type {
+    display: inline-block;
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    color: white;
+    margin-bottom: 15px;
+}
+
+.warning-type.danger {
+    background-color: #FF0000;
+}
+
+.warning-type.high-risk {
+    background-color: #FF6600;
+}
+
+.warning-type.flood {
+    background-color: #0066FF;
+}
+
+.warning-type.security {
+    background-color: #990000;
+}
+
+.warning-type.other {
+    background-color: #CC00CC;
+}
+
+.view-details-btn {
+    background-color: #0BC8CA;
+    color: white;
+    border: none;
+    border-radius: 3px;
+    padding: 3px 8px;
+    font-size: 12px;
+    cursor: pointer;
+    margin-top: 5px;
+}
+
+.view-details-btn:hover {
+    background-color: #09a8aa;
+}
+
+.delete-warning-btn {
+    background-color: #dc3545;
+    border-color: #dc3545;
+}
+
+.delete-warning-btn:hover {
+    background-color: #c82333;
+    border-color: #bd2130;
+}
+.legend-circle {
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    margin-right: 10px;
+}
+
+.legend-path {
+    width: 24px;
+    height: 2px;
+    background-color: blue;
+    border: 1px dashed blue;
+    margin-right: 10px;
+}
+
+/* Responsive styles */
+@media (max-width: 1200px) {
+    .warning-control {
+        right: 320px;
+    }
+}
+
+@media (max-width: 992px) {
+    .warning-control {
+        right: 270px;
+    }
+}
+
+@media (max-width: 768px) {
+    .warning-control {
+        top: 80px;
+        right: 10px;
+    }
+}
 
 /* Adjust legend positioning for smaller screens */
 @media (max-width: 768px) {
-    .legend {
-        top: auto;
-        bottom: 60px; /* Position above tourist-info-section on mobile */
+    .legend-section.warning-zones-legend {
+        bottom: 120px; /* Adjusted for mobile */
+        left: 10px;
+        width: calc(100% - 20px);
+    }
+    .map-legend {
+        bottom: 10px; /* Adjusted for mobile */
         left: 10px;
         width: calc(100% - 20px);
     }
