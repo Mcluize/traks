@@ -498,19 +498,7 @@ body {
     font-size: 16px;
 }
 
-/* Warning Zone Legend Styles */
-.legend-section.warning-zones-legend {
-    background-color: rgba(255, 255, 255, 0.9);
-    border-radius: 5px;
-    padding: 10px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-    position: absolute;
-    bottom: 180px; /* Adjusted to be above Check-in Legend */
-    left: 30px; /* Aligned with Check-in Legend */
-    z-index: 1000;
-    max-width: 180px;
-}
-
+/* Legend separator */
 .legend-separator {
     height: 1px;
     background-color: #ccc;
@@ -539,10 +527,8 @@ body {
 }
 
 .legend-marker.other-warning {
-    background-color: #CC00CC;
-    border-radius: 50%;
-    width: 12px;
-    height: 12px;
+    background-color: transparent;
+    border-radius: 0;
 }
 
 /* Icon indicators */
@@ -678,6 +664,7 @@ body {
     background-color: #c82333;
     border-color: #bd2130;
 }
+
 .legend-circle {
     width: 15px;
     height: 15px;
@@ -691,6 +678,12 @@ body {
     background-color: blue;
     border: 1px dashed blue;
     margin-right: 10px;
+}
+.legend-polygon {
+    width: 20px;
+    height: 20px;
+    margin-right: 10px;
+    flex-shrink: 0;
 }
 
 /* Responsive styles */
@@ -715,11 +708,6 @@ body {
 
 /* Adjust legend positioning for smaller screens */
 @media (max-width: 768px) {
-    .legend-section.warning-zones-legend {
-        bottom: 120px; /* Adjusted for mobile */
-        left: 10px;
-        width: calc(100% - 20px);
-    }
     .map-legend {
         bottom: 10px; /* Adjusted for mobile */
         left: 10px;

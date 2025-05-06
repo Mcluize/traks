@@ -37,34 +37,215 @@
         background-color: #FF7E3F;
         color: white;
     }
+    
     /* Legend Toggle Button */
     .legend-toggle {
-        position: absolute;
-        bottom: 30px;
-        left: 30px;
-        z-index: 999;
-        background-color: #FF7E3F;
-        color: white;
-        border: none;
-        border-radius: 4px;
-        padding: 8px 15px;
+        position: absolute !important;
+        bottom: 20px !important;
+        left: 20px !important;
+        z-index: 1000 !important;
+        background-color: #FF7E3F !important;
+        color: white !important;
+        border: none !important;
+        border-radius: 4px !important;
+        padding: 8px 15px !important;
         font-family: 'Poppins', sans-serif;
         font-size: 14px;
-        font-weight: 600;
-        cursor: pointer;
+        font-weight: 600 !important;
+        cursor: pointer !important;
         box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
         transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
     }
+    
     .legend-toggle:hover {
         background-color: #E56E33;
         transform: translateY(-2px);
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     }
-    /* Hide legends by default */
-    .legend-section, .map-legend {
+    
+    .legend-toggle i {
+        margin-right: 5px;
+    }
+    
+    /* Legend Container */
+    .legends-container {
+        position: absolute !important;
+        bottom: 70px !important;
+        left: 20px !important;
+        z-index: 1001 !important;
+        background-color: white !important;
+        border-radius: 6px !important;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2) !important;
+        max-width: 350px !important;
+        max-height: 60vh !important;
+        overflow-y: auto !important;
+        padding: 15px !important;
+        font-family: 'Poppins', sans-serif !important;
         display: none;
     }
+    
+    /* Tab styling */
+    .tabs-container {
+        margin-bottom: 15px;
+    }
+    
+    .legend-tabs {
+        display: flex !important;
+        border-bottom: 1px solid #eee !important;
+        margin-bottom: 10px !important;
+    }
+    
+    .tab-btn {
+        background: none !important;
+        border: none !important;
+        padding: 8px 12px !important;
+        font-size: 13px !important;
+        cursor: pointer !important;
+        color: #555 !important;
+        flex-grow: 1 !important;
+        text-align: center !important;
+        transition: all 0.2s ease;
+    }
+    
+    .tab-btn:hover {
+        background-color: #f5f5f5;
+    }
+    
+    .tab-btn.active {
+        color: #FF7E3F !important;
+        border-bottom: 2px solid #FF7E3F !important;
+        font-weight: 600 !important;
+    }
+    
+    .legends-container h4 {
+        font-size: 16px;
+        font-weight: 600;
+        color: #333;
+        margin-top: 0;
+        margin-bottom: 10px;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 8px;
+    }
+    
+    .legends-container h5 {
+        font-size: 14px;
+        font-weight: 500;
+        color: #555;
+        margin: 12px 0 8px;
+    }
+    
+    .legend-item {
+        display: flex !important;
+        align-items: center !important;
+        margin-bottom: 10px !important;
+    }
+    
+    .legend-item span {
+        font-size: 13px;
+        color: #444;
+    }
+    
+    .legend-section {
+        margin-bottom: 15px;
+    }
+    
+    .legend-section:last-child {
+        margin-bottom: 0px;
+    }
+    
+    .section-divider {
+        height: 1px;
+        background-color: #eee;
+        margin: 15px 0;
+    }
+    
+    /* Warning Zone Markers */
+    .legend-marker {
+        width: 24px;
+        height: 24px;
+        margin-right: 10px;
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-position: center;
+        flex-shrink: 0;
+    }
+    
+    .legend-circle {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        margin-right: 10px;
+        flex-shrink: 0;
+    }
+    
+    .legend-polygon {
+        width: 20px;
+        height: 20px;
+        margin-right: 10px;
+        flex-shrink: 0;
+    }
+    
+    /* Check-in Markers - Using original icons */
+    .legend-marker.first-checkin {
+        background-image: url('{{ asset('images/marker-icon-2x-green.png') }}');
+    }
+    
+    .legend-marker.intermediate-checkin {
+        background-image: url('{{ asset('images/marker-icon-2x-blue.png') }}');
+    }
+    
+    .legend-marker.last-checkin {
+        background-image: url('{{ asset('images/marker-icon-2x-red.png') }}');
+    }
+    
+    /* Warning Zone Markers - Ensure original appearance */
+    .legend-marker.danger-zone {
+        background-image: url('{{ asset('images/warning-danger.png') }}');
+    }
+    .legend-marker.high-risk {
+        background-image: url('{{ asset('images/warning-high-risk.png') }}');
+    }
+    .legend-marker.flood-area {
+        background-image: url('{{ asset('images/warning-flood.png') }}');
+    }
+    .legend-marker.security-concern {
+        background-image: url('{{ asset('images/warning-security.png') }}');
+    }
+    .legend-marker.other-warning {
+        background-image: url('{{ asset('images/warning-other.png') }}');
+    }
+    
+    .legend-path {
+        width: 30px;
+        height: 2px;
+        background: linear-gradient(to right, #0066FF 50%, transparent 50%);
+        background-size: 6px 100%;
+        margin-right: 10px;
+        flex-shrink: 0;
+    }
+    
+    /* Map overlay adjustment */
+    .leaflet-overlay-pane {
+        z-index: 400 !important;
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .legends-container {
+            bottom: 10px !important;
+            left: 10px !important;
+            width: calc(100% - 20px) !important;
+            max-height: 50vh !important;
+        }
+        .legend-toggle {
+            bottom: 10px !important;
+            left: 10px !important;
+        }
+    }
 </style>
+<link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css" />
 @endpush
 
 @section('content')
@@ -77,73 +258,98 @@
         <div class="map-container">
             <div id="map"></div>
             <!-- Legend Toggle Button -->
-            <button id="legend-toggle" class="legend-toggle">Legend</button>
-            <!-- Warning Zones Legend -->
-            <div class="legend-section warning-zones-legend">
-                <h4>Warning Zones</h4>
-                <h5>Markers</h5>
-                <div class="legend-item">
-                    <div class="legend-marker danger-zone" style="background-image: url('{{ asset('images/warning-danger.png') }}');"></div>
-                    <span>Danger Zone - Red Marker</span>
+            <button id="legend-toggle" class="legend-toggle">
+                <i class="fa fa-map-signs"></i> Legend
+            </button>
+
+            <!-- Combined legends container -->
+            <div id="legends-container" class="legends-container">
+                <div class="tabs-container">
+                    <div class="legend-tabs">
+                        <button class="tab-btn active" data-tab="all">All</button>
+                        <button class="tab-btn" data-tab="warning">Warning Zones</button>
+                        <button class="tab-btn" data-tab="checkin">Check-ins</button>
+                    </div>
                 </div>
-                <div class="legend-item">
-                    <div class="legend-marker high-risk" style="background-image: url('{{ asset('images/warning-high-risk.png') }}');"></div>
-                    <span>High Risk Area - Orange Marker</span>
+                
+                <div class="legend-section warning-zones-legend" id="warning-tab">
+                    <h4>Warning Zones</h4>
+                    
+                    <h5>Markers</h5>
+                    <div class="legend-item">
+                        <div class="legend-marker danger-zone"></div>
+                        <span>Danger Zone - Red Marker</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-marker high-risk"></div>
+                        <span>High Risk Area - Orange Marker</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-marker flood-area"></div>
+                        <span>Flood Area - Blue Marker</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-marker security-concern"></div>
+                        <span>Security Concern - Dark Red Marker</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-marker other-warning"></div>
+                        <span>Other Warning - Purple Marker</span>
+                    </div>
+                    
+                    <h5>Circles</h5>
+                    <div class="legend-item">
+                        <div class="legend-circle" style="border: 2px solid #FF0000; background-color: rgba(255, 0, 0, 0.2);"></div>
+                        <span>Danger Zone - Red Circle</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-circle" style="border: 2px solid #FF6600; background-color: rgba(255, 102, 0, 0.2);"></div>
+                        <span>High Risk Area - Orange Circle</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-circle" style="border: 2px solid #0066FF; background-color: rgba(0, 102, 255, 0.2);"></div>
+                        <span>Flood Area - Blue Circle</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-circle" style="border: 2px solid #990000; background-color: rgba(153, 0, 0, 0.2);"></div>
+                        <span>Security Concern - Dark Red Circle</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-circle" style="border: 2px solid #CC00CC; background-color: rgba(204, 0, 204, 0.2);"></div>
+                        <span>Other Warning - Purple Circle</span>
+                    </div>
+                    
+                    <h5>Polygons</h5>
+                    <div class="legend-item">
+                        <div class="legend-polygon" style="border: 2px solid #000; background-color: rgba(0, 0, 0, 0.2);"></div>
+                        <span>Warning Zone Polygon</span>
+                    </div>
                 </div>
-                <div class="legend-item">
-                    <div class="legend-marker flood-area" style="background-image: url('{{ asset('images/warning-flood.png') }}');"></div>
-                    <span>Flood Area - Blue Marker</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-marker security-concern" style="background-image: url('{{ asset('images/warning-security.png') }}');"></div>
-                    <span>Security Concern - Dark Red Marker</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-marker other-warning" style="background-image: url('{{ asset('images/warning-other.png') }}');"></div>
-                    <span>Other Warning - Purple Marker</span>
-                </div>
-                <h5>Circles</h5>
-                <div class="legend-item">
-                    <div class="legend-circle" style="border: 2px solid #FF0000; background-color: rgba(255, 0, 0, 0.2);"></div>
-                    <span>Danger Zone - Red Circle</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-circle" style="border: 2px solid #FF6600; background-color: rgba(255, 102, 0, 0.2);"></div>
-                    <span>High Risk Area - Orange Circle</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-circle" style="border: 2px solid #0066FF; background-color: rgba(0, 102, 255, 0.2);"></div>
-                    <span>Flood Area - Blue Circle</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-circle" style="border: 2px solid #990000; background-color: rgba(153, 0, 0, 0.2);"></div>
-                    <span>Security Concern - Dark Red Circle</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-circle" style="border: 2px solid #CC00CC; background-color: rgba(204, 0, 204, 0.2);"></div>
-                    <span>Other Warning - Purple Circle</span>
-                </div>
-            </div>
-            <!-- Check-in Legend -->
-            <div class="map-legend">
-                <h4>Check-in Legend</h4>
-                <h5>Markers</h5>
-                <div class="legend-item">
-                    <div class="legend-marker first-checkin"></div>
-                    <span>First Check-in - Green Marker</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-marker intermediate-checkin"></div>
-                    <span>Intermediate Check-in - Blue Marker</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-marker last-checkin"></div>
-                    <span>Last Check-in - Red Marker</span>
-                </div>
-                <h5>Paths</h5>
-                <div class="legend-item">
-                    <div class="legend-path"></div>
-                    <span>Check-in Path - Blue Dashed Line</span>
+                
+                <div class="section-divider"></div>
+                
+                <div class="legend-section checkin-legend" id="checkin-tab">
+                    <h4>Check-in Legend</h4>
+                    
+                    <h5>Markers</h5>
+                    <div class="legend-item">
+                        <div class="legend-marker first-checkin"></div>
+                        <span>First Check-in - Green Marker</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-marker intermediate-checkin"></div>
+                        <span>Intermediate Check-in - Blue Marker</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-marker last-checkin"></div>
+                        <span>Last Check-in - Red Marker</span>
+                    </div>
+                    
+                    <h5>Paths</h5>
+                    <div class="legend-item">
+                        <div class="legend-path"></div>
+                        <span>Check-in Path - Blue Dashed Line</span>
+                    </div>
                 </div>
             </div>
             <!-- Warning Control -->
@@ -191,6 +397,10 @@
                                         <input type="radio" name="drawing-mode" value="circle">
                                         <span class="radio-label">Circle</span>
                                     </label>
+                                    <label class="radio-container">
+                                        <input type="radio" name="drawing-mode" value="polygon">
+                                        <span class="radio-label">Polygon</span>
+                                    </label>
                                 </div>
                             </div>
                             <div id="circle-radius-container" style="display:none;">
@@ -200,7 +410,7 @@
                             </div>
                             <button id="go-to-map-btn" class="btn btn-info">Go to Map</button>
                             <div class="instructions">
-                                <p>Click on the map to place your warning marker or circle after pressing "Go to Map".</p>
+                                <p>After pressing "Go to Map", draw the selected shape on the map. For polygons, click multiple points and double-click to finish.</p>
                             </div>
                         </div>
                         <div class="modal-footer">
@@ -225,8 +435,8 @@
                             <!-- Content will be populated dynamically -->
                         </div>
                         <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
                             <button type="button" class="btn btn-danger delete-warning-btn">Delete Warning</button>
-                            <button type="button" class="btn btn-secondary" id="close-warning-details-btn" data-dismiss="modal">Close</button>
                         </div>
                     </div>
                 </div>
@@ -339,6 +549,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
 <script>
 // Initialize Supabase client
 const supabase = window.supabase.createClient(
@@ -402,14 +613,7 @@ const warningIcons = {
         iconAnchor: [16, 32],
         popupAnchor: [0, -32],
         shadowSize: [41, 41]
-    }).options.iconUrl ? L.icon({
-        iconUrl: '{{ asset('images/warning-danger.png') }}',
-        shadowUrl: '{{ asset('images/marker-shadow.png') }}',
-        iconSize: [32, 32],
-        iconAnchor: [16, 32],
-        popupAnchor: [0, -32],
-        shadowSize: [41, 41]
-    }) : defaultWarningIcon,
+    }),
     'high-risk': L.icon({
         iconUrl: '{{ asset('images/warning-high-risk.png') }}',
         shadowUrl: '{{ asset('images/marker-shadow.png') }}',
@@ -417,14 +621,7 @@ const warningIcons = {
         iconAnchor: [16, 32],
         popupAnchor: [0, -32],
         shadowSize: [41, 41]
-    }).options.iconUrl ? L.icon({
-        iconUrl: '{{ asset('images/warning-high-risk.png') }}',
-        shadowUrl: '{{ asset('images/marker-shadow.png') }}',
-        iconSize: [32, 32],
-        iconAnchor: [16, 32],
-        popupAnchor: [0, -32],
-        shadowSize: [41, 41]
-    }) : defaultWarningIcon,
+    }),
     'flood': L.icon({
         iconUrl: '{{ asset('images/warning-flood.png') }}',
         shadowUrl: '{{ asset('images/marker-shadow.png') }}',
@@ -432,14 +629,7 @@ const warningIcons = {
         iconAnchor: [16, 32],
         popupAnchor: [0, -32],
         shadowSize: [41, 41]
-    }).options.iconUrl ? L.icon({
-        iconUrl: '{{ asset('images/warning-flood.png') }}',
-        shadowUrl: '{{ asset('images/marker-shadow.png') }}',
-        iconSize: [32, 32],
-        iconAnchor: [16, 32],
-        popupAnchor: [0, -32],
-        shadowSize: [41, 41]
-    }) : defaultWarningIcon,
+    }),
     'security': L.icon({
         iconUrl: '{{ asset('images/warning-security.png') }}',
         shadowUrl: '{{ asset('images/marker-shadow.png') }}',
@@ -447,14 +637,7 @@ const warningIcons = {
         iconAnchor: [16, 32],
         popupAnchor: [0, -32],
         shadowSize: [41, 41]
-    }).options.iconUrl ? L.icon({
-        iconUrl: '{{ asset('images/warning-security.png') }}',
-        shadowUrl: '{{ asset('images/marker-shadow.png') }}',
-        iconSize: [32, 32],
-        iconAnchor: [16, 32],
-        popupAnchor: [0, -32],
-        shadowSize: [41, 41]
-    }) : defaultWarningIcon,
+    }),
     'other': L.icon({
         iconUrl: '{{ asset('images/warning-other.png') }}',
         shadowUrl: '{{ asset('images/marker-shadow.png') }}',
@@ -462,17 +645,10 @@ const warningIcons = {
         iconAnchor: [16, 32],
         popupAnchor: [0, -32],
         shadowSize: [41, 41]
-    }).options.iconUrl ? L.icon({
-        iconUrl: '{{ asset('images/warning-other.png') }}',
-        shadowUrl: '{{ asset('images/marker-shadow.png') }}',
-        iconSize: [32, 32],
-        iconAnchor: [16, 32],
-        popupAnchor: [0, -32],
-        shadowSize: [41, 41]
-    }) : defaultWarningIcon
+    })
 };
 
-// Circle style based on warning type
+// Circle and polygon styles based on warning type
 const circleStyles = {
     'danger': { color: '#FF0000', fillColor: '#FF0000', fillOpacity: 0.2 },
     'high-risk': { color: '#FF6600', fillColor: '#FF6600', fillOpacity: 0.2 },
@@ -784,123 +960,119 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     });
 
-    // Legend toggle functionality
+    // Improved legend toggle functionality
     const legendToggle = document.getElementById('legend-toggle');
-    const warningLegend = document.querySelector('.warning-zones-legend');
-    const checkinLegend = document.querySelector('.map-legend');
-
+    const legendsContainer = document.getElementById('legends-container');
+    
     legendToggle.addEventListener('click', function() {
-        if (warningLegend.style.display === 'none' && checkinLegend.style.display === 'none') {
-            warningLegend.style.display = 'block';
-            checkinLegend.style.display = 'block';
+        if (legendsContainer.style.display === 'block') {
+            legendsContainer.style.display = 'none';
+            legendToggle.innerHTML = '<i class="fa fa-map-signs"></i> Legend';
         } else {
-            warningLegend.style.display = 'none';
-            checkinLegend.style.display = 'none';
+            legendsContainer.style.display = 'block';
+            // Reset to "All" tab when opening
+            const allTabBtn = document.querySelector('.tab-btn[data-tab="all"]');
+            if (allTabBtn) {
+                document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+                allTabBtn.classList.add('active');
+                document.getElementById('warning-tab').style.display = 'block';
+                document.getElementById('checkin-tab').style.display = 'block';
+                document.querySelector('.section-divider').style.display = 'block';
+            }
+            legendToggle.innerHTML = '<i class="fa fa-map-signs"></i> Hide Legend';
         }
     });
+
+    // Setup legend tabs
+    setTimeout(setupLegendTabs, 500);
+
+    // Load existing warning zones
+    loadWarningZones();
 });
 
+// Function to set up legend tabs
+function setupLegendTabs() {
+    const tabButtons = document.querySelectorAll('.tab-btn');
+    const warningTab = document.getElementById('warning-tab');
+    const checkinTab = document.getElementById('checkin-tab');
+    const divider = document.querySelector('.section-divider');
+    
+    tabButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            tabButtons.forEach(btn => btn.classList.remove('active'));
+            this.classList.add('active');
+            
+            const tabName = this.getAttribute('data-tab');
+            if (tabName === 'all') {
+                warningTab.style.display = 'block';
+                checkinTab.style.display = 'block';
+                divider.style.display = 'block';
+            } else if (tabName === 'warning') {
+                warningTab.style.display = 'block';
+                checkinTab.style.display = 'none';
+                divider.style.display = 'none';
+            } else if (tabName === 'checkin') {
+                warningTab.style.display = 'none';
+                checkinTab.style.display = 'block';
+                divider.style.display = 'none';
+            }
+        });
+    });
+}
+
 // Initialize warning elements
-let drawingMode = false;
+let drawHandler;
+let selectedShape = null;
 let currentDrawingType = 'marker';
-let tempMarker = null;
-let tempCircle = null;
-let selectedLocation = null;
-let selectedRadius = 200;
 let warningLayer = L.layerGroup().addTo(map);
 
 // Add event listener for the "Add Warning Zone" button
 document.getElementById('add-warning-btn').addEventListener('click', function() {
+    resetWarningForm();
     $('#warningModal').modal('show');
 });
 
 // Add event listener for the "Go to Map" button
 document.getElementById('go-to-map-btn').addEventListener('click', function() {
-    drawingMode = true;
-    currentDrawingType = document.querySelector('input[name="drawing-mode"]:checked').value;
-    if (currentDrawingType === 'circle') {
-        selectedRadius = parseInt(document.getElementById('circle-radius').value);
+    const drawingType = document.querySelector('input[name="drawing-mode"]:checked').value;
+    currentDrawingType = drawingType;
+    if (drawingType === 'marker') {
+        drawHandler = new L.Draw.Marker(map);
+    } else if (drawingType === 'circle') {
+        drawHandler = new L.Draw.Circle(map);
+    } else if (drawingType === 'polygon') {
+        drawHandler = new L.Draw.Polygon(map);
     }
+    drawHandler.enable();
     $('#warningModal').modal('hide');
 });
 
-// Handle radius input change
-document.getElementById('circle-radius').addEventListener('input', function() {
-    const radius = parseInt(this.value);
-    document.getElementById('radius-value').textContent = radius + 'm';
-    selectedRadius = radius;
-    
-    if (tempCircle && selectedLocation) {
-        tempCircle.setRadius(radius);
+// Handle drawn shape
+map.on('draw:created', function(e) {
+    if (selectedShape) {
+        map.removeLayer(selectedShape);
     }
-});
-
-// Handle drawing mode selection
-document.querySelectorAll('input[name="drawing-mode"]').forEach(input => {
-    input.addEventListener('change', function() {
-        currentDrawingType = this.value;
-        if (currentDrawingType === 'circle') {
-            document.getElementById('circle-radius-container').style.display = 'block';
-        } else {
-            document.getElementById('circle-radius-container').style.display = 'none';
-        }
-        
-        // Reset temp markers/circles
-        if (tempMarker) {
-            map.removeLayer(tempMarker);
-            tempMarker = null;
-        }
-        if (tempCircle) {
-            map.removeLayer(tempCircle);
-            tempCircle = null;
-        }
-        selectedLocation = null;
-        document.getElementById('save-warning-btn').disabled = true;
-    });
-});
-
-// Handle map click events for placing warnings
-map.on('click', function(e) {
-    if (!drawingMode) return;
-    
-    console.log('Map clicked at:', e.latlng);
-    selectedLocation = e.latlng;
-    
-    if (tempMarker) {
-        map.removeLayer(tempMarker);
-        tempMarker = null;
-    }
-    if (tempCircle) {
-        map.removeLayer(tempCircle);
-        tempCircle = null;
-    }
-    
-    const warningType = document.getElementById('warning-type').value;
-    
-    try {
-        if (currentDrawingType === 'marker') {
-            tempMarker = L.marker(e.latlng, { icon: warningIcons[warningType] }).addTo(map);
-            console.log('Marker added with icon:', warningIcons[warningType].options.iconUrl);
-        } else if (currentDrawingType === 'circle') {
-            tempCircle = L.circle(e.latlng, {
-                radius: selectedRadius,
-                ...circleStyles[warningType]
-            }).addTo(map);
-            console.log('Circle added with radius:', selectedRadius);
-        }
-    } catch (error) {
-        console.error('Error adding marker/circle:', error);
-    }
-    
+    selectedShape = e.layer;
+    map.addLayer(selectedShape);
+    drawHandler.disable();
     document.getElementById('save-warning-btn').disabled = false;
     $('#warningModal').modal('show');
-    drawingMode = false;
+});
+
+// Handle drawing cancellation
+map.on('draw:canceled', function() {
+    if (selectedShape) {
+        map.removeLayer(selectedShape);
+        selectedShape = null;
+    }
+    drawHandler.disable();
+    $('#warningModal').modal('show');
 });
 
 // Handle save warning button click
 document.getElementById('save-warning-btn').addEventListener('click', async function() {
-    if (!selectedLocation) {
-        showErrorModal('Please select a location on the map.');
+    if (!selectedShape) {
+        showErrorModal('Please draw a shape on the map.');
         return;
     }
     
@@ -913,24 +1085,49 @@ document.getElementById('save-warning-btn').addEventListener('click', async func
         return;
     }
     
-    const warningData = {
-        type: warningType,
-        title: warningTitle,
-        description: warningDescription,
-        latitude: selectedLocation.lat,
-        longitude: selectedLocation.lng,
-        radius: currentDrawingType === 'circle' ? selectedRadius : null,
-        shape_type: currentDrawingType,
-        created_at: new Date().toISOString()
-    };
-    
-    console.log('Saving warning with data:', warningData);
+    let warningData;
+    if (currentDrawingType === 'marker') {
+        const latlng = selectedShape.getLatLng();
+        warningData = {
+            type: warningType,
+            title: warningTitle,
+            description: warningDescription,
+            latitude: latlng.lat,
+            longitude: latlng.lng,
+            shape_type: 'marker',
+            created_at: new Date().toISOString()
+        };
+    } else if (currentDrawingType === 'circle') {
+        const center = selectedShape.getLatLng();
+        const radius = selectedShape.getRadius();
+        warningData = {
+            type: warningType,
+            title: warningTitle,
+            description: warningDescription,
+            latitude: center.lat,
+            longitude: center.lng,
+            radius: radius,
+            shape_type: 'circle',
+            created_at: new Date().toISOString()
+        };
+    } else if (currentDrawingType === 'polygon') {
+        const latlngs = selectedShape.getLatLngs()[0]; // Assuming simple polygon
+        const polygonCoords = latlngs.map(point => [point.lat, point.lng]);
+        warningData = {
+            type: warningType,
+            title: warningTitle,
+            description: warningDescription,
+            polygon_coords: polygonCoords,
+            shape_type: 'polygon',
+            created_at: new Date().toISOString()
+        };
+    }
     
     try {
         const { data, error } = await supabase.from('warning_zones').insert([warningData]).select();
         
         if (error) {
-            console.error('Supabase error:', error.message, error.details, error.hint);
+            console.error('Supabase error:', error.message);
             throw new Error(`Supabase error: ${error.message}`);
         }
         
@@ -973,6 +1170,13 @@ function addWarningToMap(warning) {
             radius: warning.radius,
             ...circleStyles[warning.type]
         });
+    } else if (warning.shape_type === 'polygon') {
+        const latlngs = warning.polygon_coords.map(coord => [coord[0], coord[1]]);
+        warningElement = L.polygon(latlngs, {
+            color: circleStyles[warning.type].color,
+            fillColor: circleStyles[warning.type].fillColor,
+            fillOpacity: circleStyles[warning.type].fillOpacity
+        });
     }
     
     warningElement.bindPopup(`<b>${warning.title}</b><br><button class="view-details-btn" data-id="${warning.zone_id}">View Details</button>`);
@@ -999,8 +1203,9 @@ function showWarningDetails(warning) {
         <h4>${warning.title}</h4>
         <p class="warning-type ${warning.type}"><strong>Type:</strong> ${warning.type.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}</p>
         <p><strong>Description:</strong> ${warning.description || 'No description provided'}</p>
+        <p><strong>Shape Type:</strong> ${warning.shape_type}</p>
         <p><strong>Created:</strong> ${new Date(warning.created_at).toLocaleString()}</p>
-        <p><strong>Location:</strong> Lat: ${warning.latitude.toFixed(6)}, Lng: ${warning.longitude.toFixed(6)}</p>
+        ${warning.shape_type === 'marker' || warning.shape_type === 'circle' ? `<p><strong>Location:</strong> Lat: ${warning.latitude ? warning.latitude.toFixed(6) : 'N/A'}, Lng: ${warning.longitude ? warning.longitude.toFixed(6) : 'N/A'}</p>` : ''}
         ${warning.shape_type === 'circle' ? `<p><strong>Radius:</strong> ${warning.radius}m</p>` : ''}
     `;
     
@@ -1012,7 +1217,6 @@ function showWarningDetails(warning) {
 document.querySelector('.delete-warning-btn').addEventListener('click', function() {
     const warningId = this.getAttribute('data-id');
     
-    // Find the warning data
     let warningToDelete = null;
     warningLayer.eachLayer(layer => {
         if (layer.warningData && layer.warningData.zone_id == warningId) {
@@ -1021,15 +1225,10 @@ document.querySelector('.delete-warning-btn').addEventListener('click', function
     });
     
     if (warningToDelete) {
-        // Store the warning ID for later use
         currentWarningToDelete = warningId;
-        
-        // Populate the confirmation modal with warning details
         const confirmModal = document.getElementById('deleteWarningModal');
         confirmModal.querySelector('.warning-title').textContent = warningToDelete.title;
         confirmModal.querySelector('.warning-type').textContent = `Type: ${warningToDelete.type.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}`;
-        
-        // Hide the details modal and show the confirmation modal
         $('#warningDetailsModal').modal('hide');
         $('#deleteWarningModal').modal('show');
     }
@@ -1045,58 +1244,36 @@ function resetWarningForm() {
     document.getElementById('circle-radius').value = 200;
     document.getElementById('radius-value').textContent = '200m';
     
-    if (tempMarker) {
-        map.removeLayer(tempMarker);
-        tempMarker = null;
+    if (selectedShape) {
+        map.removeLayer(selectedShape);
+        selectedShape = null;
     }
-    if (tempCircle) {
-        map.removeLayer(tempCircle);
-        tempCircle = null;
+    if (drawHandler) {
+        drawHandler.disable();
     }
-    selectedLocation = null;
-    drawingMode = false;
     currentDrawingType = 'marker';
     document.getElementById('save-warning-btn').disabled = true;
 }
 
-// Handle Cancel button functionality for Warning Modal
-document.getElementById('cancel-warning-btn').addEventListener('click', function() {
-    resetWarningForm();
-    $('#warningModal').modal('hide');
-});
-
-// Modal close events for additional cleanup
-$('#warningModal').on('hidden.bs.modal', function () {
-    resetWarningForm();
-});
-
-// Initialize warning zones on page load
-document.addEventListener('DOMContentLoaded', function() {
-    loadWarningZones();
-});
-
-// Handle warning deletion - Updated code
-let currentWarningToDelete = null;
-
+// Handle delete confirmation
 document.getElementById('confirm-delete-btn').addEventListener('click', async function() {
-    if (!currentWarningToDelete) return;
-    
+    const warningId = currentWarningToDelete;
     try {
-        const { error } = await supabase.from('warning_zones').delete().eq('zone_id', currentWarningToDelete);
+        const { error } = await supabase.from('warning_zones').delete().eq('zone_id', warningId);
         if (error) throw error;
         
         warningLayer.eachLayer(layer => {
-            if (layer.warningData && layer.warningData.zone_id == currentWarningToDelete) {
+            if (layer.warningData && layer.warningData.zone_id == warningId) {
                 warningLayer.removeLayer(layer);
             }
         });
         
         $('#deleteWarningModal').modal('hide');
-        currentWarningToDelete = null;
-        showSuccessModal('Warning deleted successfully!');
+        showSuccessModal('Warning zone deleted successfully!');
     } catch (error) {
-        console.error('Error deleting warning:', error);
-        showErrorModal('Failed to delete warning. Please try again.');
+        console.error('Error deleting warning zone:', error);
+        $('#deleteWarningModal').modal('hide');
+        showErrorModal(`Failed to delete warning zone: ${error.message}`);
     }
 });
 </script>
