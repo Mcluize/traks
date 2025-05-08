@@ -83,6 +83,7 @@ Route::group([
     // Dashboard API endpoints
     Route::get('api/tourist-arrivals/{filter}', [DashboardController::class, 'getTouristArrivals']);
     Route::get('api/incident-reports/{filter}', [DashboardController::class, 'getIncidentReports']);
+    Route::get('api/popular-spots/{filter}', [DashboardController::class, 'getPopularSpots']);
     Route::get('api/latest-tourists',            [DashboardController::class, 'getLatestTourists']);
     Route::get('api/checkins-by-spot/{filter}',  [DashboardController::class, 'getCheckinsBySpot']);
     Route::get('api/accounts/count',             [DashboardController::class, 'getAccountCounts']);

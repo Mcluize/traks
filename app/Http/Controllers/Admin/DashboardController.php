@@ -5,15 +5,22 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Services\SupabaseService;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
 class DashboardController extends Controller
 {
+    protected $supabaseService;
+
+    public function __construct(SupabaseService $supabaseService)
+    {
+        $this->supabaseService = $supabaseService;
+    }
+
     public function getTouristArrivals($filter)
     {
-        $supabase = new SupabaseService();
         $now = Carbon::now();
-        $localToday = Carbon::today(); // Start of today in local timezone
+        $localToday = Carbon::today();
         $localTomorrow = $localToday->copy()->addDay();
         $utcTodayStart = $localToday->copy()->utc();
         $utcTomorrowStart = $localTomorrow->copy()->utc();
@@ -51,7 +58,6 @@ class DashboardController extends Controller
                 break;
 
             case 'all_time':
-                // No time filters
                 break;
 
             default:
@@ -60,21 +66,18 @@ class DashboardController extends Controller
 
         \Log::info('Checkins Filters: ' . json_encode($filters));
 
-        // Step 1: Fetch tourist_ids from checkins
-        $checkinsData = $supabase->fetchTable('checkins', $filters, false);
+        $checkinsData = $this->supabaseService->fetchTable('checkins', $filters, false);
         if ($checkinsData === null) {
             \Log::error('Failed to fetch checkins data');
             return response()->json(['error' => 'Failed to fetch checkins data'], 500);
         }
 
-        // Extract tourist_ids
         $touristIds = array_column($checkinsData, 'tourist_id');
-        $touristIds = array_filter($touristIds, fn($id) => !is_null($id)); // Remove null values
+        $touristIds = array_filter($touristIds, fn($id) => !is_null($id));
         if (empty($touristIds)) {
             return response()->json(['count' => 0]);
         }
 
-        // Step 2: Fetch users with user_type = 'user' for the tourist_ids
         $userFilters = [
             'select' => 'user_id',
             'user_type' => 'eq.user',
@@ -83,13 +86,12 @@ class DashboardController extends Controller
 
         \Log::info('Users Filters: ' . json_encode($userFilters));
 
-        $usersData = $supabase->fetchTable('users', $userFilters, false);
+        $usersData = $this->supabaseService->fetchTable('users', $userFilters, false);
         if ($usersData === null) {
             \Log::error('Failed to fetch users data');
             return response()->json(['error' => 'Failed to fetch users data'], 500);
         }
 
-        // Extract unique tourist_ids that are actual tourists
         $touristUserIds = array_column($usersData, 'user_id');
         $uniqueTouristIds = array_unique($touristUserIds);
         $count = count($uniqueTouristIds);
@@ -99,7 +101,6 @@ class DashboardController extends Controller
 
     public function getCheckinsBySpot($filter)
     {
-        $supabase = new SupabaseService();
         $now = Carbon::now();
         $localToday = Carbon::today();
         $localTomorrow = $localToday->copy()->addDay();
@@ -149,7 +150,7 @@ class DashboardController extends Controller
                 return response()->json(['error' => 'Invalid filter'], 400);
         }
 
-        $data = $supabase->fetchTable('checkins', $filters, false);
+        $data = $this->supabaseService->fetchTable('checkins', $filters, false);
         if ($data === null) {
             return response()->json(['error' => 'Failed to fetch data'], 500);
         }
@@ -173,22 +174,20 @@ class DashboardController extends Controller
 
     public function getIncidentReports($filter)
     {
-        $supabase = new SupabaseService();
-        return $supabase->getIncidentReports($filter);
+        return $this->supabaseService->getIncidentReports($filter);
     }
 
     public function getLatestTourists()
     {
         try {
-            $supabase = new SupabaseService();
             $filters = [
-                'user_type' => 'eq.user', // Filter for tourists (user_type = 'user')
-                'order' => 'created_at.desc', // Sort by creation date, latest first
-                'limit' => 3, // Limit to 3 latest tourists
+                'user_type' => 'eq.user',
+                'order' => 'created_at.desc',
+                'limit' => 3,
             ];
 
             Log::info('Fetching latest tourists with filters: ' . json_encode($filters));
-            $data = $supabase->fetchTable('users', $filters, false);
+            $data = $this->supabaseService->fetchTable('users', $filters, false);
 
             if ($data === null || !is_array($data)) {
                 Log::warning('Supabase returned null or invalid data for latest tourists');
@@ -198,15 +197,13 @@ class DashboardController extends Controller
             Log::info('Raw data from Supabase: ' . json_encode($data));
 
             $ids = array_map(function ($user) {
-                // Check for both 'id' and 'user_id' to handle schema variations
-                $touristId = isset($user['user_id']) ? $user['user_id'] : (isset($user['id']) ? $user['id'] : null);
+                $touristId = $user['user_id'] ?? $user['id'] ?? null;
                 if ($touristId === null) {
                     Log::warning('User record missing ID field: ' . json_encode($user));
                 }
                 return $touristId;
             }, $data);
 
-            // Filter out null values and ensure we have valid IDs
             $validIds = array_filter($ids, fn($id) => $id !== null);
 
             Log::info('Processed tourist IDs: ' . json_encode($validIds));
@@ -224,9 +221,8 @@ class DashboardController extends Controller
     public function getAccountCounts()
     {
         try {
-            $supabase = new SupabaseService();
-            $users = $supabase->fetchTable('users');
-            
+            $users = $this->supabaseService->fetchTable('users');
+
             if ($users === null || !is_array($users)) {
                 Log::warning('Supabase returned null or invalid data for account counts');
                 return response()->json(['touristCount' => 0, 'adminCount' => 0], 200);
@@ -247,4 +243,83 @@ class DashboardController extends Controller
             return response()->json(['touristCount' => 0, 'adminCount' => 0, 'error' => 'Server error fetching account counts'], 500);
         }
     }
+
+    public function getPopularSpots($filter)
+{
+    $cacheKey = 'popular_spots_' . $filter;
+    $data = Cache::remember($cacheKey, 60, function () use ($filter) {
+        // Fetch check-ins with minimal columns
+        $dateFilter = $this->getDateFilter($filter);
+        $filters = ['select' => 'spot_id,tourist_id'];
+        if (isset($dateFilter['and'])) {
+            $filters['and'] = $dateFilter['and'];
+        }
+        $checkins = $this->supabaseService->fetchTable('checkins', $filters);
+
+        // Process check-ins
+        $spotVisits = [];
+        if ($filter === 'today') {
+            $uniqueTouristsPerSpot = [];
+            foreach ($checkins as $checkin) {
+                $spotId = $checkin['spot_id'];
+                $touristId = $checkin['tourist_id'];
+                if (!isset($uniqueTouristsPerSpot[$spotId])) {
+                    $uniqueTouristsPerSpot[$spotId] = [];
+                }
+                if (!array_key_exists($touristId, $uniqueTouristsPerSpot[$spotId])) {
+                    $uniqueTouristsPerSpot[$spotId][$touristId] = true;
+                    $spotVisits[$spotId] = ($spotVisits[$spotId] ?? 0) + 1;
+                }
+            }
+        } else {
+            foreach ($checkins as $checkin) {
+                $spotId = $checkin['spot_id'];
+                if ($spotId) {
+                    $spotVisits[$spotId] = ($spotVisits[$spotId] ?? 0) + 1;
+                }
+            }
+        }
+
+        // Fetch cached tourist spots
+        $touristSpots = Cache::remember('tourist_spots', 3600, function () {
+            return $this->supabaseService->fetchTable('tourist_spots', ['select' => 'spot_id,name']);
+        });
+
+        // Map spot IDs to names efficiently
+        $spotIdToName = array_column($touristSpots, 'name', 'spot_id');
+        $data = array_map(function($id) use ($spotVisits, $spotIdToName) {
+            $name = $spotIdToName[$id] ?? 'Unknown';
+            return ['spot' => $name, 'visits' => $spotVisits[$id] ?? 0];
+        }, array_keys($spotVisits));
+
+        return $data;
+    });
+
+    return response()->json($data);
+}
+
+private function getDateFilter($filter)
+{
+    $now = Carbon::now('Asia/Manila');
+    switch ($filter) {
+        case 'today':
+            $start = $now->startOfDay()->toIso8601String();
+            $end = $now->endOfDay()->toIso8601String();
+            return ['and' => "(timestamp.gte.{$start},timestamp.lt.{$end})"];
+        case 'this_week':
+            $start = $now->startOfWeek()->toIso8601String();
+            $end = $now->endOfWeek()->toIso8601String();
+            return ['and' => "(timestamp.gte.{$start},timestamp.lt.{$end})"];
+        case 'this_month':
+            $start = $now->startOfMonth()->toIso8601String();
+            $end = $now->endOfMonth()->toIso8601String();
+            return ['and' => "(timestamp.gte.{$start},timestamp.lt.{$end})"];
+        case 'all_time':
+            return [];
+        default:
+            $start = $now->subMonth()->startOfMonth()->toIso8601String();
+            $end = $now->subMonth()->endOfMonth()->toIso8601String();
+            return ['and' => "(timestamp.gte.{$start},timestamp.lt.{$end})"];
+    }
+}
 }

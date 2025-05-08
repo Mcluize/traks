@@ -268,10 +268,8 @@ body {
     background-color: transparent !important;
 }
 
-/* Make body still scrollable when modal is open */
 body.modal-open {
     overflow: auto !important;
-    padding-right: 0 !important;
 }
 
 /* Position modals properly */
@@ -292,7 +290,15 @@ body.modal-open {
     border: none;
     overflow: hidden;
 }
-
+html {
+    overflow-y: hidden;
+    height: 100%;
+}
+body {
+    overflow-y: auto;
+    height: 100%;
+    margin: 0;
+}
 .modal-header {
     background-color: #0BC8CA;
     color: white;

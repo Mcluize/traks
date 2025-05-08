@@ -563,9 +563,14 @@ const map = L.map('map', {
     attributionControl: true,
 }).setView([7.0767, 125.8259], 13);
 
+// Add tile layer to the map
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
 }).addTo(map);
+
+// Create layer groups for check-ins and warnings
+const warningLayer = L.layerGroup().addTo(map);
+const checkinLayer = L.layerGroup().addTo(map);
 
 // Define marker icons with fallbacks
 const greenIcon = L.icon({
@@ -695,12 +700,15 @@ async function fetchCheckins(touristId, filter) {
         }
 
         const { data, error } = await query;
-        if (error) throw new Error(error.message);
+        if (error) {
+            console.error('Supabase query error:', error);
+            throw new Error(`Failed to fetch check-ins: ${error.message}`);
+        }
         console.log('Fetched check-ins:', data);
         return data;
     } catch (error) {
         console.error('Error fetching check-ins:', error);
-        return null;
+        throw error;
     }
 }
 
@@ -734,11 +742,7 @@ function createCurvedPath(coords) {
 
 // Plot check-ins on the map
 function plotCheckins(checkins) {
-    map.eachLayer(layer => {
-        if (layer instanceof L.Marker || layer instanceof L.Polyline) {
-            map.removeLayer(layer);
-        }
-    });
+    checkinLayer.clearLayers(); // Clear only check-in layers
 
     const spotCounts = {};
     checkins.forEach(checkin => {
@@ -752,8 +756,12 @@ function plotCheckins(checkins) {
     const pathCoordinates = [];
     checkins.forEach((checkin, index) => {
         const { latitude, longitude, name, spot_id } = checkin.tourist_spots;
-        let markerIcon;
+        if (!latitude || !longitude) {
+            console.warn(`Invalid coordinates for check-in at ${name}: latitude=${latitude}, longitude=${longitude}`);
+            return;
+        }
 
+        let markerIcon;
         if (index === 0) {
             markerIcon = greenIcon;
         } else if (index === checkins.length - 1) {
@@ -764,7 +772,7 @@ function plotCheckins(checkins) {
 
         const count = spotCounts[spot_id];
         const marker = L.marker([latitude, longitude], { icon: markerIcon })
-            .addTo(map)
+            .addTo(checkinLayer)
             .bindPopup(`<b>${name}</b><br>Check-in Time: ${new Date(checkin.timestamp).toLocaleString()}<br>Total Check-ins at this spot: ${count}`);
 
         pathCoordinates.push([latitude, longitude]);
@@ -777,7 +785,7 @@ function plotCheckins(checkins) {
             weight: 4,
             dashArray: '10, 10',
             dashOffset: '0'
-        }).addTo(map);
+        }).addTo(checkinLayer);
     }
 
     if (pathCoordinates.length > 0) {
@@ -885,11 +893,7 @@ function displayTableWithPagination(checkins, currentPage) {
 // Handle no data or error scenario
 function showNoData(message = 'No check-ins found for this tourist.') {
     document.querySelector('.tourist-cards').innerHTML = `<p>${message}</p>`;
-    map.eachLayer(layer => {
-        if (layer instanceof L.Marker || layer instanceof L.Polyline) {
-            map.removeLayer(layer);
-        }
-    });
+    checkinLayer.clearLayers();
 }
 
 // Show loading state
@@ -918,12 +922,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         const filter = filterSelect.value;
         if (touristId) {
             showLoading();
-            const checkins = await fetchCheckins(touristId, filter);
-            if (checkins && checkins.length > 0) {
-                plotCheckins(checkins);
-                displaySummary(checkins, touristId);
-            } else {
-                showNoData('No check-ins found');
+            try {
+                const checkins = await fetchCheckins(touristId, filter);
+                if (checkins && checkins.length > 0) {
+                    plotCheckins(checkins);
+                    displaySummary(checkins, touristId);
+                } else {
+                    showNoData('No check-ins found for this tourist ID.');
+                }
+            } catch (error) {
+                showErrorModal(`Error fetching check-ins: ${error.message}`);
+                showNoData('Failed to load check-ins. Please try again.');
             }
         } else {
             showNoData('Please enter a tourist ID.');
@@ -987,7 +996,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     setTimeout(setupLegendTabs, 500);
 
     // Load existing warning zones
-    loadWarningZones();
+    try {
+        await loadWarningZones();
+    } catch (error) {
+        console.error('Failed to load warning zones on initialization:', error);
+        showErrorModal(`Error loading warning zones: ${error.message}`);
+    }
 });
 
 // Function to set up legend tabs
@@ -1024,7 +1038,6 @@ function setupLegendTabs() {
 let drawHandler;
 let selectedShape = null;
 let currentDrawingType = 'marker';
-let warningLayer = L.layerGroup().addTo(map);
 
 // Add event listener for the "Add Warning Zone" button
 document.getElementById('add-warning-btn').addEventListener('click', function() {
@@ -1127,7 +1140,7 @@ document.getElementById('save-warning-btn').addEventListener('click', async func
         const { data, error } = await supabase.from('warning_zones').insert([warningData]).select();
         
         if (error) {
-            console.error('Supabase error:', error.message);
+            console.error('Supabase error on insert:', error);
             throw new Error(`Supabase error: ${error.message}`);
         }
         
@@ -1147,15 +1160,23 @@ document.getElementById('save-warning-btn').addEventListener('click', async func
 async function loadWarningZones() {
     try {
         const { data, error } = await supabase.from('warning_zones').select('*');
-        if (error) throw error;
+        if (error) {
+            console.error('Supabase error on fetch warning zones:', error);
+            throw new Error(`Failed to load warning zones: ${error.message}`);
+        }
         
+        console.log('Fetched warning zones:', data);
         if (data && data.length > 0) {
+            warningLayer.clearLayers(); // Clear existing warnings to avoid duplicates
             data.forEach(warning => {
                 addWarningToMap(warning);
             });
+        } else {
+            console.log('No warning zones found in the database.');
         }
     } catch (error) {
         console.error('Error loading warning zones:', error);
+        throw error;
     }
 }
 
@@ -1164,19 +1185,44 @@ function addWarningToMap(warning) {
     let warningElement;
     
     if (warning.shape_type === 'marker') {
-        warningElement = L.marker([warning.latitude, warning.longitude], { icon: warningIcons[warning.type] });
+        if (!warning.latitude || !warning.longitude) {
+            console.warn(`Invalid coordinates for warning zone ${warning.title}: latitude=${warning.latitude}, longitude=${warning.longitude}`);
+            return;
+        }
+        warningElement = L.marker([warning.latitude, warning.longitude], { icon: warningIcons[warning.type] || defaultWarningIcon });
     } else if (warning.shape_type === 'circle') {
+        if (!warning.latitude || !warning.longitude || !warning.radius) {
+            console.warn(`Invalid circle data for warning zone ${warning.title}: latitude=${warning.latitude}, longitude=${warning.longitude}, radius=${warning.radius}`);
+            return;
+        }
         warningElement = L.circle([warning.latitude, warning.longitude], {
             radius: warning.radius,
             ...circleStyles[warning.type]
         });
     } else if (warning.shape_type === 'polygon') {
-        const latlngs = warning.polygon_coords.map(coord => [coord[0], coord[1]]);
+        if (!warning.polygon_coords || !Array.isArray(warning.polygon_coords)) {
+            console.warn(`Invalid polygon coordinates for warning zone ${warning.title}:`, warning.polygon_coords);
+            return;
+        }
+        const latlngs = warning.polygon_coords.map(coord => {
+            if (!coord || coord.length !== 2) {
+                console.warn(`Invalid coordinate in polygon for warning zone ${warning.title}:`, coord);
+                return null;
+            }
+            return [coord[0], coord[1]];
+        }).filter(coord => coord !== null);
+        if (latlngs.length < 3) {
+            console.warn(`Not enough valid coordinates to form a polygon for warning zone ${warning.title}`);
+            return;
+        }
         warningElement = L.polygon(latlngs, {
             color: circleStyles[warning.type].color,
             fillColor: circleStyles[warning.type].fillColor,
             fillOpacity: circleStyles[warning.type].fillOpacity
         });
+    } else {
+        console.warn(`Unsupported shape type for warning zone ${warning.title}: ${warning.shape_type}`);
+        return;
     }
     
     warningElement.bindPopup(`<b>${warning.title}</b><br><button class="view-details-btn" data-id="${warning.zone_id}">View Details</button>`);
@@ -1260,7 +1306,10 @@ document.getElementById('confirm-delete-btn').addEventListener('click', async fu
     const warningId = currentWarningToDelete;
     try {
         const { error } = await supabase.from('warning_zones').delete().eq('zone_id', warningId);
-        if (error) throw error;
+        if (error) {
+            console.error('Supabase error on delete:', error);
+            throw new Error(`Failed to delete warning zone: ${error.message}`);
+        }
         
         warningLayer.eachLayer(layer => {
             if (layer.warningData && layer.warningData.zone_id == warningId) {

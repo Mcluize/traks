@@ -426,63 +426,136 @@ body {
     font-size: 12px;
 }
 
-/* Analytics Card (Expanded) */
 .analytics-card {
-    width: 1131px; /* Spans from left:283px to right:1414px (map card's right edge) */
+    width: 1131px;
     height: 373px;
     top: 625px;
-    left: 283px; /* Starts at original Manage Tourist left position */
+    left: 283px;
     border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    position: absolute;
+    background-color: white;
 }
 
 .analytics-card .card-header {
-    width: 88px;
-    height: 27px;
+    padding: 15px 15px 10px;
     font-family: 'Poppins', sans-serif;
     font-weight: 700;
-    font-size: 18px;
-    line-height: 150%;
-    letter-spacing: 0;
-    vertical-align: middle;
+    font-size: 16px;
     color: #484A58;
-    padding-left: 27px;
-    margin-bottom: -25px;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: none;
 }
 
-.analytics-header {
-    margin-bottom: 15px;
-    margin-left: 20px;
+/* Removed the chart-actions class as it's no longer needed */
+
+#spotsFilterDashboard {
+    padding: 5px 10px;
+    border: 1px solid #FF7E3F;
+    border-radius: 4px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 12px;
+    color: white;
+    background-color: #FF7E3F;
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+    width: auto;
+    max-width: 120px;
+    text-align: center;
 }
 
-.analytics-total h2 {
-    font-size: 32px;
-    font-weight: 700 !important;
-    margin: 0;
-    color: #292D32;
-    line-height: 100%;
+#spotsFilterDashboard:hover {
+    background-color: #ff6a20; /* Slightly darker orange on hover */
+    border-color: #ff6a20;
 }
 
-.analytics-total p {
-    font-weight: 500 !important;
-    font-size: 8px;
-    color: #666;
-    margin: 5px 0 0;
+/* Style for the options in the dropdown */
+#spotsFilterDashboard option {
+    background-color: white;
+    color: #484A58;
+    padding: 8px;
+}
+
+/* Styling for dropdown when opened (for browsers that support) */
+#spotsFilterDashboard option:hover,
+#spotsFilterDashboard option:focus,
+#spotsFilterDashboard option:active,
+#spotsFilterDashboard option:checked {
+    background-color: #FF7E3F !important;
+    color: white !important;
+    box-shadow: 0 0 10px 100px #FF7E3F inset !important;
+    -webkit-text-fill-color: white !important;
+}
+
+/* For webkit browsers */
+#spotsFilterDashboard::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+}
+
+.card-body {
+    padding: 0 15px 15px;
 }
 
 .chart-container {
-    width: 1087px; /* Adjusted to fit new width (1131px - padding) */
-    height: 283px;
+    width: 100%;
+    height: 290px;
     position: relative;
-    padding: 10px;
     border: 1px solid #F1F1F1;
     border-radius: 5px;
-    margin: 10px auto;
+    background-color: white;
     overflow: hidden;
+    padding: 10px;
 }
 
-canvas#analyticsChart {
+canvas#popularSpotsDashboardChart {
     max-width: 100%;
     height: 100% !important;
+}
+
+/* Override Bootstrap form-select styles for our specific dropdown */
+.form-select-sm#spotsFilterDashboard {
+    padding-right: 10px; /* Reduced padding since we don't need space for the arrow */
+    background-image: none; /* Remove the dropdown arrow */
+}
+
+/* Custom styling for select element */
+select#spotsFilterDashboard {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1440px) {
+    .analytics-card {
+        transform: scale(0.9);
+        transform-origin: top left;
+    }
+}
+
+@media (max-width: 992px) {
+    .analytics-card {
+        position: relative;
+        top: auto;
+        left: auto;
+        width: 100% !important;
+        height: auto !important;
+        margin-bottom: 20px;
+        transform: none;
+    }
+    
+    .chart-container {
+        height: 250px;
+    }
+}
+
+@media (max-width: 768px) {
+    .chart-container {
+        height: 200px;
+    }
 }
 
 /* Header Styles */
@@ -794,6 +867,7 @@ h2.header-container small {
 .stats-number.loading {
     animation: pulse 1.5s infinite ease-in-out;
 }
+
 
 @keyframes pulse {
     0% { opacity: 0.6; }

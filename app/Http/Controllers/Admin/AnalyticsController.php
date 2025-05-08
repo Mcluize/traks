@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Services\SupabaseService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Cache;
 use Carbon\Carbon;
 
 class AnalyticsController extends Controller
@@ -175,51 +176,54 @@ class AnalyticsController extends Controller
 
     public function getPopularSpots($filter)
     {
-        $dateFilter = $this->getDateFilter($filter);
-        $filters = [];
-        if (is_array($dateFilter)) {
-            $filters = [
-                'timestamp' => 'gte.' . $dateFilter['gte'],
-                'timestamp' => 'lt.' . $dateFilter['lt']
-            ];
-        } elseif ($dateFilter) {
-            $filters = ['timestamp' => 'gte.' . $dateFilter->toIso8601String()];
-        }
-        $checkins = $this->supabaseService->fetchTable('checkins', $filters);
-        Log::info('Fetched checkins for filter', ['filter' => $filter, 'checkins' => $checkins]);
+        $cacheKey = 'popular_spots_' . $filter;
+        $data = Cache::remember($cacheKey, 60, function () use ($filter) {
+            $dateFilter = $this->getDateFilter($filter);
+            $filters = [];
+            if (is_array($dateFilter)) {
+                $filters = [
+                    'timestamp' => 'gte.' . $dateFilter['gte'],
+                    'timestamp' => 'lt.' . $dateFilter['lt']
+                ];
+            }
+            $checkins = $this->supabaseService->fetchTable('checkins', $filters);
+            Log::info('Fetched checkins for filter', ['filter' => $filter, 'checkins' => $checkins]);
 
-        $spotVisits = [];
-        if ($filter === 'today') {
-            $today = Carbon::today('Asia/Manila')->toDateString();
-            $uniqueTouristsPerSpot = [];
-            foreach ($checkins as $checkin) {
-                $spotId = $checkin['spot_id'];
-                $touristId = $checkin['tourist_id'];
-                $checkinDate = Carbon::parse($checkin['timestamp'], 'Asia/Manila')->toDateString();
-                if ($checkinDate === $today) {
-                    if (!isset($uniqueTouristsPerSpot[$spotId])) {
-                        $uniqueTouristsPerSpot[$spotId] = [];
+            $spotVisits = [];
+            if ($filter === 'today') {
+                $today = Carbon::today('Asia/Manila')->toDateString();
+                $uniqueTouristsPerSpot = [];
+                foreach ($checkins as $checkin) {
+                    $spotId = $checkin['spot_id'];
+                    $touristId = $checkin['tourist_id'];
+                    $checkinDate = Carbon::parse($checkin['timestamp'], 'Asia/Manila')->toDateString();
+                    if ($checkinDate === $today) {
+                        if (!isset($uniqueTouristsPerSpot[$spotId])) {
+                            $uniqueTouristsPerSpot[$spotId] = [];
+                        }
+                        if (!in_array($touristId, $uniqueTouristsPerSpot[$spotId])) {
+                            $uniqueTouristsPerSpot[$spotId][] = $touristId;
+                            $spotVisits[$spotId] = ($spotVisits[$spotId] ?? 0) + 1;
+                        }
                     }
-                    if (!in_array($touristId, $uniqueTouristsPerSpot[$spotId])) {
-                        $uniqueTouristsPerSpot[$spotId][] = $touristId;
+                }
+            } else {
+                foreach ($checkins as $checkin) {
+                    $spotId = $checkin['spot_id'];
+                    if ($spotId) {
                         $spotVisits[$spotId] = ($spotVisits[$spotId] ?? 0) + 1;
                     }
                 }
             }
-        } else {
-            foreach ($checkins as $checkin) {
-                $spotId = $checkin['spot_id'];
-                if ($spotId) {
-                    $spotVisits[$spotId] = ($spotVisits[$spotId] ?? 0) + 1;
-                }
-            }
-        }
 
-        $touristSpots = $this->supabaseService->fetchTable('tourist_spots');
-        $data = array_map(function($id) use ($spotVisits, $touristSpots) {
-            $name = $touristSpots[array_search($id, array_column($touristSpots, 'spot_id'))]['name'] ?? 'Unknown';
-            return ['spot' => $name, 'visits' => $spotVisits[$id] ?? 0];
-        }, array_keys($spotVisits));
+            $touristSpots = $this->supabaseService->fetchTable('tourist_spots');
+            $data = array_map(function($id) use ($spotVisits, $touristSpots) {
+                $name = $touristSpots[array_search($id, array_column($touristSpots, 'spot_id'))]['name'] ?? 'Unknown';
+                return ['spot' => $name, 'visits' => $spotVisits[$id] ?? 0];
+            }, array_keys($spotVisits));
+            return $data;
+        });
+
         return response()->json($data);
     }
 
@@ -233,13 +237,22 @@ class AnalyticsController extends Controller
                     'lt' => $now->endOfDay()->toIso8601String()
                 ];
             case 'this_week':
-                return $now->startOfWeek();
+                return [
+                    'gte' => $now->startOfWeek()->toIso8601String(),
+                    'lt' => $now->endOfWeek()->toIso8601String()
+                ];
             case 'this_month':
-                return $now->startOfMonth();
+                return [
+                    'gte' => $now->startOfMonth()->toIso8601String(),
+                    'lt' => $now->endOfMonth()->toIso8601String()
+                ];
             case 'all_time':
                 return null;
             default:
-                return $now->subMonth();
+                return [
+                    'gte' => $now->subMonth()->startOfMonth()->toIso8601String(),
+                    'lt' => $now->subMonth()->endOfMonth()->toIso8601String()
+                ];
         }
     }
 }
