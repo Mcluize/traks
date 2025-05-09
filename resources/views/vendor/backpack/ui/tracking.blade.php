@@ -200,6 +200,10 @@
         background-image: url('{{ asset('images/marker-icon-2x-red.png') }}');
     }
     
+    .legend-marker.current-location {
+        background-image: url('{{ asset('images/marker-icon-2x-yellow.png') }}');
+    }
+    
     /* Warning Zone Markers - Ensure original appearance */
     .legend-marker.danger-zone {
         background-image: url('{{ asset('images/warning-danger.png') }}');
@@ -343,6 +347,10 @@
                     <div class="legend-item">
                         <div class="legend-marker last-checkin"></div>
                         <span>Last Check-in - Red Marker</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-marker current-location"></div>
+                        <span>Current Location - Yellow Marker</span>
                     </div>
                     
                     <h5>Paths</h5>
@@ -505,6 +513,53 @@
                 </div>
             </div>
 
+            <!-- Modal for PIN Input with Cancel Button -->
+            <div class="modal fade" id="locationPinModal" tabindex="-1" role="dialog" aria-labelledby="locationPinModalLabel" aria-hidden="true" data-backdrop="false">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header" style="background-color: #0BC8CA; color: #fff;">
+                            <h5 class="modal-title" id="locationPinModalLabel">Enter PIN to View Current Location</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">×</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <input type="password" id="pinInput" class="form-control mb-3" placeholder="••••••" maxlength="6">
+                            <div id="pinError" class="text-danger" style="display:none;">Incorrect PIN.</div>
+                            <div class="mt-3">
+                                <button id="changePinBtn" class="btn btn-warning">Change PIN</button>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" id="cancelPinModal" data-dismiss="modal">Cancel</button>
+                            <button type="button" class="btn btn-primary" id="unlockLocationBtn" style="background-color: #FF7E3F;">Unlock</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal for Change PIN -->
+            <div class="modal fade" id="changePinModal" tabindex="-1" role="dialog" aria-labelledby="changePinModalLabel" aria-hidden="true" data-backdrop="false">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header" style="background-color: #FF7E3F; color: #fff;">
+                            <h5 class="modal-title" id="changePinModalLabel">Change Your PIN</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">×</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <input type="password" id="newPinInput" class="form-control mb-3" placeholder="Enter New PIN" maxlength="6">
+                            <div id="pinChangeError" class="text-danger" style="display:none;">Failed to update PIN.</div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" id="cancelPinChange" data-dismiss="modal">Cancel</button>
+                            <button type="button" class="btn btn-success" id="saveNewPinBtn">Save New PIN</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div class="tourist-info-section">
                 <div class="search-container">
                     <div class="search-header">Search ID</div>
@@ -551,11 +606,19 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
 <script>
+// Define Supabase configuration
+const supabaseUrl = '{{ config('services.supabase.url') }}';
+const supabaseKey = '{{ config('services.supabase.key') }}';
+
+// Validate Supabase configuration
+if (!supabaseUrl || !supabaseKey) {
+    console.error('Supabase configuration is missing. Please check your .env file.');
+    document.body.innerHTML = '<p>Error: Supabase configuration is missing. Please contact the administrator.</p>';
+    throw new Error('Supabase configuration missing');
+}
+
 // Initialize Supabase client
-const supabase = window.supabase.createClient(
-    '{{ config('services.supabase.url') }}',
-    '{{ config('services.supabase.key') }}'
-);
+const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
 // Initialize Leaflet map
 const map = L.map('map', {
@@ -593,6 +656,16 @@ const redIcon = L.icon({
 
 const blueIcon = L.icon({
     iconUrl: '{{ asset('images/marker-icon-2x-blue.png') }}',
+    shadowUrl: '{{ asset('images/marker-shadow.png') }}',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41]
+});
+
+// Current Location Icon
+const currentLocationIcon = L.icon({
+    iconUrl: '{{ asset('images/marker-icon-2x-yellow.png') }}',
     shadowUrl: '{{ asset('images/marker-shadow.png') }}',
     iconSize: [25, 41],
     iconAnchor: [12, 41],
@@ -666,6 +739,61 @@ const circleStyles = {
 setTimeout(function() {
     map.invalidateSize();
 }, 100);
+
+// Variable to store the current tourist ID
+let currentTouristId;
+
+// Variable to store the interval ID for location updates
+let locationUpdateInterval = null;
+
+// Variables to store the current location marker and data
+let currentLocationMarker = null;
+let currentLocationData = null;
+
+// State to track if location is visible
+let isLocationVisible = false;
+
+// Function to check if tourist ID is valid (user_type = 'user')
+async function isValidTourist(touristId) {
+    try {
+        const { data, error } = await supabase
+            .from('users')
+            .select('user_id')
+            .eq('user_id', touristId)
+            .eq('user_type', 'user');
+        
+        if (error) {
+            throw error;
+        }
+        return data.length > 0;
+    } catch (error) {
+        console.error('Error checking tourist validity:', error);
+        return false;
+    }
+}
+
+// Fetch latest location from Supabase
+async function fetchLatestLocation(touristId) {
+    try {
+        const { data, error } = await supabase
+            .from('live_locations')
+            .select('latitude, longitude, updated_at')
+            .eq('user_id', touristId)
+            .order('updated_at', { ascending: false })
+            .limit(1);
+        
+        if (error) {
+            throw error;
+        }
+        if (data.length === 0) {
+            return null; // No location found
+        }
+        return data[0];
+    } catch (error) {
+        console.error('Error fetching latest location:', error);
+        throw error;
+    }
+}
 
 // Fetch check-ins from Supabase with corrected query
 async function fetchCheckins(touristId, filter) {
@@ -788,21 +916,30 @@ function plotCheckins(checkins) {
         }).addTo(checkinLayer);
     }
 
-    if (pathCoordinates.length > 0) {
+    if (pathCoordinates.length > 0 && !isLocationVisible) {
         const bounds = L.latLngBounds(pathCoordinates);
         map.fitBounds(bounds);
     }
 }
 
-// Display summary with table view button
-function displaySummary(checkins, touristId) {
+// Display summary with table view and current location buttons
+async function displaySummary(checkins, touristId) {
     const firstCheckin = checkins.length > 0 ? new Date(checkins[0].timestamp).toLocaleString() : 'N/A';
     const lastCheckin = checkins.length > 0 ? new Date(checkins[checkins.length - 1].timestamp).toLocaleString() : 'N/A';
     const lastLocation = checkins.length > 0 ? checkins[checkins.length - 1].tourist_spots.name : 'N/A';
 
+    let locationButtonHtml = '';
+    const locationExists = await fetchLatestLocation(touristId);
+    if (locationExists) {
+        locationButtonHtml = isLocationVisible 
+            ? `<button class="view-table-button" id="hide-current-location-btn">Hide Current Location</button>`
+            : `<button class="view-table-button" id="view-current-location-btn">View Current Location</button>`;
+    }
+
     const summaryHtml = `
-        <p><strong>Tourist ID:</strong> ${touristId}</p>
-        <p><strong>Number of Check-ins:</strong> ${checkins.length} <button class="view-table-button" data-toggle="modal" data-target="#checkinModal">View Table</button></p>
+        <p><strong>Tourist ID:</strong> ${touristId} ${locationButtonHtml}</p>
+        <p><strong>Number of Check-ins:</strong> ${checkins.length} ${checkins.length > 0 ? '<button class="view-table-button" data-toggle="modal" data-target="#checkinModal">View Table</button>' : ''}</p>
+        ${checkins.length === 0 ? '<p>No check-ins found for this tourist.</p>' : ''}
         <p><strong>First Check-in:</strong> ${firstCheckin}</p>
         <p><strong>Last Check-in:</strong> ${lastCheckin}</p>
         <p><strong>Last Location:</strong> ${lastLocation}</p>
@@ -811,9 +948,36 @@ function displaySummary(checkins, touristId) {
 
     window.checkinsData = checkins;
 
-    document.querySelector('.view-table-button').addEventListener('click', () => {
-        displayTableWithPagination(checkins, 1);
-    });
+    // Event listener for View Table button (only if there are check-ins)
+    if (checkins.length > 0) {
+        document.querySelector('[data-target="#checkinModal"]').addEventListener('click', () => {
+            displayTableWithPagination(checkins, 1);
+        });
+    }
+
+    // Event listener for View/Hide Current Location button
+    const locationBtn = document.getElementById('view-current-location-btn') || document.getElementById('hide-current-location-btn');
+    if (locationBtn) {
+        locationBtn.addEventListener('click', async () => {
+            if (isLocationVisible) {
+                // Hide location logic
+                if (locationUpdateInterval) {
+                    clearInterval(locationUpdateInterval);
+                    locationUpdateInterval = null;
+                }
+                if (currentLocationMarker) {
+                    checkinLayer.removeLayer(currentLocationMarker);
+                    currentLocationMarker = null;
+                }
+                isLocationVisible = false;
+                displaySummary(checkins, touristId);
+            } else {
+                // Show location logic
+                currentTouristId = touristId;
+                $('#locationPinModal').modal('show');
+            }
+        });
+    }
 }
 
 // Display check-ins in a table with pagination
@@ -893,7 +1057,6 @@ function displayTableWithPagination(checkins, currentPage) {
 // Handle no data or error scenario
 function showNoData(message = 'No check-ins found for this tourist.') {
     document.querySelector('.tourist-cards').innerHTML = `<p>${message}</p>`;
-    checkinLayer.clearLayers();
 }
 
 // Show loading state
@@ -912,30 +1075,52 @@ function showErrorModal(message) {
     $('#errorModal').modal('show');
 }
 
-// Event listeners for search, filter, and legend toggle
+// Event listeners for search, filter, legend toggle, and PIN modals
 document.addEventListener('DOMContentLoaded', async () => {
     const searchInput = document.querySelector('.search-input');
     const filterSelect = document.querySelector('.filter-select');
 
     async function fetchAndDisplayData() {
-        const touristId = searchInput.value.trim();
+        const touristIdInput = searchInput.value.trim();
         const filter = filterSelect.value;
-        if (touristId) {
-            showLoading();
-            try {
-                const checkins = await fetchCheckins(touristId, filter);
-                if (checkins && checkins.length > 0) {
-                    plotCheckins(checkins);
-                    displaySummary(checkins, touristId);
-                } else {
-                    showNoData('No check-ins found for this tourist ID.');
-                }
-            } catch (error) {
-                showErrorModal(`Error fetching check-ins: ${error.message}`);
-                showNoData('Failed to load check-ins. Please try again.');
-            }
-        } else {
+        if (!touristIdInput) {
             showNoData('Please enter a tourist ID.');
+            checkinLayer.clearLayers();
+            return;
+        }
+        const touristId = parseInt(touristIdInput, 10);
+        if (isNaN(touristId)) {
+            showNoData('Invalid tourist ID.');
+            checkinLayer.clearLayers();
+            return;
+        }
+        // Clear existing interval and reset marker/data when a new tourist is selected
+        if (locationUpdateInterval) {
+            clearInterval(locationUpdateInterval);
+            locationUpdateInterval = null;
+        }
+        if (currentLocationMarker) {
+            checkinLayer.removeLayer(currentLocationMarker);
+            currentLocationMarker = null;
+        }
+        currentLocationData = null;
+        isLocationVisible = false;
+        checkinLayer.clearLayers(); // Reset all check-in data
+        showLoading();
+        try {
+            const isValid = await isValidTourist(touristId);
+            if (!isValid) {
+                showNoData('The tourist does not exist.');
+                return;
+            }
+            const checkins = await fetchCheckins(touristId, filter);
+            displaySummary(checkins, touristId);
+            if (checkins && checkins.length > 0) {
+                plotCheckins(checkins);
+            }
+        } catch (error) {
+            showErrorModal(`Error fetching data: ${error.message}`);
+            showNoData('Failed to load data. Please try again.');
         }
     }
 
@@ -1002,6 +1187,185 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.error('Failed to load warning zones on initialization:', error);
         showErrorModal(`Error loading warning zones: ${error.message}`);
     }
+
+    // Event listener for unlockLocationBtn with periodic updates
+    document.getElementById('unlockLocationBtn').addEventListener('click', async () => {
+        const pin = document.getElementById('pinInput').value;
+        if (!pin) {
+            document.getElementById('pinError').textContent = 'Please enter your PIN';
+            document.getElementById('pinError').style.display = 'block';
+            return;
+        }
+
+        try {
+            const response = await fetch('/admin/pin/verify', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
+                body: JSON.stringify({ pin })
+            });
+            const data = await response.json();
+            if (data.message) {
+                // PIN correct, fetch and display initial location
+                $('#locationPinModal').modal('hide');
+                const location = await fetchLatestLocation(currentTouristId);
+                if (location) {
+                    currentLocationData = location;
+                    const { latitude, longitude } = location;
+                    if (!currentLocationMarker) {
+                        currentLocationMarker = L.marker([latitude, longitude], { icon: currentLocationIcon })
+                            .addTo(checkinLayer)
+                            .bindPopup(function() {
+                                return `<b>Current Location</b><br>Last Updated: ${new Date(currentLocationData.updated_at).toLocaleString()}`;
+                            });
+                    } else {
+                        currentLocationMarker.setLatLng([latitude, longitude]);
+                    }
+                    isLocationVisible = true;
+                    map.setView([latitude, longitude], 13); // Set view only on initial unlock
+                    displaySummary(window.checkinsData || [], currentTouristId);
+
+                    // Start interval to update location every 5 seconds without setting view
+                    locationUpdateInterval = setInterval(async () => {
+                        try {
+                            const updatedLocation = await fetchLatestLocation(currentTouristId);
+                            if (updatedLocation) {
+                                currentLocationData = updatedLocation;
+                                const { latitude, longitude } = updatedLocation;
+                                if (currentLocationMarker) {
+                                    currentLocationMarker.setLatLng([latitude, longitude]);
+                                }
+                            } else {
+                                if (currentLocationMarker) {
+                                    checkinLayer.removeLayer(currentLocationMarker);
+                                    currentLocationMarker = null;
+                                }
+                                isLocationVisible = false;
+                                displaySummary(window.checkinsData || [], currentTouristId);
+                            }
+                        } catch (error) {
+                            console.error('Error fetching live location:', error);
+                            showErrorModal(`Error updating location: ${error.message}`);
+                        }
+                    }, 5000);
+                } else {
+                    showErrorModal('Tourist did not enable current location.');
+                }
+            } else {
+                document.getElementById('pinError').textContent = 'Incorrect PIN.';
+                document.getElementById('pinError').style.display = 'block';
+            }
+        } catch (error) {
+            console.error('Error verifying PIN:', error);
+            document.getElementById('pinError').textContent = 'Error verifying PIN.';
+            document.getElementById('pinError').style.display = 'block';
+        }
+    });
+
+    // Event listener for cancelPinModal
+    document.getElementById('cancelPinModal').addEventListener('click', () => {
+        $('#locationPinModal').modal('hide');
+    });
+
+    // Event listener for changePinBtn
+    document.getElementById('changePinBtn').addEventListener('click', async () => {
+        const pin = document.getElementById('pinInput').value;
+        if (!pin) {
+            document.getElementById('pinError').textContent = 'Please enter your current PIN';
+            document.getElementById('pinError').style.display = 'block';
+            return;
+        }
+
+        try {
+            const response = await fetch('/admin/pin/verify', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
+                body: JSON.stringify({ pin })
+            });
+            const data = await response.json();
+            if (data.message) {
+                $('#locationPinModal').modal('hide');
+                $('#changePinModal').modal('show');
+            } else {
+                document.getElementById('pinError').textContent = 'Incorrect PIN.';
+                document.getElementById('pinError').style.display = 'block';
+            }
+        } catch (error) {
+            console.error('Error verifying PIN:', error);
+            document.getElementById('pinError').textContent = 'Error verifying PIN.';
+            document.getElementById('pinError').style.display = 'block';
+        }
+    });
+
+    // Event listener for saveNewPinBtn
+    document.getElementById('saveNewPinBtn').addEventListener('click', async () => {
+        const currentPin = document.getElementById('pinInput').value;
+        const newPin = document.getElementById('newPinInput').value;
+
+        if (!newPin) {
+            document.getElementById('pinChangeError').textContent = 'Please enter a new PIN';
+            document.getElementById('pinChangeError').style.display = 'block';
+            return;
+        }
+
+        try {
+            const response = await fetch('/admin/pin/update', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
+                body: JSON.stringify({
+                    current_pin: currentPin,
+                    new_pin: newPin
+                })
+            });
+            const data = await response.json();
+            if (data.message) {
+                $('#changePinModal').modal('hide');
+                $('#changePinModal').on('hidden.bs.modal', function () {
+                    showSuccessModal('PIN updated successfully');
+                    $(this).off('hidden.bs.modal');
+                });
+            } else {
+                document.getElementById('pinChangeError').textContent = data.error || 'Failed to update PIN';
+                document.getElementById('pinChangeError').style.display = 'block';
+            }
+        } catch (error) {
+            console.error('Error updating PIN:', error);
+            document.getElementById('pinChangeError').textContent = 'Error updating PIN';
+            document.getElementById('pinChangeError').style.display = 'block';
+        }
+    });
+
+    // Event listener for cancelPinChange
+    document.getElementById('cancelPinChange').addEventListener('click', () => {
+        $('#changePinModal').modal('hide');
+        $('#locationPinModal').modal('show');
+    });
+
+    // Reset modals on show
+    $('#locationPinModal').on('shown.bs.modal', function () {
+        document.getElementById('pinInput').value = '';
+        document.getElementById('pinError').style.display = 'none';
+    });
+
+    $('#changePinModal').on('shown.bs.modal', function () {
+        document.getElementById('newPinInput').value = '';
+        document.getElementById('pinChangeError').style.display = 'none';
+    });
+
+    // Clear interval when the page is unloaded
+    window.addEventListener('beforeunload', () => {
+        if (locationUpdateInterval) {
+            clearInterval(locationUpdateInterval);
+        }
+    });
 });
 
 // Function to set up legend tabs
