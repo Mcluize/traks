@@ -367,67 +367,67 @@
 
             <!-- Warning Modal -->
             <div class="modal fade" id="warningModal" tabindex="-1" role="dialog" aria-labelledby="warningModalLabel" aria-hidden="true" data-backdrop="false">
-                <div class="modal-dialog" role="document">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="warningModalLabel">Add Warning Zone</h5>
-                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                <span aria-hidden="true">×</span>
-                            </button>
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="warningModalLabel">Add Warning Zone</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">×</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label for="warning-type">Warning Type</label>
+                            <select id="warning-type" class="form-control">
+                                <option value="danger">Danger Zone</option>
+                                <option value="high-risk">High Risk Area</option>
+                                <option value="flood">Flood Area</option>
+                                <option value="security">Security Concern</option>
+                                <option value="other">Other</option>
+                            </select>
                         </div>
-                        <div class="modal-body">
-                            <div class="form-group">
-                                <label for="warning-type">Warning Type</label>
-                                <select id="warning-type" class="form-control">
-                                    <option value="danger">Danger Zone</option>
-                                    <option value="high-risk">High Risk Area</option>
-                                    <option value="flood">Flood Area</option>
-                                    <option value="security">Security Concern</option>
-                                    <option value="other">Other</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="warning-title">Title</label>
-                                <input type="text" id="warning-title" class="form-control" placeholder="e.g., Flood Warning">
-                            </div>
-                            <div class="form-group">
-                                <label for="warning-description">Description</label>
-                                <textarea id="warning-description" class="form-control" rows="3" placeholder="Describe the warning or danger..."></textarea>
-                            </div>
-                            <div class="form-group">
-                                <label>Drawing Mode</label>
-                                <div class="drawing-options">
-                                    <label class="radio-container">
-                                        <input type="radio" name="drawing-mode" value="marker" checked>
-                                        <span class="radio-label">Marker</span>
-                                    </label>
-                                    <label class="radio-container">
-                                        <input type="radio" name="drawing-mode" value="circle">
-                                        <span class="radio-label">Circle</span>
-                                    </label>
-                                    <label class="radio-container">
-                                        <input type="radio" name="drawing-mode" value="polygon">
-                                        <span class="radio-label">Polygon</span>
-                                    </label>
-                                </div>
-                            </div>
-                            <div id="circle-radius-container" style="display:none;">
-                                <label for="circle-radius">Radius (meters)</label>
-                                <input type="range" id="circle-radius" min="50" max="2000" value="200" step="50">
-                                <span id="radius-value">200m</span>
-                            </div>
-                            <button id="go-to-map-btn" class="btn btn-info">Go to Map</button>
-                            <div class="instructions">
-                                <p>After pressing "Go to Map", draw the selected shape on the map. For polygons, click multiple points and double-click to finish.</p>
+                        <div class="form-group">
+                            <label for="warning-zone-tag">Zone Tag</label>
+                            <input type="text" id="warning-zone-tag" class="form-control" placeholder="e.g., Flood Warning">
+                        </div>
+                        <div class="form-group">
+                            <label for="warning-description">Description</label>
+                            <textarea id="warning-description" class="form-control" rows="3" placeholder="Describe the warning or danger..."></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Drawing Mode</label>
+                            <div class="drawing-options">
+                                <label class="radio-container">
+                                    <input type="radio" name="drawing-mode" value="marker" checked>
+                                    <span class="radio-label">Marker</span>
+                                </label>
+                                <label class="radio-container">
+                                    <input type="radio" name="drawing-mode" value="circle">
+                                    <span class="radio-label">Circle</span>
+                                </label>
+                                <label class="radio-container">
+                                    <input type="radio" name="drawing-mode" value="polygon">
+                                    <span class="radio-label">Polygon</span>
+                                </label>
                             </div>
                         </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" id="cancel-warning-btn" data-dismiss="modal">Cancel</button>
-                            <button type="button" class="btn btn-primary" id="save-warning-btn" disabled>Save Warning</button>
+                        <div id="circle-radius-container" style="display:none;">
+                            <label for="circle-radius">Radius (meters)</label>
+                            <input type="range" id="circle-radius" min="50" max="2000" value="200" step="50">
+                            <span id="radius-value">200m</span>
                         </div>
+                        <button id="go-to-map-btn" class="btn btn-info">Go to Map</button>
+                        <div class="instructions">
+                            <p>After pressing "Go to Map", draw the selected shape on the map. For polygons, click multiple points and double-click to finish.</p>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" id="cancel-warning-btn" data-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-primary" id="save-warning-btn" disabled>Save Warning</button>
                     </div>
                 </div>
             </div>
+        </div>
 
             <!-- Warning Details Modal -->
             <div class="modal fade" id="warningDetailsModal" tabindex="-1" role="dialog" aria-labelledby="warningDetailsModalLabel" aria-hidden="true" data-backdrop="false">
@@ -1454,11 +1454,11 @@ document.getElementById('save-warning-btn').addEventListener('click', async func
     }
     
     const warningType = document.getElementById('warning-type').value;
-    const warningTitle = document.getElementById('warning-title').value.trim();
+    const warningZoneTag = document.getElementById('warning-zone-tag').value.trim();
     const warningDescription = document.getElementById('warning-description').value.trim();
     
-    if (!warningTitle) {
-        showErrorModal('Please enter a title for the warning');
+    if (!warningZoneTag) {
+        showErrorModal('Please enter a zone tag for the warning');
         return;
     }
     
@@ -1467,7 +1467,7 @@ document.getElementById('save-warning-btn').addEventListener('click', async func
         const latlng = selectedShape.getLatLng();
         warningData = {
             type: warningType,
-            title: warningTitle,
+            zone_tag: warningZoneTag,
             description: warningDescription,
             latitude: latlng.lat,
             longitude: latlng.lng,
@@ -1479,7 +1479,7 @@ document.getElementById('save-warning-btn').addEventListener('click', async func
         const radius = selectedShape.getRadius();
         warningData = {
             type: warningType,
-            title: warningTitle,
+            zone_tag: warningZoneTag,
             description: warningDescription,
             latitude: center.lat,
             longitude: center.lng,
@@ -1488,11 +1488,11 @@ document.getElementById('save-warning-btn').addEventListener('click', async func
             created_at: new Date().toISOString()
         };
     } else if (currentDrawingType === 'polygon') {
-        const latlngs = selectedShape.getLatLngs()[0]; // Assuming simple polygon
+        const latlngs = selectedShape.getLatLngs()[0];
         const polygonCoords = latlngs.map(point => [point.lat, point.lng]);
         warningData = {
             type: warningType,
-            title: warningTitle,
+            zone_tag: warningZoneTag,
             description: warningDescription,
             polygon_coords: polygonCoords,
             shape_type: 'polygon',
@@ -1502,21 +1502,15 @@ document.getElementById('save-warning-btn').addEventListener('click', async func
     
     try {
         const { data, error } = await supabase.from('warning_zones').insert([warningData]).select();
-        
-        if (error) {
-            console.error('Supabase error on insert:', error);
-            throw new Error(`Supabase error: ${error.message}`);
-        }
-        
+        if (error) throw new Error(`Supabase error: ${error.message}`);
         console.log('Warning saved successfully:', data[0]);
         addWarningToMap(data[0]);
-        
         resetWarningForm();
         $('#warningModal').modal('hide');
         showSuccessModal('Warning zone added successfully!');
     } catch (error) {
         console.error('Error saving warning zone:', error);
-        showErrorModal(`Failed to save warning zone: ${error.message}. Check console for details.`);
+        showErrorModal(`Failed to save warning zone: ${error.message}`);
     }
 });
 
@@ -1547,49 +1541,29 @@ async function loadWarningZones() {
 // Add a warning to the map
 function addWarningToMap(warning) {
     let warningElement;
-    
     if (warning.shape_type === 'marker') {
-        if (!warning.latitude || !warning.longitude) {
-            console.warn(`Invalid coordinates for warning zone ${warning.title}: latitude=${warning.latitude}, longitude=${warning.longitude}`);
-            return;
-        }
+        if (!warning.latitude || !warning.longitude) return;
         warningElement = L.marker([warning.latitude, warning.longitude], { icon: warningIcons[warning.type] || defaultWarningIcon });
     } else if (warning.shape_type === 'circle') {
-        if (!warning.latitude || !warning.longitude || !warning.radius) {
-            console.warn(`Invalid circle data for warning zone ${warning.title}: latitude=${warning.latitude}, longitude=${warning.longitude}, radius=${warning.radius}`);
-            return;
-        }
+        if (!warning.latitude || !warning.longitude || !warning.radius) return;
         warningElement = L.circle([warning.latitude, warning.longitude], {
             radius: warning.radius,
             ...circleStyles[warning.type]
         });
     } else if (warning.shape_type === 'polygon') {
-        if (!warning.polygon_coords || !Array.isArray(warning.polygon_coords)) {
-            console.warn(`Invalid polygon coordinates for warning zone ${warning.title}:`, warning.polygon_coords);
-            return;
-        }
-        const latlngs = warning.polygon_coords.map(coord => {
-            if (!coord || coord.length !== 2) {
-                console.warn(`Invalid coordinate in polygon for warning zone ${warning.title}:`, coord);
-                return null;
-            }
-            return [coord[0], coord[1]];
-        }).filter(coord => coord !== null);
-        if (latlngs.length < 3) {
-            console.warn(`Not enough valid coordinates to form a polygon for warning zone ${warning.title}`);
-            return;
-        }
+        if (!warning.polygon_coords || !Array.isArray(warning.polygon_coords)) return;
+        const latlngs = warning.polygon_coords.map(coord => [coord[0], coord[1]]).filter(coord => coord !== null);
+        if (latlngs.length < 3) return;
         warningElement = L.polygon(latlngs, {
             color: circleStyles[warning.type].color,
             fillColor: circleStyles[warning.type].fillColor,
             fillOpacity: circleStyles[warning.type].fillOpacity
         });
     } else {
-        console.warn(`Unsupported shape type for warning zone ${warning.title}: ${warning.shape_type}`);
         return;
     }
     
-    warningElement.bindPopup(`<b>${warning.title}</b><br><button class="view-details-btn" data-id="${warning.zone_id}">View Details</button>`);
+    warningElement.bindPopup(`<b>${warning.zone_tag}</b><br><button class="view-details-btn" data-id="${warning.zone_id}">View Details</button>`);
     warningElement.addTo(warningLayer);
     warningElement.warningData = warning;
     
@@ -1610,7 +1584,7 @@ function addWarningToMap(warning) {
 function showWarningDetails(warning) {
     const content = document.querySelector('.warning-details-content');
     content.innerHTML = `
-        <h4>${warning.title}</h4>
+        <h4>${warning.zone_tag}</h4>
         <p class="warning-type ${warning.type}"><strong>Type:</strong> ${warning.type.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}</p>
         <p><strong>Description:</strong> ${warning.description || 'No description provided'}</p>
         <p><strong>Shape Type:</strong> ${warning.shape_type}</p>
@@ -1623,7 +1597,6 @@ function showWarningDetails(warning) {
     $('#warningDetailsModal').modal('show');
 }
 
-// Handle warning deletion
 document.querySelector('.delete-warning-btn').addEventListener('click', function() {
     const warningId = this.getAttribute('data-id');
     
@@ -1637,7 +1610,7 @@ document.querySelector('.delete-warning-btn').addEventListener('click', function
     if (warningToDelete) {
         currentWarningToDelete = warningId;
         const confirmModal = document.getElementById('deleteWarningModal');
-        confirmModal.querySelector('.warning-title').textContent = warningToDelete.title;
+        confirmModal.querySelector('.warning-title').textContent = warningToDelete.zone_tag;
         confirmModal.querySelector('.warning-type').textContent = `Type: ${warningToDelete.type.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}`;
         $('#warningDetailsModal').modal('hide');
         $('#deleteWarningModal').modal('show');
@@ -1646,7 +1619,7 @@ document.querySelector('.delete-warning-btn').addEventListener('click', function
 
 // Reset the warning form
 function resetWarningForm() {
-    document.getElementById('warning-title').value = '';
+    document.getElementById('warning-zone-tag').value = '';
     document.getElementById('warning-description').value = '';
     document.getElementById('warning-type').value = 'danger';
     document.querySelector('input[name="drawing-mode"][value="marker"]').checked = true;

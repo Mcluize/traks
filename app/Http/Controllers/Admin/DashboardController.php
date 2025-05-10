@@ -75,7 +75,7 @@ class DashboardController extends Controller
         $touristIds = array_column($checkinsData, 'tourist_id');
         $touristIds = array_filter($touristIds, fn($id) => !is_null($id));
         if (empty($touristIds)) {
-            return response()->json(['count' => 0]);
+            return response()->json(['count' => 0, 'touristIds' => []]);
         }
 
         $userFilters = [
@@ -96,7 +96,10 @@ class DashboardController extends Controller
         $uniqueTouristIds = array_unique($touristUserIds);
         $count = count($uniqueTouristIds);
 
-        return response()->json(['count' => $count]);
+        return response()->json([
+            'count' => $count,
+            'touristIds' => $uniqueTouristIds
+        ]);
     }
 
     public function getCheckinsBySpot($filter)
@@ -245,81 +248,77 @@ class DashboardController extends Controller
     }
 
     public function getPopularSpots($filter)
-{
-    $cacheKey = 'popular_spots_' . $filter;
-    $data = Cache::remember($cacheKey, 60, function () use ($filter) {
-        // Fetch check-ins with minimal columns
-        $dateFilter = $this->getDateFilter($filter);
-        $filters = ['select' => 'spot_id,tourist_id'];
-        if (isset($dateFilter['and'])) {
-            $filters['and'] = $dateFilter['and'];
-        }
-        $checkins = $this->supabaseService->fetchTable('checkins', $filters);
+    {
+        $cacheKey = 'popular_spots_' . $filter;
+        $data = Cache::remember($cacheKey, 60, function () use ($filter) {
+            $dateFilter = $this->getDateFilter($filter);
+            $filters = ['select' => 'spot_id,tourist_id'];
+            if (isset($dateFilter['and'])) {
+                $filters['and'] = $dateFilter['and'];
+            }
+            $checkins = $this->supabaseService->fetchTable('checkins', $filters);
 
-        // Process check-ins
-        $spotVisits = [];
-        if ($filter === 'today') {
-            $uniqueTouristsPerSpot = [];
-            foreach ($checkins as $checkin) {
-                $spotId = $checkin['spot_id'];
-                $touristId = $checkin['tourist_id'];
-                if (!isset($uniqueTouristsPerSpot[$spotId])) {
-                    $uniqueTouristsPerSpot[$spotId] = [];
+            $spotVisits = [];
+            if ($filter === 'today') {
+                $uniqueTouristsPerSpot = [];
+                foreach ($checkins as $checkin) {
+                    $spotId = $checkin['spot_id'];
+                    $touristId = $checkin['tourist_id'];
+                    if (!isset($uniqueTouristsPerSpot[$spotId])) {
+                        $uniqueTouristsPerSpot[$spotId] = [];
+                    }
+                    if (!array_key_exists($touristId, $uniqueTouristsPerSpot[$spotId])) {
+                        $uniqueTouristsPerSpot[$spotId][$touristId] = true;
+                        $spotVisits[$spotId] = ($spotVisits[$spotId] ?? 0) + 1;
+                    }
                 }
-                if (!array_key_exists($touristId, $uniqueTouristsPerSpot[$spotId])) {
-                    $uniqueTouristsPerSpot[$spotId][$touristId] = true;
-                    $spotVisits[$spotId] = ($spotVisits[$spotId] ?? 0) + 1;
+            } else {
+                foreach ($checkins as $checkin) {
+                    $spotId = $checkin['spot_id'];
+                    if ($spotId) {
+                        $spotVisits[$spotId] = ($spotVisits[$spotId] ?? 0) + 1;
+                    }
                 }
             }
-        } else {
-            foreach ($checkins as $checkin) {
-                $spotId = $checkin['spot_id'];
-                if ($spotId) {
-                    $spotVisits[$spotId] = ($spotVisits[$spotId] ?? 0) + 1;
-                }
-            }
-        }
 
-        // Fetch cached tourist spots
-        $touristSpots = Cache::remember('tourist_spots', 3600, function () {
-            return $this->supabaseService->fetchTable('tourist_spots', ['select' => 'spot_id,name']);
+            $touristSpots = Cache::remember('tourist_spots', 3600, function () {
+                return $this->supabaseService->fetchTable('tourist_spots', ['select' => 'spot_id,name']);
+            });
+
+            $spotIdToName = array_column($touristSpots, 'name', 'spot_id');
+            $data = array_map(function($id) use ($spotVisits, $spotIdToName) {
+                $name = $spotIdToName[$id] ?? 'Unknown';
+                return ['spot' => $name, 'visits' => $spotVisits[$id] ?? 0];
+            }, array_keys($spotVisits));
+
+            return $data;
         });
 
-        // Map spot IDs to names efficiently
-        $spotIdToName = array_column($touristSpots, 'name', 'spot_id');
-        $data = array_map(function($id) use ($spotVisits, $spotIdToName) {
-            $name = $spotIdToName[$id] ?? 'Unknown';
-            return ['spot' => $name, 'visits' => $spotVisits[$id] ?? 0];
-        }, array_keys($spotVisits));
-
-        return $data;
-    });
-
-    return response()->json($data);
-}
-
-private function getDateFilter($filter)
-{
-    $now = Carbon::now('Asia/Manila');
-    switch ($filter) {
-        case 'today':
-            $start = $now->startOfDay()->toIso8601String();
-            $end = $now->endOfDay()->toIso8601String();
-            return ['and' => "(timestamp.gte.{$start},timestamp.lt.{$end})"];
-        case 'this_week':
-            $start = $now->startOfWeek()->toIso8601String();
-            $end = $now->endOfWeek()->toIso8601String();
-            return ['and' => "(timestamp.gte.{$start},timestamp.lt.{$end})"];
-        case 'this_month':
-            $start = $now->startOfMonth()->toIso8601String();
-            $end = $now->endOfMonth()->toIso8601String();
-            return ['and' => "(timestamp.gte.{$start},timestamp.lt.{$end})"];
-        case 'all_time':
-            return [];
-        default:
-            $start = $now->subMonth()->startOfMonth()->toIso8601String();
-            $end = $now->subMonth()->endOfMonth()->toIso8601String();
-            return ['and' => "(timestamp.gte.{$start},timestamp.lt.{$end})"];
+        return response()->json($data);
     }
-}
+
+    private function getDateFilter($filter)
+    {
+        $now = Carbon::now('Asia/Manila');
+        switch ($filter) {
+            case 'today':
+                $start = $now->startOfDay()->toIso8601String();
+                $end = $now->endOfDay()->toIso8601String();
+                return ['and' => "(timestamp.gte.{$start},timestamp.lt.{$end})"];
+            case 'this_week':
+                $start = $now->startOfWeek()->toIso8601String();
+                $end = $now->endOfWeek()->toIso8601String();
+                return ['and' => "(timestamp.gte.{$start},timestamp.lt.{$end})"];
+            case 'this_month':
+                $start = $now->startOfMonth()->toIso8601String();
+                $end = $now->endOfMonth()->toIso8601String();
+                return ['and' => "(timestamp.gte.{$start},timestamp.lt.{$end})"];
+            case 'all_time':
+                return [];
+            default:
+                $start = $now->subMonth()->startOfMonth()->toIso8601String();
+                $end = $now->subMonth()->endOfMonth()->toIso8601String();
+                return ['and' => "(timestamp.gte.{$start},timestamp.lt.{$end})"];
+        }
+    }
 }

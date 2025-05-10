@@ -92,9 +92,6 @@
                 <div class="stat-content">
                     <h3>Admin Accounts</h3>
                     <div class="stat-number">{{ $adminAccounts }}</div>
-                    <div class="stat-change {{ $adminAccountsChangeClass }}">
-                        <i class="fas {{ $adminAccountsChangeIcon }}"></i> {{ $adminAccountsChange }}% from last month
-                    </div>
                 </div>
             </div>
         </div>
@@ -207,46 +204,6 @@
         </div>
     </div>
 
-    <!-- Latest Incident Reports -->
-    <div class="row">
-        <div class="col-12">
-            <div class="data-card">
-                <div class="chart-header">
-                    <h3>Latest Incident Reports</h3>
-                    <div class="chart-actions">
-                        <button class="btn btn-sm btn-outline-secondary view-all-reports">View All Reports</button>
-                    </div>
-                </div>
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th>Report ID</th>
-                                <th>Tourist ID</th>
-                                <th>Location</th>
-                                <th>Timestamp</th>
-                                <th>Status</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($latestIncidents as $incident)
-                            <tr>
-                                <td class="text-truncate" style="max-width: 150px;">{{ substr($incident['report_id'], 0, 4) }}...</td>
-                                <td>{{ $incident['user_id'] }}</td>
-                                <td>{{ $incident['latitude'] }}, {{ $incident['longitude'] }}</td>
-                                <td>{{ $incident['timestamp'] }}</td>
-                                <td><span class="badge bg-{{ $incident['status'] == 'Pending' ? 'warning' : ($incident['status'] == 'Cancelled' ? 'danger' : 'secondary') }}">{{ $incident['status'] }}</span></td>
-                                <td><button class="btn btn-sm btn-outline-primary">View</button></td>
-                            </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- Popular Spots Modal -->
     <div class="modal fade" id="spotsModal" tabindex="-1" aria-labelledby="spotsModalLabel" aria-hidden="true" data-bs-backdrop="false">
         <div class="modal-dialog">
@@ -290,22 +247,82 @@
             return;
         }
 
-        // Incident Status Chart
         var statusCtx = document.getElementById('incidentStatusChart').getContext('2d');
+        var statusColors = {
+            'Pending': '#FFC107',
+            'pending': '#FFC107',
+            'Cancelled': '#DC3545',
+            'cancelled': '#DC3545',
+            'Resolved': '#28A745',
+            'resolved': '#28A745',  // Adding lowercase version
+            'Ignored': '#6C757D',
+            'ignored': '#6C757D'
+        };
+
+        var incidentStatusLabels = {!! json_encode($incidentStatusLabels) !!};
+        var incidentStatusData = {!! json_encode($incidentStatusData) !!};
+
+        // Ensure each label gets the right color regardless of capitalization
+        var backgroundColors = incidentStatusLabels.map(label => statusColors[label]);
+
+        // Create the doughnut chart
         var statusChart = new Chart(statusCtx, {
             type: 'doughnut',
             data: {
-                labels: {!! json_encode($incidentStatusLabels) !!},
+                labels: incidentStatusLabels,
                 datasets: [{
-                    data: {!! json_encode($incidentStatusData) !!},
-                    backgroundColor: ['#FFC107', '#DC3545', '#6C757D', '#28A745'],
+                    data: incidentStatusData,
+                    backgroundColor: backgroundColors,
                     borderWidth: 0
                 }]
             },
             options: {
                 responsive: true,
-                legend: { position: 'right', labels: { boxWidth: 12, fontFamily: 'Poppins' } },
-                tooltips: { titleFontFamily: 'Poppins', bodyFontFamily: 'Poppins' },
+                legend: { 
+                    position: 'right', 
+                    labels: { 
+                        boxWidth: 12, 
+                        fontFamily: 'Poppins',
+                        // This function ensures colors are consistent in the legend too
+                        generateLabels: function(chart) {
+                            var data = chart.data;
+                            if (data.labels.length && data.datasets.length) {
+                                return data.labels.map(function(label, i) {
+                                    var meta = chart.getDatasetMeta(0);
+                                    var ds = data.datasets[0];
+                                    var arc = meta.data[i];
+                                    var custom = arc && arc.custom || {};
+                                    var getValueAtIndexOrDefault = Chart.helpers.getValueAtIndexOrDefault;
+                                    var arcOpts = chart.options.elements.arc;
+                                    
+                                    // Use our statusColors mapping
+                                    var fill = statusColors[label] || getValueAtIndexOrDefault(ds.backgroundColor, i, arcOpts.backgroundColor);
+                                    
+                                    return {
+                                        text: label,
+                                        fillStyle: fill,
+                                        strokeStyle: custom.borderColor ? custom.borderColor : getValueAtIndexOrDefault(ds.borderColor, i, arcOpts.borderColor),
+                                        lineWidth: custom.borderWidth ? custom.borderWidth : getValueAtIndexOrDefault(ds.borderWidth, i, arcOpts.borderWidth),
+                                        hidden: isNaN(ds.data[i]) || meta.data[i].hidden,
+                                        index: i
+                                    };
+                                });
+                            }
+                            return [];
+                        }
+                    }
+                },
+                tooltips: { 
+                    titleFontFamily: 'Poppins', 
+                    bodyFontFamily: 'Poppins',
+                    callbacks: {
+                        label: function(tooltipItem, data) {
+                            var label = data.labels[tooltipItem.index];
+                            var value = data.datasets[0].data[tooltipItem.index];
+                            return label + ': ' + value;
+                        }
+                    }
+                },
                 cutoutPercentage: 70
             }
         });
@@ -317,6 +334,7 @@
             $.get('/admin/analytics/incident-status?period=' + period, function(data) {
                 statusChart.data.labels = data.labels;
                 statusChart.data.datasets[0].data = data.values;
+                statusChart.data.datasets[0].backgroundColor = data.labels.map(label => statusColors[label]);
                 statusChart.update();
             });
         });
@@ -435,9 +453,8 @@
         $('#spotsFilterChart').change(function() {
             var filter = $(this).val();
             $.get(`/admin/analytics/popular-spots/${filter}`, function(data) {
-                var topSpots = data.sort((a, b) => b.visits - a.visits).slice(0, 4);
-                var labels = topSpots.map(item => item.spot);
-                var values = topSpots.map(item => item.visits);
+                var labels = data.map(item => item.spot);
+                var values = data.map(item => item.visits);
                 popularSpotsChart.data.labels = labels;
                 popularSpotsChart.data.datasets[0].data = values;
                 popularSpotsChart.update();
@@ -451,7 +468,7 @@
         var tileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© OpenStreetMap contributors'
         }).addTo(map);
-        map.tileLayer = tileLayer; // Store reference to tile layer
+        map.tileLayer = tileLayer;
 
         var spots = {!! json_encode($touristSpots) !!};
         var incidents = {!! json_encode($incidents) !!};
@@ -471,7 +488,6 @@
             });
         }
 
-        // Initial map setup
         spots.forEach(function(spot) {
             var checkinCount = checkins.filter(c => c.spot_id === spot.spot_id).length;
             L.marker([spot.latitude, spot.longitude], {
@@ -496,7 +512,6 @@
         }).filter(Boolean);
         var heat = L.heatLayer(heatPoints, {radius: 25}).addTo(map);
 
-        // Create a custom legend control
         var LegendControl = L.Control.extend({
             options: { position: 'bottomright' },
             onAdd: function(map) {
@@ -512,27 +527,19 @@
             }
         });
 
-        // Add the legend to the map
         new LegendControl().addTo(map);
 
         $('#mapFilter').change(function() {
             var filter = $(this).val();
-            
-            // Remove all layers except the tile layer and legend
             map.eachLayer(function(layer) {
                 if (layer !== map.tileLayer && !(layer instanceof LegendControl)) {
                     map.removeLayer(layer);
                 }
             });
-            
-            // Ensure tile layer is present
             if (!map.hasLayer(map.tileLayer)) {
                 map.tileLayer.addTo(map);
             }
-            
-            // Add heatmap layer
             heat.addTo(map);
-            
             if (filter === 'all' || filter === 'checkins') {
                 if (checkins.length > 0) {
                     spots.forEach(function(spot) {
@@ -551,11 +558,8 @@
                         return spot ? [spot.latitude, spot.longitude, 1] : null;
                     }).filter(Boolean);
                     heat.setLatLngs(heatPoints);
-                } else {
-                    console.log('No check-ins data available');
                 }
             }
-            
             if (filter === 'all' || filter === 'incidents') {
                 if (incidents.length > 0) {
                     incidents.forEach(function(incident) {
@@ -563,13 +567,10 @@
                             .addTo(map)
                             .bindPopup(`Incident - ${incident.status}<br>Tourist ID: ${incident.user_id}`);
                     });
-                } else {
-                    console.log('No incidents data available');
                 }
             }
         });
 
-        // Export Button
         $('.export-btn').click(function() {
             var csv = "Day,Tourist Activities,Incident Reports\n";
             var labels = {!! json_encode($weeklyLabels) !!};
@@ -585,7 +586,6 @@
             link.click();
         });
 
-        // View All Spots Modal
         $('.view-all-spots').click(function() {
             $('#spotsModal').modal('show');
             updateSpotsTable('today');
@@ -608,20 +608,17 @@
             });
         }
 
-        // Make backdrop clickable to close modal
         $('#spotsModal').on('shown.bs.modal', function () {
             $('.modal-backdrop').on('click', function () {
                 $('#spotsModal').modal('hide');
             });
         });
 
-        // Handle navigation back to clean up modal
         window.onpopstate = function(event) {
             $('#spotsModal').modal('hide');
             $('.modal-backdrop').remove();
         };
 
-        // View All Reports (Redirect or Modal can be implemented here)
         $('.view-all-reports').click(function() {
             window.location.href = '/admin/incidents';
         });

@@ -44,19 +44,16 @@ class AnalyticsController extends Controller
         $touristAccountsLastMonth = count(array_filter($users, fn($user) => Carbon::parse($user['created_at'], 'Asia/Manila')->gte(now('Asia/Manila')->subMonth()) && $user['user_type'] === 'user'));
         $touristAccountsChange = $touristAccountsLastMonth ? round((($touristAccounts - $touristAccountsLastMonth) / $touristAccountsLastMonth) * 100) : 0;
 
-        // Count active admin accounts (excluding locked ones)
         $adminAccounts = count(array_filter($users, fn($user) => 
             in_array($user['user_type'], ['admin', 'super_admin']) && 
             ($user['status'] ?? '') !== 'locked'
         ));
 
-        // Count active admin accounts from the last month (excluding locked ones)
         $adminAccountsLastMonth = count(array_filter($users, fn($user) => 
             Carbon::parse($user['created_at'], 'Asia/Manila')->gte(now('Asia/Manila')->subMonth()) && 
             in_array($user['user_type'], ['admin', 'super_admin']) && 
             ($user['status'] ?? '') !== 'locked'
         ));
-
         $adminAccountsChange = $adminAccountsLastMonth ? round((($adminAccounts - $adminAccountsLastMonth) / $adminAccountsLastMonth) * 100) : 0;
 
         // Incident Status
@@ -109,7 +106,7 @@ class AnalyticsController extends Controller
             $spotVisits[$spotId] = ($spotVisits[$spotId] ?? 0) + 1;
         }
         arsort($spotVisits);
-        $popularSpots = array_slice($spotVisits, 0, 5, true);
+        $popularSpots = array_slice($spotVisits, 0, 4, true); // Updated to 4 spots
         $popularSpotsLabels = array_map(function($id) use ($touristSpots) {
             $index = array_search($id, array_column($touristSpots, 'spot_id'));
             return $index !== false ? $touristSpots[$index]['name'] : 'Unknown';
@@ -129,16 +126,16 @@ class AnalyticsController extends Controller
         $totalActivities = array_sum($weeklyCheckinsData);
 
         // Define change classes and icons
-        $touristChangeClass = $touristChange > 0 ? 'positive' : ($touristChange < 0 ? 'negative' : 'neutral');
+        $touristChangeClass = $touristChange > 0 ? 'increase' : ($touristChange < 0 ? 'decrease' : 'neutral');
         $touristChangeIcon = $touristChange > 0 ? 'fa-arrow-up' : ($touristChange < 0 ? 'fa-arrow-down' : 'fa-equals');
 
-        $incidentChangeClass = $incidentChange > 0 ? 'positive' : ($incidentChange < 0 ? 'negative' : 'neutral');
+        $incidentChangeClass = $incidentChange > 0 ? 'increase' : ($incidentChange < 0 ? 'decrease' : 'neutral');
         $incidentChangeIcon = $incidentChange > 0 ? 'fa-arrow-up' : ($incidentChange < 0 ? 'fa-arrow-down' : 'fa-equals');
 
-        $touristAccountsChangeClass = $touristAccountsChange > 0 ? 'positive' : ($touristAccountsChange < 0 ? 'negative' : 'neutral');
+        $touristAccountsChangeClass = $touristAccountsChange > 0 ? 'increase' : ($touristAccountsChange < 0 ? 'decrease' : 'neutral');
         $touristAccountsChangeIcon = $touristAccountsChange > 0 ? 'fa-arrow-up' : ($touristAccountsChange < 0 ? 'fa-arrow-down' : 'fa-equals');
 
-        $adminAccountsChangeClass = $adminAccountsChange > 0 ? 'positive' : ($adminAccountsChange < 0 ? 'negative' : 'neutral');
+        $adminAccountsChangeClass = $adminAccountsChange > 0 ? 'increase' : ($adminAccountsChange < 0 ? 'decrease' : 'neutral');
         $adminAccountsChangeIcon = $adminAccountsChange > 0 ? 'fa-arrow-up' : ($adminAccountsChange < 0 ? 'fa-arrow-down' : 'fa-equals');
 
         return view('vendor.backpack.ui.analytics', compact(
@@ -216,11 +213,15 @@ class AnalyticsController extends Controller
                 }
             }
 
+            arsort($spotVisits);
+            $topSpotIds = array_slice(array_keys($spotVisits), 0, 4); // Limit to top 4 spots
+
             $touristSpots = $this->supabaseService->fetchTable('tourist_spots');
-            $data = array_map(function($id) use ($spotVisits, $touristSpots) {
+            $data = [];
+            foreach ($topSpotIds as $id) {
                 $name = $touristSpots[array_search($id, array_column($touristSpots, 'spot_id'))]['name'] ?? 'Unknown';
-                return ['spot' => $name, 'visits' => $spotVisits[$id] ?? 0];
-            }, array_keys($spotVisits));
+                $data[] = ['spot' => $name, 'visits' => $spotVisits[$id] ?? 0];
+            }
             return $data;
         });
 

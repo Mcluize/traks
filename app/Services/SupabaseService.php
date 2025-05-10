@@ -107,7 +107,9 @@ class SupabaseService
     public function getIncidentReports($filter)
     {
         $now = Carbon::now();
-        $filters = [];
+        $filters = [
+            'select' => 'user_id, latitude, longitude, timestamp, status' 
+        ];
 
         switch ($filter) {
             case 'today':
@@ -115,6 +117,7 @@ class SupabaseService
                 $localEnd = $localStart->copy()->addDay();
                 $start = $localStart->toIso8601String();
                 $end = $localEnd->toIso8601String();
+                $filters['and'] = "(timestamp.gte.{$start},timestamp.lt.{$end})";
                 break;
 
             case 'this_week':
@@ -122,6 +125,7 @@ class SupabaseService
                 $localEnd = $localStart->copy()->addWeek();
                 $start = $localStart->toIso8601String();
                 $end = $localEnd->toIso8601String();
+                $filters['and'] = "(timestamp.gte.{$start},timestamp.lt.{$end})";
                 break;
 
             case 'this_month':
@@ -129,27 +133,49 @@ class SupabaseService
                 $localEnd = $localStart->copy()->addMonth();
                 $start = $localStart->toIso8601String();
                 $end = $localEnd->toIso8601String();
+                $filters['and'] = "(timestamp.gte.{$start},timestamp.lt.{$end})";
                 break;
 
             case 'all_time':
-                $start = null;
-                $end = null;
                 break;
 
             default:
                 return response()->json(['error' => 'Invalid filter'], 400);
         }
 
-        if ($start && $end) {
-            $filters = [
-                'and' => "(timestamp.gte.{$start},timestamp.lt.{$end})",
-            ];
-        }
-
-        $count = $this->fetchTable('emergency_reports', $filters, true);
-        if ($count === null) {
+        $incidents = $this->fetchTable('emergency_reports', $filters, false);
+        if ($incidents === null) {
             return response()->json(['error' => 'Failed to fetch data'], 500);
         }
-        return response()->json(['count' => $count]);
+
+        // Format timestamps to remove UTC offset and display only date, hours, minutes, and whole seconds
+        foreach ($incidents as &$incident) {
+            $incident['timestamp'] = Carbon::parse($incident['timestamp'])->format('Y-m-d H:i:s');
+        }
+
+        return response()->json([
+            'count' => count($incidents),
+            'incidents' => $incidents
+        ]);
+    }
+
+    public function index()
+    {
+        $userGrowth = $this->supabaseService->fetchTable('users', ['user_type' => 'eq.user']);
+        
+        $userGrowthByDate = [];
+        foreach ($userGrowth as $user) {
+            $date = Carbon::parse($user['created_at'], 'Asia/Manila')->format('Y-m-d');
+            $userGrowthByDate[$date] = ($userGrowthByDate[$date] ?? 0) + 1;
+        }
+        
+        ksort($userGrowthByDate);
+        $userGrowthLabels = array_keys($userGrowthByDate);
+        $userGrowthData = array_values($userGrowthByDate);
+
+        return view('analytics', [
+            'userGrowthLabels' => $userGrowthLabels,
+            'userGrowthData' => $userGrowthData,
+        ]);
     }
 }

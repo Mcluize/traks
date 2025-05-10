@@ -685,7 +685,9 @@ body {
     margin-right: 10px;
     flex-shrink: 0;
 }
-
+#go-to-map-btn{
+    background-color: #0BC8CA;
+}
 /* Responsive styles */
 @media (max-width: 1200px) {
     .warning-control {
