@@ -105,9 +105,14 @@
                 <div class="chart-header">
                     <h3>Incident Report Status</h3>
                     <div class="chart-actions">
-                        <button class="btn btn-sm btn-outline-secondary time-filter" data-period="week">Week</button>
-                        <button class="btn btn-sm btn-outline-secondary time-filter active" data-period="month">Month</button>
-                        <button class="btn btn-sm btn-outline-secondary time-filter" data-period="year">Year</button>
+                        <select class="form-select form-select-sm time-filter" id="incidentPeriodFilter">
+                            <option value="today">Today</option>
+                            <option value="week">This Week</option>
+                            <option value="month" selected>This Month</option>
+                            <option value="year">This Year</option>
+                            <option value="all_time">All Time</option>
+                            <option value="custom_year">Custom Year</option>
+                        </select>
                     </div>
                 </div>
                 <div class="chart-body">
@@ -116,21 +121,47 @@
             </div>
         </div>
         
-        <!-- Weekly Analytics -->
+        <!-- Tourist Activities -->
         <div class="col-md-6">
             <div class="chart-card">
                 <div class="chart-header">
-                    <h3>Weekly Analytics</h3>
+                    <h3>Tourist Activities</h3>
                     <div class="chart-actions">
-                        <button class="btn btn-sm btn-outline-secondary export-btn">Export</button>
+                        <select class="form-select form-select-sm activity-filter" id="touristPeriodFilter">
+                            <option value="this_week" selected>This Week</option>
+                            <option value="this_month">This Month</option>
+                            <option value="this_year">This Year</option>
+                            <option value="custom_year">Custom Year</option>
+                        </select>
+                        <button class="btn btn-sm btn-outline-secondary export-btn">Export CSV</button>
+                        <button class="btn btn-sm btn-outline-secondary export-btn-pdf">Export PDF</button>
                     </div>
                 </div>
                 <div class="chart-body">
                     <div class="metric-highlight">
-                        <div class="metric-value">{{ $totalActivities }}</div>
-                        <div class="metric-label">Total Activities This Week</div>
+                        <div class="metric-value" id="totalActivitiesValue">{{ $totalActivities }}</div>
+                        <div class="metric-label" id="totalActivitiesLabel">Total Activities This Week</div>
                     </div>
-                    <canvas id="weeklyAnalyticsChart" height="200"></canvas>
+                    <canvas id="touristActivitiesChart" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Custom Year Modal for Tourist Activities -->
+        <div class="modal fade" id="customYearModalTourist" tabindex="-1" aria-labelledby="customYearModalTouristLabel" aria-hidden="true" data-bs-backdrop="false">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="customYearModalTouristLabel">Select Year for Tourist Activities</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="number" id="customYearInputTourist" class="form-control" placeholder="Enter year (e.g., 2023)" min="1900" max="2100">
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-primary" id="applyCustomYearTourist">Apply</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -204,6 +235,25 @@
         </div>
     </div>
 
+    <!-- Custom Year Modal -->
+    <div class="modal fade" id="customYearModal" tabindex="-1" aria-labelledby="customYearModalLabel" aria-hidden="true" data-bs-backdrop="false">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="customYearModalLabel">Select Year</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="number" id="customYearInput" class="form-control" placeholder="Enter year (e.g., 2023)" min="1900" max="2100">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="applyCustomYear">Apply</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Popular Spots Modal -->
     <div class="modal fade" id="spotsModal" tabindex="-1" aria-labelledby="spotsModalLabel" aria-hidden="true" data-bs-backdrop="false">
         <div class="modal-dialog">
@@ -235,6 +285,7 @@
 <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <script>
     $(document).ready(function() {
@@ -250,22 +301,16 @@
         var statusCtx = document.getElementById('incidentStatusChart').getContext('2d');
         var statusColors = {
             'Pending': '#FFC107',
-            'pending': '#FFC107',
             'Cancelled': '#DC3545',
-            'cancelled': '#DC3545',
             'Resolved': '#28A745',
-            'resolved': '#28A745',  // Adding lowercase version
-            'Ignored': '#6C757D',
-            'ignored': '#6C757D'
+            'Ignored': '#6C757D'
         };
 
         var incidentStatusLabels = {!! json_encode($incidentStatusLabels) !!};
         var incidentStatusData = {!! json_encode($incidentStatusData) !!};
 
-        // Ensure each label gets the right color regardless of capitalization
-        var backgroundColors = incidentStatusLabels.map(label => statusColors[label]);
+        var backgroundColors = incidentStatusLabels.map(label => statusColors[label] || '#6C757D');
 
-        // Create the doughnut chart
         var statusChart = new Chart(statusCtx, {
             type: 'doughnut',
             data: {
@@ -283,7 +328,6 @@
                     labels: { 
                         boxWidth: 12, 
                         fontFamily: 'Poppins',
-                        // This function ensures colors are consistent in the legend too
                         generateLabels: function(chart) {
                             var data = chart.data;
                             if (data.labels.length && data.datasets.length) {
@@ -295,7 +339,6 @@
                                     var getValueAtIndexOrDefault = Chart.helpers.getValueAtIndexOrDefault;
                                     var arcOpts = chart.options.elements.arc;
                                     
-                                    // Use our statusColors mapping
                                     var fill = statusColors[label] || getValueAtIndexOrDefault(ds.backgroundColor, i, arcOpts.backgroundColor);
                                     
                                     return {
@@ -327,21 +370,49 @@
             }
         });
 
-        $('.time-filter').click(function() {
-            $('.time-filter').removeClass('active');
-            $(this).addClass('active');
-            var period = $(this).data('period');
-            $.get('/admin/analytics/incident-status?period=' + period, function(data) {
-                statusChart.data.labels = data.labels;
-                statusChart.data.datasets[0].data = data.values;
-                statusChart.data.datasets[0].backgroundColor = data.labels.map(label => statusColors[label]);
-                statusChart.update();
-            });
+        $('#incidentPeriodFilter').change(function() {
+            var period = $(this).val();
+            if (period === 'custom_year') {
+                $('#customYearModal').modal('show');
+            } else {
+                $.get('/admin/analytics/incident-status?period=' + period, function(data) {
+                    statusChart.data.labels = data.labels;
+                    statusChart.data.datasets[0].data = data.values;
+                    statusChart.data.datasets[0].backgroundColor = data.labels.map(label => statusColors[label] || '#6C757D');
+                    statusChart.update();
+                }).fail(function() {
+                    alert('Failed to load data for the selected period.');
+                });
+            }
         });
 
-        // Weekly Analytics Chart
-        var weeklyCtx = document.getElementById('weeklyAnalyticsChart').getContext('2d');
-        var weeklyChart = new Chart(weeklyCtx, {
+        $('#applyCustomYear').click(function() {
+            var year = $('#customYearInput').val();
+            if (year && /^\d{4}$/.test(year)) {
+                $.get('/admin/analytics/incident-status?period=custom_year&year=' + year, function(data) {
+                    statusChart.data.labels = data.labels;
+                    statusChart.data.datasets[0].data = data.values;
+                    statusChart.data.datasets[0].backgroundColor = data.labels.map(label => statusColors[label] || '#6C757D');
+                    statusChart.update();
+                    $('#customYearModal').modal('hide');
+                }).fail(function() {
+                    alert('Failed to load data for the selected year.');
+                });
+            } else {
+                $('#customYearInput').addClass('is-invalid');
+                if (!$('#customYearError').length) {
+                    $('#customYearInput').after('<div id="customYearError" class="invalid-feedback">Please enter a valid 4-digit year.</div>');
+                }
+            }
+        });
+
+        $('#customYearInput').on('input', function() {
+            $(this).removeClass('is-invalid');
+            $('#customYearError').remove();
+        });
+
+        var touristActivitiesCtx = document.getElementById('touristActivitiesChart').getContext('2d');
+        var touristActivitiesChart = new Chart(touristActivitiesCtx, {
             type: 'line',
             data: {
                 labels: {!! json_encode($weeklyLabels) !!},
@@ -378,7 +449,160 @@
             }
         });
 
-        // User Growth Chart
+        $('#touristPeriodFilter').change(function() {
+            var period = $(this).val();
+            if (period === 'custom_year') {
+                $('#customYearModalTourist').modal('show');
+            } else {
+                $.get('/admin/analytics/tourist-activities?period=' + period, function(data) {
+                    touristActivitiesChart.data.labels = data.labels;
+                    touristActivitiesChart.data.datasets[0].data = data.checkins;
+                    touristActivitiesChart.data.datasets[1].data = data.incidents;
+                    touristActivitiesChart.update();
+                    $('#totalActivitiesValue').text(data.totalActivities);
+                    $('#totalActivitiesLabel').text('Total Activities ' + data.period);
+                }).fail(function() {
+                    console.error('Failed to load tourist activities data.');
+                });
+            }
+        });
+
+        $('#applyCustomYearTourist').click(function() {
+            var year = $('#customYearInputTourist').val();
+            if (year && /^\d{4}$/.test(year)) {
+                $.get('/admin/analytics/tourist-activities?period=custom_year&year=' + year, function(data) {
+                    touristActivitiesChart.data.labels = data.labels;
+                    touristActivitiesChart.data.datasets[0].data = data.checkins;
+                    touristActivitiesChart.data.datasets[1].data = data.incidents;
+                    touristActivitiesChart.update();
+                    $('#totalActivitiesValue').text(data.totalActivities);
+                    $('#totalActivitiesLabel').text('Total Activities ' + data.period);
+                    $('#customYearModalTourist').modal('hide');
+                }).fail(function() {
+                    alert('Failed to load data for the selected year.');
+                });
+            } else {
+                $('#customYearInputTourist').addClass('is-invalid');
+                if (!$('#customYearErrorTourist').length) {
+                    $('#customYearInputTourist').after('<div id="customYearErrorTourist" class="invalid-feedback">Please enter a valid 4-digit year.</div>');
+                }
+            }
+        });
+
+        $('#customYearInputTourist').on('input', function() {
+            $(this).removeClass('is-invalid');
+            $('#customYearErrorTourist').remove();
+        });
+
+        $('.export-btn').click(function() {
+            var labels = touristActivitiesChart.data.labels;
+            var checkinsData = touristActivitiesChart.data.datasets[0].data;
+            var incidentsData = touristActivitiesChart.data.datasets[1].data;
+            var csv = "Period,Tourist Activities,Incident Reports\n";
+            for (var i = 0; i < labels.length; i++) {
+                csv += `${labels[i]},${checkinsData[i]},${incidentsData[i]}\n`;
+            }
+            var blob = new Blob([csv], {type: 'text/csv'});
+            var link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'tourist_activities.csv';
+            link.click();
+        });
+
+        $('.export-btn-pdf').click(function() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            const pageWidth = doc.internal.pageSize.getWidth();
+            const dateStr = new Date().toLocaleDateString();
+            const timeStr = new Date().toLocaleTimeString();
+            let yOffset = 15;
+
+            doc.setFontSize(18);
+            doc.setTextColor(55, 73, 87);
+            doc.text("TRAKS - Tourism Dashboard Export", pageWidth / 2, yOffset, { align: "center" });
+
+            yOffset += 8;
+            doc.setFontSize(10);
+            doc.setTextColor(100, 100, 100);
+            doc.text(`Generated on: ${dateStr} at ${timeStr}`, pageWidth / 2, yOffset, { align: "center" });
+
+            yOffset += 15;
+
+            function addSectionHeader(title) {
+                doc.setFillColor(255, 126, 63);
+                doc.rect(10, yOffset - 5, pageWidth - 20, 8, 'F');
+                doc.setFontSize(12);
+                doc.setTextColor(255, 255, 255);
+                doc.text(title, 12, yOffset);
+                yOffset += 8;
+                doc.setTextColor(0, 0, 0);
+                doc.setFontSize(10);
+            }
+
+            function addTable(headers, rows, startY) {
+                const cellPadding = 2;
+                const lineHeight = 8;
+                const fontSize = 9;
+                const tableWidth = pageWidth - 20;
+                const colWidth = tableWidth / headers.length;
+
+                if (startY + (rows.length + 1) * lineHeight > doc.internal.pageSize.getHeight() - 20) {
+                    doc.addPage();
+                    startY = 20;
+                }
+
+                doc.setFillColor(240, 240, 240);
+                doc.rect(10, startY, tableWidth, lineHeight, 'F');
+                doc.setFontSize(fontSize);
+                doc.setTextColor(80, 80, 80);
+                doc.setFont(undefined, 'bold');
+
+                headers.forEach((header, i) => {
+                    doc.text(header, 10 + (i * colWidth) + cellPadding, startY + lineHeight - 2);
+                });
+
+                doc.setFont(undefined, 'normal');
+                doc.setTextColor(0, 0, 0);
+
+                rows.forEach((row, r) => {
+                    if (r % 2 === 0) {
+                        doc.setFillColor(250, 250, 250);
+                        doc.rect(10, startY + (r + 1) * lineHeight, tableWidth, lineHeight, 'F');
+                    }
+
+                    row.forEach((cell, c) => {
+                        doc.text(String(cell), 10 + (c * colWidth) + cellPadding, startY + (r + 1) * lineHeight + lineHeight - 2);
+                    });
+                });
+
+                return startY + (rows.length + 1) * lineHeight + 10;
+            }
+
+            addSectionHeader("TOURIST ACTIVITIES");
+            doc.text(`Period: ${$('#totalActivitiesLabel').text().replace('Total Activities ', '')}`, 12, yOffset + 5);
+            doc.text(`Total Activities: ${$('#totalActivitiesValue').text()}`, 12, yOffset + 10);
+            yOffset += 15;
+
+            const headers = ["Period", "Tourist Activities", "Incident Reports"];
+            const rows = touristActivitiesChart.data.labels.map((label, i) => [
+                label,
+                touristActivitiesChart.data.datasets[0].data[i],
+                touristActivitiesChart.data.datasets[1].data[i]
+            ]);
+            yOffset = addTable(headers, rows, yOffset);
+
+            const pageCount = doc.internal.getNumberOfPages();
+            for (let i = 1; i <= pageCount; i++) {
+                doc.setPage(i);
+                doc.setFontSize(8);
+                doc.setTextColor(150, 150, 150);
+                doc.text(`Page ${i} of ${pageCount}`, pageWidth - 20, doc.internal.pageSize.getHeight() - 10);
+            }
+
+            const currentDate = new Date().toISOString().slice(0,10);
+            doc.save(`TRAKS_Tourist_Activities_Export_${currentDate}.pdf`);
+        });
+
         var userGrowthCtx = document.getElementById('userGrowthChart').getContext('2d');
         var userGrowthChart = new Chart(userGrowthCtx, {
             type: 'line',
@@ -407,7 +631,6 @@
             }
         });
 
-        // User Type Distribution Chart
         var userTypeCtx = document.getElementById('userTypeChart').getContext('2d');
         var userTypeChart = new Chart(userTypeCtx, {
             type: 'pie',
@@ -426,7 +649,6 @@
             }
         });
 
-        // Popular Tourist Spots Chart
         var popularSpotsCtx = document.getElementById('popularSpotsChart').getContext('2d');
         var popularSpotsChart = new Chart(popularSpotsCtx, {
             type: 'bar',
@@ -449,7 +671,6 @@
             }
         });
 
-        // Update Popular Spots Chart based on filter
         $('#spotsFilterChart').change(function() {
             var filter = $(this).val();
             $.get(`/admin/analytics/popular-spots/${filter}`, function(data) {
@@ -463,7 +684,6 @@
             });
         });
 
-        // Initialize Map
         var map = L.map('activityMap').setView([7.08, 125.6], 11);
         var tileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© OpenStreetMap contributors'
@@ -476,10 +696,7 @@
         var users = {!! json_encode($users) !!};
 
         function getIncidentIcon(status) {
-            var color = status === 'Pending' ? '#FFC107' :
-                        status === 'Cancelled' ? '#DC3545' :
-                        status === 'Resolved' ? '#28A745' :
-                        status === 'Ignored' ? '#6C757D' : '#6C757D';
+            var color = statusColors[status] || '#6C757D';
             return L.divIcon({
                 className: 'custom-div-icon',
                 html: `<div style="background-color: ${color}; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white;"></div>`,
@@ -516,7 +733,7 @@
             options: { position: 'bottomright' },
             onAdd: function(map) {
                 var div = L.DomUtil.create('div', 'leaflet-control-legend');
-                div.innerHTML = `
+                div.inner567HTML = `
                     <div class="legend-item"><div class="legend-color" style="background:#4ECDC4;"></div> Check-ins</div>
                     <div class="legend-item"><div class="legend-color" style="background:#FFC107;"></div> Pending Incidents</div>
                     <div class="legend-item"><div class="legend-color" style="background:#DC3545;"></div> Cancelled Incidents</div>
@@ -569,21 +786,6 @@
                     });
                 }
             }
-        });
-
-        $('.export-btn').click(function() {
-            var csv = "Day,Tourist Activities,Incident Reports\n";
-            var labels = {!! json_encode($weeklyLabels) !!};
-            var checkinsData = {!! json_encode($weeklyCheckinsData) !!};
-            var incidentsData = {!! json_encode($weeklyIncidentsData) !!};
-            for (var i = 0; i < labels.length; i++) {
-                csv += `${labels[i]},${checkinsData[i]},${incidentsData[i]}\n`;
-            }
-            var blob = new Blob([csv], {type: 'text/csv'});
-            var link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = 'weekly_analytics.csv';
-            link.click();
         });
 
         $('.view-all-spots').click(function() {

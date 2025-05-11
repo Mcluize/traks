@@ -18,7 +18,7 @@
                     <td>{{ \Carbon\Carbon::parse($incident['timestamp'])->format('H:i') }}</td>
                     <td>{{ $incident['latitude'] }}</td>
                     <td>{{ $incident['longitude'] }}</td>
-                    <td>{{ $incident['status'] }}</td>
+                    <td class="status status-{{ strtolower($incident['status']) }}">{{ $incident['status'] }}</td>
                 </tr>
             @empty
                 <tr><td colspan="6" class="text-center error-message">{{ $message ?? 'No incidents found' }}</td></tr>

@@ -89,4 +89,6 @@ Route::group([
     Route::get('api/accounts/count',             [DashboardController::class, 'getAccountCounts']);
     Route::get('api/account-counts',             [AdminAccountController::class, 'getAccountCounts']);
     Route::get('/admin/analytics/map-data/{activityFilter}/{timeFilter}', [AnalyticsController::class, 'getMapData']);
+    Route::get('analytics/tourist-activities', [AnalyticsController::class, 'getTouristActivities'])
+    ->name('analytics.tourist-activities');
 });

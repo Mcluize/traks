@@ -285,7 +285,42 @@ body {
     margin-top: 10px !important;
     font-size: 14px !important;
 }
+/* Status colors */
+.status.status-pending {
+    background-color: #FFC107; /* Amber */
+    color: #212529; /* Dark text for contrast */
+    padding: 2px 8px;
+    border-radius: 4px;
+}
 
+.status.status-cancelled {
+    background-color: #DC3545; /* Red */
+    color: white;
+    padding: 2px 8px;
+    border-radius: 4px;
+}
+
+.status.status-resolved {
+    background-color: #28A745; /* Green */
+    color: white;
+    padding: 2px 8px;
+    border-radius: 4px;
+}
+
+.status.status-ignored {
+    background-color: #6C757D; 
+    color: white;
+    padding: 2px 8px;
+    border-radius: 4px;
+}
+
+/* Default style for unrecognized statuses */
+.status {
+    padding: 2px 8px;
+    border-radius: 4px;
+    background-color: #6C757D; 
+    color: white;
+}
 /* Responsive adjustments */
 @media (max-width: 768px) {
     .text-right {

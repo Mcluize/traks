@@ -160,6 +160,7 @@ body {
     align-items: center;
     gap: 10px;
 }
+
 .search-input:focus {
     border-color: #0BC8CA;
     box-shadow: 0 0 0 0.2rem rgba(11, 200, 202, 0.25);
@@ -186,7 +187,7 @@ body {
 
 /* Filter Select Styling */
 .filter-select {
-    width: 100px;
+    width: 120px; /* Increased width to 120px */
     height: 42px;
     background-color: #FFFFFF;
     color: #666666;
@@ -679,19 +680,60 @@ body {
     border: 1px dashed blue;
     margin-right: 10px;
 }
+
 .legend-polygon {
     width: 20px;
     height: 20px;
     margin-right: 10px;
     flex-shrink: 0;
 }
-#go-to-map-btn{
+
+#go-to-map-btn {
     background-color: #0BC8CA;
 }
+/* Status colors */
+.status.status-pending {
+    background-color: #FFC107; /* Amber */
+    color: #212529; /* Dark text for contrast */
+    padding: 2px 8px;
+    border-radius: 4px;
+}
+
+.status.status-cancelled {
+    background-color: #DC3545;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 4px;
+}
+
+.status.status-resolved {
+    background-color: #28A745; 
+    padding: 2px 8px;
+    border-radius: 4px;
+}
+
+.status.status-ignored {
+    background-color: #6C757D; 
+    color: white;
+    padding: 2px 8px;
+    border-radius: 4px;
+}
+
+/* Default style for unrecognized statuses */
+.status {
+    padding: 2px 8px;
+    border-radius: 4px;
+    background-color: #6C757D; 
+    color: white;
+}
+
 /* Responsive styles */
 @media (max-width: 1200px) {
     .warning-control {
         right: 320px;
+    }
+    .filter-select {
+        width: 100px; /* Adjusted for smaller screens */
     }
 }
 
@@ -740,9 +782,6 @@ body {
     .search-input {
         width: 150px;
     }
-    .filter-select {
-        width: 80px;
-    }
 }
 
 @media (max-width: 992px) {
@@ -753,7 +792,7 @@ body {
         width: 120px;
     }
     .filter-select {
-        width: 70px;
+        width: 90px;
     }
 }
 

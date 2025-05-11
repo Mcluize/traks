@@ -21,6 +21,17 @@ class IncidentController extends Controller
         $filter = $request->input('filter', 'all_time');
         $searchId = $request->input('search_id');
         $searchDate = $request->input('search_date');
+        $selectedYear = $request->input('year');
+
+        // Fetch min and max timestamps to determine year range
+        $minMax = $this->supabaseService->fetchMinMax('emergency_reports', 'timestamp');
+        if ($minMax && isset($minMax['min']) && isset($minMax['max'])) {
+            $minYear = Carbon::parse($minMax['min'])->year;
+            $maxYear = Carbon::parse($minMax['max'])->year;
+            $years = range($minYear, $maxYear);
+        } else {
+            $years = [Carbon::now()->year]; // Default to current year if no data
+        }
 
         $now = Carbon::now();
         $filters = [];
@@ -48,7 +59,11 @@ class IncidentController extends Controller
                 $filters['and'] = "(timestamp.gte.{$start},timestamp.lt.{$end})";
                 break;
             case 'all_time':
-                // No time filter
+                if ($selectedYear) {
+                    $start = Carbon::create($selectedYear, 1, 1)->startOfDay()->toIso8601String();
+                    $end = Carbon::create($selectedYear + 1, 1, 1)->startOfDay()->toIso8601String();
+                    $filters['and'] = "(timestamp.gte.{$start},timestamp.lt.{$end})";
+                }
                 break;
             default:
                 $filter = 'all_time';
@@ -88,7 +103,9 @@ class IncidentController extends Controller
             'lastPage' => ceil($total / $perPage),
             'filter' => $filter,
             'search' => $searchId,
-            'search_date' => $searchDate
+            'search_date' => $searchDate,
+            'years' => $years,
+            'selectedYear' => $selectedYear
         ]);
     }
 
@@ -98,6 +115,7 @@ class IncidentController extends Controller
             $filter = $request->input('filter', 'all_time');
             $searchId = $request->input('search_id');
             $searchDate = $request->input('search_date');
+            $selectedYear = $request->input('year');
 
             $now = Carbon::now();
             $filters = [];
@@ -125,7 +143,11 @@ class IncidentController extends Controller
                     $filters['and'] = "(timestamp.gte.{$start},timestamp.lt.{$end})";
                     break;
                 case 'all_time':
-                    // No time filter
+                    if ($selectedYear) {
+                        $start = Carbon::create($selectedYear, 1, 1)->startOfDay()->toIso8601String();
+                        $end = Carbon::create($selectedYear + 1, 1, 1)->startOfDay()->toIso8601String();
+                        $filters['and'] = "(timestamp.gte.{$start},timestamp.lt.{$end})";
+                    }
                     break;
                 default:
                     return response()->json(['error' => 'Invalid filter'], 400);
@@ -159,16 +181,34 @@ class IncidentController extends Controller
             $offset = ($page - 1) * $perPage;
             $paginatedIncidents = array_slice($incidents, $offset, $perPage);
 
-            return view('vendor.backpack.ui.incident-table-partial', [
+            // Fetch min and max timestamps to determine year range
+            $minMax = $this->supabaseService->fetchMinMax('emergency_reports', 'timestamp');
+            if ($minMax && isset($minMax['min']) && isset($minMax['max'])) {
+                $minYear = Carbon::parse($minMax['min'])->year;
+                $maxYear = Carbon::parse($minMax['max'])->year;
+                $years = range($minYear, $maxYear);
+            } else {
+                $years = [Carbon::now()->year]; // Default to current year if no data
+            }
+
+            // Render the table partial
+            $tableHtml = view('vendor.backpack.ui.incident-table-partial', [
                 'incidents' => $paginatedIncidents,
                 'total' => $total,
                 'currentPage' => $page,
                 'lastPage' => ceil($total / $perPage)
+            ])->render();
+
+            // Return JSON response with table HTML and years
+            return response()->json([
+                'tableHtml' => $tableHtml,
+                'years' => $years
             ]);
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }
+
     public function fetchTable(Request $request)
     {
         $supabase = new SupabaseClient(env('SUPABASE_URL'), env('SUPABASE_KEY'));
@@ -222,5 +262,12 @@ class IncidentController extends Controller
             'per_page' => $perPage,
             'current_page' => $page
         ]);
+    }
+
+    public function fetchMinMax($table, $column)
+    {
+        $min = $this->supabaseService->fetchTable($table, [], "min($column)")[0]['min'] ?? null;
+        $max = $this->supabaseService->fetchTable($table, [], "max($column)")[0]['max'] ?? null;
+        return ['min' => $min, 'max' => $max];
     }
 }

@@ -30,38 +30,63 @@ class DashboardController extends Controller
 
         \Log::info('Filter: ' . $filter);
 
-        switch ($filter) {
-            case 'today':
-                $start = $utcTodayStart->toIso8601String();
-                $end = $utcTomorrowStart->toIso8601String();
+        if (strpos($filter, 'custom_year:') === 0) {
+            $year = substr($filter, strlen('custom_year:'));
+            if (is_numeric($year) && strlen($year) == 4) {
+                $localStart = Carbon::createFromDate($year, 1, 1, 'Asia/Manila');
+                $localEnd = $localStart->copy()->addYear();
+                $utcStart = $localStart->copy()->utc();
+                $utcEnd = $localEnd->copy()->utc();
+                $start = $utcStart->toIso8601String();
+                $end = $utcEnd->toIso8601String();
                 $filters['and'] = "(timestamp.gte.{$start},timestamp.lt.{$end})";
-                break;
+            } else {
+                return response()->json(['error' => 'Invalid year'], 400);
+            }
+        } else {
+            switch ($filter) {
+                case 'today':
+                    $start = $utcTodayStart->toIso8601String();
+                    $end = $utcTomorrowStart->toIso8601String();
+                    $filters['and'] = "(timestamp.gte.{$start},timestamp.lt.{$end})";
+                    break;
 
-            case 'this_week':
-                $localStartOfWeek = $now->copy()->startOfWeek();
-                $localEndOfWeek = $localStartOfWeek->copy()->addWeek();
-                $utcStartOfWeek = $localStartOfWeek->utc();
-                $utcEndOfWeek = $localEndOfWeek->utc();
-                $start = $utcStartOfWeek->toIso8601String();
-                $end = $utcEndOfWeek->toIso8601String();
-                $filters['and'] = "(timestamp.gte.{$start},timestamp.lt.{$end})";
-                break;
+                case 'this_week':
+                    $localStartOfWeek = $now->copy()->startOfWeek();
+                    $localEndOfWeek = $localStartOfWeek->copy()->addWeek();
+                    $utcStartOfWeek = $localStartOfWeek->utc();
+                    $utcEndOfWeek = $localEndOfWeek->utc();
+                    $start = $utcStartOfWeek->toIso8601String();
+                    $end = $utcEndOfWeek->toIso8601String();
+                    $filters['and'] = "(timestamp.gte.{$start},timestamp.lt.{$end})";
+                    break;
 
-            case 'this_month':
-                $localStartOfMonth = $now->copy()->startOfMonth();
-                $localEndOfMonth = $localStartOfMonth->copy()->addMonth();
-                $utcStartOfMonth = $localStartOfMonth->utc();
-                $utcEndOfMonth = $localEndOfMonth->utc();
-                $start = $utcStartOfMonth->toIso8601String();
-                $end = $utcEndOfMonth->toIso8601String();
-                $filters['and'] = "(timestamp.gte.{$start},timestamp.lt.{$end})";
-                break;
+                case 'this_month':
+                    $localStartOfMonth = $now->copy()->startOfMonth();
+                    $localEndOfMonth = $localStartOfMonth->copy()->addMonth();
+                    $utcStartOfMonth = $localStartOfMonth->utc();
+                    $utcEndOfMonth = $localEndOfMonth->utc();
+                    $start = $utcStartOfMonth->toIso8601String();
+                    $end = $utcEndOfMonth->toIso8601String();
+                    $filters['and'] = "(timestamp.gte.{$start},timestamp.lt.{$end})";
+                    break;
 
-            case 'all_time':
-                break;
+                case 'this_year':
+                    $localStart = $now->copy()->startOfYear();
+                    $localEnd = $now->copy()->addYear()->startOfYear();
+                    $utcStart = $localStart->copy()->utc();
+                    $utcEnd = $localEnd->copy()->utc();
+                    $start = $utcStart->toIso8601String();
+                    $end = $utcEnd->toIso8601String();
+                    $filters['and'] = "(timestamp.gte.{$start},timestamp.lt.{$end})";
+                    break;
 
-            default:
-                return response()->json(['error' => 'Invalid filter'], 400);
+                case 'all_time':
+                    break;
+
+                default:
+                    return response()->json(['error' => 'Invalid filter'], 400);
+            }
         }
 
         \Log::info('Checkins Filters: ' . json_encode($filters));
@@ -111,46 +136,76 @@ class DashboardController extends Controller
         $utcTomorrowStart = $localTomorrow->copy()->utc();
         $filters = [];
 
-        switch ($filter) {
-            case 'today':
-                $start = $utcTodayStart->toIso8601String();
-                $end = $utcTomorrowStart->toIso8601String();
+        if (strpos($filter, 'custom_year:') === 0) {
+            $year = substr($filter, strlen('custom_year:'));
+            if (is_numeric($year) && strlen($year) == 4) {
+                $localStart = Carbon::createFromDate($year, 1, 1, 'Asia/Manila');
+                $localEnd = $localStart->copy()->addYear();
+                $utcStart = $localStart->copy()->utc();
+                $utcEnd = $localEnd->copy()->utc();
+                $start = $utcStart->toIso8601String();
+                $end = $utcEnd->toIso8601String();
                 $filters = [
                     'select' => '*, tourist_spots!inner(name, latitude, longitude)',
                     'and' => "(timestamp.gte.{$start},timestamp.lt.{$end})"
                 ];
-                break;
-            case 'this_week':
-                $localStartOfWeek = $now->copy()->startOfWeek();
-                $localEndOfWeek = $localStartOfWeek->copy()->addWeek();
-                $utcStartOfWeek = $localStartOfWeek->utc();
-                $utcEndOfWeek = $localEndOfWeek->utc();
-                $start = $utcStartOfWeek->toIso8601String();
-                $end = $utcEndOfWeek->toIso8601String();
-                $filters = [
-                    'select' => '*, tourist_spots!inner(name, latitude, longitude)',
-                    'and' => "(timestamp.gte.{$start},timestamp.lt.{$end})"
-                ];
-                break;
-            case 'this_month':
-                $localStartOfMonth = $now->copy()->startOfMonth();
-                $localEndOfMonth = $localStartOfMonth->copy()->addMonth();
-                $utcStartOfMonth = $localStartOfMonth->utc();
-                $utcEndOfMonth = $localEndOfMonth->utc();
-                $start = $utcStartOfMonth->toIso8601String();
-                $end = $utcEndOfMonth->toIso8601String();
-                $filters = [
-                    'select' => '*, tourist_spots!inner(name, latitude, longitude)',
-                    'and' => "(timestamp.gte.{$start},timestamp.lt.{$end})"
-                ];
-                break;
-            case 'all_time':
-                $filters = [
-                    'select' => '*, tourist_spots!inner(name, latitude, longitude)'
-                ];
-                break;
-            default:
-                return response()->json(['error' => 'Invalid filter'], 400);
+            } else {
+                return response()->json(['error' => 'Invalid year'], 400);
+            }
+        } else {
+            switch ($filter) {
+                case 'today':
+                    $start = $utcTodayStart->toIso8601String();
+                    $end = $utcTomorrowStart->toIso8601String();
+                    $filters = [
+                        'select' => '*, tourist_spots!inner(name, latitude, longitude)',
+                        'and' => "(timestamp.gte.{$start},timestamp.lt.{$end})"
+                    ];
+                    break;
+                case 'this_week':
+                    $localStartOfWeek = $now->copy()->startOfWeek();
+                    $localEndOfWeek = $localStartOfWeek->copy()->addWeek();
+                    $utcStartOfWeek = $localStartOfWeek->utc();
+                    $utcEndOfWeek = $localEndOfWeek->utc();
+                    $start = $utcStartOfWeek->toIso8601String();
+                    $end = $utcEndOfWeek->toIso8601String();
+                    $filters = [
+                        'select' => '*, tourist_spots!inner(name, latitude, longitude)',
+                        'and' => "(timestamp.gte.{$start},timestamp.lt.{$end})"
+                    ];
+                    break;
+                case 'this_month':
+                    $localStartOfMonth = $now->copy()->startOfMonth();
+                    $localEndOfMonth = $localStartOfMonth->copy()->addMonth();
+                    $utcStartOfMonth = $localStartOfMonth->utc();
+                    $utcEndOfMonth = $localEndOfMonth->utc();
+                    $start = $utcStartOfMonth->toIso8601String();
+                    $end = $utcEndOfMonth->toIso8601String();
+                    $filters = [
+                        'select' => '*, tourist_spots!inner(name, latitude, longitude)',
+                        'and' => "(timestamp.gte.{$start},timestamp.lt.{$end})"
+                    ];
+                    break;
+                case 'this_year':
+                    $localStart = $now->copy()->startOfYear();
+                    $localEnd = $now->copy()->addYear()->startOfYear();
+                    $utcStart = $localStart->copy()->utc();
+                    $utcEnd = $localEnd->copy()->utc();
+                    $start = $utcStart->toIso8601String();
+                    $end = $utcEnd->toIso8601String();
+                    $filters = [
+                        'select' => '*, tourist_spots!inner(name, latitude, longitude)',
+                        'and' => "(timestamp.gte.{$start},timestamp.lt.{$end})"
+                    ];
+                    break;
+                case 'all_time':
+                    $filters = [
+                        'select' => '*, tourist_spots!inner(name, latitude, longitude)'
+                    ];
+                    break;
+                default:
+                    return response()->json(['error' => 'Invalid filter'], 400);
+            }
         }
 
         $data = $this->supabaseService->fetchTable('checkins', $filters, false);
@@ -251,15 +306,55 @@ class DashboardController extends Controller
     {
         $cacheKey = 'popular_spots_' . $filter;
         $data = Cache::remember($cacheKey, 60, function () use ($filter) {
-            $dateFilter = $this->getDateFilter($filter);
+            $now = Carbon::now();
             $filters = ['select' => 'spot_id,tourist_id'];
-            if (isset($dateFilter['and'])) {
-                $filters['and'] = $dateFilter['and'];
+
+            if (strpos($filter, 'custom_year:') === 0) {
+                $year = substr($filter, strlen('custom_year:'));
+                if (is_numeric($year) && strlen($year) == 4) {
+                    $localStart = Carbon::createFromDate($year, 1, 1, 'Asia/Manila');
+                    $localEnd = $localStart->copy()->addYear();
+                    $start = $localStart->toIso8601String();
+                    $end = $localEnd->toIso8601String();
+                    $filters['and'] = "(timestamp.gte.{$start},timestamp.lt.{$end})";
+                } else {
+                    throw new \Exception('Invalid year');
+                }
+            } else {
+                switch ($filter) {
+                    case 'today':
+                        $start = $now->startOfDay()->toIso8601String();
+                        $end = $now->endOfDay()->toIso8601String();
+                        $filters['and'] = "(timestamp.gte.{$start},timestamp.lt.{$end})";
+                        break;
+                    case 'this_week':
+                        $start = $now->startOfWeek()->toIso8601String();
+                        $end = $now->endOfWeek()->toIso8601String();
+                        $filters['and'] = "(timestamp.gte.{$start},timestamp.lt.{$end})";
+                        break;
+                    case 'this_month':
+                        $start = $now->startOfMonth()->toIso8601String();
+                        $end = $now->endOfMonth()->toIso8601String();
+                        $filters['and'] = "(timestamp.gte.{$start},timestamp.lt.{$end})";
+                        break;
+                    case 'this_year':
+                        $start = $now->startOfYear()->toIso8601String();
+                        $end = $now->addYear()->startOfYear()->toIso8601String();
+                        $filters['and'] = "(timestamp.gte.{$start},timestamp.lt.{$end})";
+                        break;
+                    case 'all_time':
+                        break;
+                    default:
+                        $start = $now->subMonth()->startOfMonth()->toIso8601String();
+                        $end = $now->subMonth()->endOfMonth()->toIso8601String();
+                        $filters['and'] = "(timestamp.gte.{$start},timestamp.lt.{$end})";
+                }
             }
+
             $checkins = $this->supabaseService->fetchTable('checkins', $filters);
 
             $spotVisits = [];
-            if ($filter === 'today') {
+            if ($filter === 'today' || strpos($filter, 'custom_year:') === 0) {
                 $uniqueTouristsPerSpot = [];
                 foreach ($checkins as $checkin) {
                     $spotId = $checkin['spot_id'];
@@ -312,6 +407,10 @@ class DashboardController extends Controller
             case 'this_month':
                 $start = $now->startOfMonth()->toIso8601String();
                 $end = $now->endOfMonth()->toIso8601String();
+                return ['and' => "(timestamp.gte.{$start},timestamp.lt.{$end})"];
+            case 'this_year':
+                $start = $now->startOfYear()->toIso8601String();
+                $end = $now->addYear()->startOfYear()->toIso8601String();
                 return ['and' => "(timestamp.gte.{$start},timestamp.lt.{$end})"];
             case 'all_time':
                 return [];

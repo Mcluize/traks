@@ -235,6 +235,23 @@
         z-index: 400 !important;
     }
     
+    /* Change Year Button Styling */
+    #edit-year-btn {
+        background-color: #FF7E3F;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        padding: 5px 10px;
+        font-family: 'Poppins', sans-serif;
+        font-size: 12px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+    
+    #edit-year-btn:hover {
+        background-color: #E56E33;
+    }
+    
     /* Responsive adjustments */
     @media (max-width: 768px) {
         .legends-container {
@@ -560,6 +577,32 @@
                 </div>
             </div>
 
+            <!-- Custom Year Modal -->
+            <div class="modal fade" id="customYearModal" tabindex="-1" role="dialog" aria-labelledby="customYearModalLabel" aria-hidden="true" data-backdrop="false">
+                <div class="modal-dialog modal-dialog-centered" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="customYearModalLabel">Select Custom Year</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">×</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="customYearForm">
+                                <div class="form-group">
+                                    <label for="yearInput">Enter Year</label>
+                                    <input type="number" class="form-control" id="yearInput" placeholder="e.g., 2023" min="1900" max="2100">
+                                </div>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                            <button type="button" class="btn btn-primary" id="applyYearBtn">Apply</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div class="tourist-info-section">
                 <div class="search-container">
                     <div class="search-header">Search ID</div>
@@ -570,8 +613,11 @@
                             <option value="today">Today</option>
                             <option value="this_week">This Week</option>
                             <option value="this_month">This Month</option>
+                            <option value="custom_year">Custom Year</option>
+                            <option value="this_year">This Year</option>
                         </select>
                     </div>
+                    <button id="edit-year-btn" style="display:none; margin-top: 10px; margin-left:252px;">Change Year</button>
                 </div>
                 <div class="tourist-cards"></div>
             </div>
@@ -753,6 +799,10 @@ let currentLocationData = null;
 // State to track if location is visible
 let isLocationVisible = false;
 
+// Variables to manage filter state
+let currentFilter = 'all_time'; // Tracks the currently applied filter
+let selectedCustomYear = null;  // Tracks the selected custom year
+
 // Function to check if tourist ID is valid (user_type = 'user')
 async function isValidTourist(touristId) {
     try {
@@ -825,6 +875,16 @@ async function fetchCheckins(touristId, filter) {
         } else if (filter === 'this_month') {
             const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
             query = query.gte('timestamp', startOfMonth);
+        } else if (filter === 'this_year') {
+            const startOfYear = new Date(now.getFullYear(), 0, 1).toISOString();
+            query = query.gte('timestamp', startOfYear);
+        } else if (filter === 'custom_year') {
+            if (!selectedCustomYear) {
+                throw new Error('Custom year not selected');
+            }
+            const startOfYear = new Date(selectedCustomYear, 0, 1).toISOString();
+            const endOfYear = new Date(selectedCustomYear, 11, 31, 23, 59, 59).toISOString();
+            query = query.gte('timestamp', startOfYear).lte('timestamp', endOfYear);
         }
 
         const { data, error } = await query;
@@ -1080,9 +1140,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     const searchInput = document.querySelector('.search-input');
     const filterSelect = document.querySelector('.filter-select');
 
+    // Function to update the Change Year button visibility
+    function updateChangeYearButtonVisibility() {
+        if (currentFilter === 'custom_year' && selectedCustomYear) {
+            document.getElementById('edit-year-btn').style.display = 'block';
+        } else {
+            document.getElementById('edit-year-btn').style.display = 'none';
+        }
+    }
+
     async function fetchAndDisplayData() {
         const touristIdInput = searchInput.value.trim();
-        const filter = filterSelect.value;
+        const filter = currentFilter; // Use currentFilter instead of filterSelect.value
         if (!touristIdInput) {
             showNoData('Please enter a tourist ID.');
             checkinLayer.clearLayers();
@@ -1125,8 +1194,55 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     searchInput.addEventListener('change', fetchAndDisplayData);
-    filterSelect.addEventListener('change', fetchAndDisplayData);
 
+    filterSelect.addEventListener('change', function() {
+        const selectedValue = this.value;
+        if (selectedValue === 'custom_year') {
+            const tempFilter = currentFilter; // Store the current applied filter
+            $('#customYearModal').modal('show');
+            // Use .one() to ensure the handler runs only once per modal open
+            $('#customYearModal').one('hidden.bs.modal', function() {
+                if (!selectedCustomYear) {
+                    // Revert to the previous filter if no year was applied
+                    filterSelect.value = tempFilter;
+                    currentFilter = tempFilter;
+                    updateChangeYearButtonVisibility();
+                }
+            });
+        } else {
+            currentFilter = selectedValue; // Update currentFilter for non-custom filters
+            selectedCustomYear = null;     // Reset custom year
+            updateChangeYearButtonVisibility();
+            fetchAndDisplayData();
+        }
+    });
+
+    // Handle "Change Year" button click to re-open the modal
+    document.getElementById('edit-year-btn').addEventListener('click', function() {
+        $('#customYearModal').modal('show');
+    });
+
+    // Handle custom year modal show event
+    $('#customYearModal').on('show.bs.modal', function() {
+        document.getElementById('yearInput').value = selectedCustomYear || '';
+    });
+
+    // Handle apply year button click
+    document.getElementById('applyYearBtn').addEventListener('click', function() {
+        const year = document.getElementById('yearInput').value;
+        if (year && /^\d{4}$/.test(year)) {
+            selectedCustomYear = year;
+            currentFilter = 'custom_year';     // Update currentFilter
+            filterSelect.value = 'custom_year'; // Ensure dropdown reflects "Custom Year"
+            updateChangeYearButtonVisibility();
+            $('#customYearModal').modal('hide');
+            fetchAndDisplayData();
+        } else {
+            alert('Please enter a valid four-digit year.');
+        }
+    });
+
+    // Existing event listeners below remain unchanged
     window.addEventListener('resize', () => {
         map.invalidateSize();
     });

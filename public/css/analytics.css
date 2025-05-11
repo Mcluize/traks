@@ -376,8 +376,38 @@ body {
 }
 
 /* Modal Styles */
+.modal-backdrop {
+    pointer-events: none;
+}
+
+.modal {
+    pointer-events: none;
+}
+
+.modal-dialog {
+    pointer-events: auto;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+}
+
 .modal-content {
     border-radius: 12px;
+}
+
+/* Apply Button Styles */
+#applyCustomYear, #applyCustomYearTourist {
+    background-color: #0BC8CA;
+    border-color: #0BC8CA;
+    color: white;
+}
+
+#applyCustomYear:hover, #applyCustomYearTourist:hover {
+    background-color: #0BC8CA;
+    border-color: #0BC8CA;
+    color: white;
 }
 
 /* Responsive Adjustments */

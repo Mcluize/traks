@@ -40,28 +40,34 @@
                                     <button type="button" class="btn btn-filter {{ ($filter ?? '') == 'today' ? 'active' : '' }}" data-filter="today">Today</button>
                                 </div>
                             </div>
-                            <div class="col-md-6 text-right">
-                                <button type="button" class="btn btn-export">
-                                    <i class="la la-download"></i> Export Data
-                                </button>
-                            </div>
                         </div>
                     </div>
                 
-                    <!-- Search Bar with Date Search -->
+                    <!-- Search Bar with Date and Year Search -->
                     <div class="row mb-4">
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <div class="search-container">
                                 <i class="la la-search search-icon"></i>
                                 <input type="text" id="incident-search" class="form-control search-input" 
                                        placeholder="Search by Tourist ID" value="{{ $search ?? '' }}">
                             </div>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <div class="search-container">
                                 <i class="la la-calendar search-icon"></i>
                                 <input type="date" id="date-search" class="form-control search-input" 
                                        placeholder="Search by Date" value="{{ $search_date ?? '' }}">
+                            </div>
+                        </div>
+                        <div class="col-md-4" id="year-filter" style="display: {{ $filter == 'all_time' ? 'block' : 'none' }};">
+                            <div class="search-container">
+                                <i class="la la-calendar-check search-icon"></i>
+                                <select id="year-select" class="form-control search-input">
+                                    <option value="">All Years</option>
+                                    @foreach (array_reverse($years) as $year)
+                                        <option value="{{ $year }}" {{ $selectedYear == $year ? 'selected' : '' }}>{{ $year }}</option>
+                                    @endforeach
+                                </select>
                             </div>
                         </div>
                     </div>
@@ -92,6 +98,15 @@ $(document).ready(function() {
     let currentPage = {{ $currentPage ?? 1 }};
     let isLoading = false;
 
+    function toggleYearFilter() {
+        if (currentFilter === 'all_time') {
+            $('#year-filter').show();
+        } else {
+            $('#year-filter').hide();
+            $('#year-select').val('');
+        }
+    }
+
     function updateTable(showLoading = true) {
         if (isLoading) return;
         isLoading = true;
@@ -100,6 +115,8 @@ $(document).ready(function() {
             $('#incident-table-container').html('<div class="text-center p-3"><i class="la la-spinner la-spin"></i> Loading incidents...</div>');
         }
 
+        let year = currentFilter === 'all_time' ? $('#year-select').val() : '';
+
         $.ajax({
             url: "{{ route('admin.incidents.table-data') }}",
             type: "GET",
@@ -107,11 +124,34 @@ $(document).ready(function() {
                 filter: currentFilter,
                 search_id: currentSearch,
                 search_date: searchDate,
+                year: year,
                 page: currentPage
             },
             success: function(response) {
-                $('#incident-table-container').html(response);
-                attachPaginationHandlers();
+                if (response.tableHtml && response.years) {
+                    // Update table container
+                    $('#incident-table-container').html(response.tableHtml);
+                    attachPaginationHandlers();
+
+                    // Update year dropdown if 'all_time' filter is active
+                    if (currentFilter === 'all_time') {
+                        let yearSelect = $('#year-select');
+                        let selectedYear = yearSelect.val();
+                        yearSelect.empty();
+                        yearSelect.append('<option value="">All Years</option>');
+                        response.years.reverse().forEach(function(year) {
+                            yearSelect.append('<option value="' + year + '">' + year + '</option>');
+                        });
+                        // Restore the previously selected year if it still exists
+                        if (selectedYear && response.years.includes(parseInt(selectedYear))) {
+                            yearSelect.val(selectedYear);
+                        } else {
+                            yearSelect.val(''); // Default to "All Years" if the selected year is no longer valid
+                        }
+                    }
+                } else {
+                    console.error('Invalid response format');
+                }
             },
             error: function(xhr) {
                 console.error('Error:', xhr.status, xhr.responseText);
@@ -151,22 +191,25 @@ $(document).ready(function() {
         updateTable(true);
     });
 
+    $('#year-select').on('change', function() {
+        if (currentFilter === 'all_time') {
+            currentPage = 1;
+            updateTable(true);
+        }
+    });
+
     $('.btn-filter').click(function() {
         $('.btn-filter').removeClass('active');
         $(this).addClass('active');
         currentFilter = $(this).data('filter');
         currentPage = 1;
+        toggleYearFilter();
         updateTable(true);
     });
 
-    $('.btn-export').click(function() {
-        alert('Export functionality will be implemented later');
-    });
-
-    // Initial load with loading indicator
+    toggleYearFilter();
     updateTable(true);
 
-    // Periodic update every 5 seconds without loading indicator
     setInterval(() => updateTable(false), 5000);
 });
 </script>
