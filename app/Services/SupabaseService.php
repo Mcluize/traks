@@ -16,9 +16,9 @@ class SupabaseService
         $this->key = config('services.supabase.key');
     }
 
-    public function fetchTable($table, $filters = [], $count = false)
+    public function fetchTable($table, $filters = [], $count = false, $select = '*')
     {
-        \Log::info("Final Supabase URL: {$this->url}/rest/v1/{$table}", ['filters' => $filters]);
+        \Log::info("Final Supabase URL: {$this->url}/rest/v1/{$table}", ['filters' => $filters, 'select' => $select]);
 
         $headers = [
             'apikey' => $this->key,
@@ -29,8 +29,10 @@ class SupabaseService
             $headers['Prefer'] = 'count=exact';
         }
 
+        $queryParams = array_merge(['select' => $select], $filters);
+
         $query = Http::withHeaders($headers)
-            ->get("{$this->url}/rest/v1/{$table}", $filters);
+            ->get("{$this->url}/rest/v1/{$table}", $queryParams);
 
         if ($query->successful()) {
             if ($count) {
@@ -104,50 +106,50 @@ class SupabaseService
         }
     }
 
-            public function fetchMinMax($table, $column)
-{
-    $headers = [
-        'apikey' => $this->key,
-        'Authorization' => 'Bearer ' . $this->key
-    ];
+    public function fetchMinMax($table, $column)
+    {
+        $headers = [
+            'apikey' => $this->key,
+            'Authorization' => 'Bearer ' . $this->key
+        ];
 
-    // Fetch earliest timestamp
-    $minQuery = Http::withHeaders($headers)
-        ->get("{$this->url}/rest/v1/{$table}", [
-            'select' => $column,
-            'order' => "$column.asc",
-            'limit' => 1
-        ]);
+        // Fetch earliest timestamp
+        $minQuery = Http::withHeaders($headers)
+            ->get("{$this->url}/rest/v1/{$table}", [
+                'select' => $column,
+                'order' => "$column.asc",
+                'limit' => 1
+            ]);
 
-    // Fetch latest timestamp
-    $maxQuery = Http::withHeaders($headers)
-        ->get("{$this->url}/rest/v1/{$table}", [
-            'select' => $column,
-            'order' => "$column.desc",
-            'limit' => 1
-        ]);
+        // Fetch latest timestamp
+        $maxQuery = Http::withHeaders($headers)
+            ->get("{$this->url}/rest/v1/{$table}", [
+                'select' => $column,
+                'order' => "$column.desc",
+                'limit' => 1
+            ]);
 
-    if ($minQuery->successful() && $maxQuery->successful()) {
-        $minResult = $minQuery->json();
-        $maxResult = $maxQuery->json();
-        \Log::info('fetchMinMax min result', ['minResult' => $minResult]);
-        \Log::info('fetchMinMax max result', ['maxResult' => $maxResult]);
-        if (!empty($minResult) && !empty($maxResult)) {
-            return [
-                'min' => $minResult[0][$column] ?? null,
-                'max' => $maxResult[0][$column] ?? null
-            ];
+        if ($minQuery->successful() && $maxQuery->successful()) {
+            $minResult = $minQuery->json();
+            $maxResult = $maxQuery->json();
+            \Log::info('fetchMinMax min result', ['minResult' => $minResult]);
+            \Log::info('fetchMinMax max result', ['maxResult' => $maxResult]);
+            if (!empty($minResult) && !empty($maxResult)) {
+                return [
+                    'min' => $minResult[0][$column] ?? null,
+                    'max' => $maxResult[0][$column] ?? null
+                ];
+            }
+        } else {
+            \Log::error('Supabase fetchMinMax failed', [
+                'minStatus' => $minQuery->status(),
+                'maxStatus' => $maxQuery->status(),
+                'minBody' => $minQuery->body(),
+                'maxBody' => $maxQuery->body()
+            ]);
         }
-    } else {
-        \Log::error('Supabase fetchMinMax failed', [
-            'minStatus' => $minQuery->status(),
-            'maxStatus' => $maxQuery->status(),
-            'minBody' => $minQuery->body(),
-            'maxBody' => $maxQuery->body()
-        ]);
+        return ['min' => null, 'max' => null];
     }
-    return ['min' => null, 'max' => null];
-}
 
     public function getIncidentReports($filter)
     {
@@ -224,23 +226,31 @@ class SupabaseService
         ]);
     }
 
-    public function index()
+    public function getMinMaxYears()
     {
-        $userGrowth = $this->fetchTable('users', ['user_type' => 'eq.user']); 
-        
-        $userGrowthByDate = [];
-        foreach ($userGrowth as $user) {
-            $date = Carbon::parse($user['created_at'], 'Asia/Manila')->format('Y-m-d');
-            $userGrowthByDate[$date] = ($userGrowthByDate[$date] ?? 0) + 1;
-        }
-        
-        ksort($userGrowthByDate);
-        $userGrowthLabels = array_keys($userGrowthByDate);
-        $userGrowthData = array_values($userGrowthByDate);
+        $checkinsRange = $this->fetchMinMax('checkins', 'timestamp');
+        $incidentsRange = $this->fetchMinMax('emergency_reports', 'timestamp');
 
-        return view('analytics', [
-            'userGrowthLabels' => $userGrowthLabels,
-            'userGrowthData' => $userGrowthData,
-        ]);
+        $minYear = null;
+        $maxYear = null;
+
+        if ($checkinsRange['min']) {
+            $minYear = Carbon::parse($checkinsRange['min'], 'Asia/Manila')->year;
+        }
+        if ($incidentsRange['min'] && (!$minYear || Carbon::parse($incidentsRange['min'], 'Asia/Manila')->year < $minYear)) {
+            $minYear = Carbon::parse($incidentsRange['min'], 'Asia/Manila')->year;
+        }
+
+        if ($checkinsRange['max']) {
+            $maxYear = Carbon::parse($checkinsRange['max'], 'Asia/Manila')->year;
+        }
+        if ($incidentsRange['max'] && (!$maxYear || Carbon::parse($incidentsRange['max'], 'Asia/Manila')->year > $maxYear)) {
+            $maxYear = Carbon::parse($incidentsRange['max'], 'Asia/Manila')->year;
+        }
+
+        return [
+            'min' => $minYear,
+            'max' => $maxYear
+        ];
     }
 }

@@ -241,9 +241,10 @@ body {
     display: flex;
     gap: 8px;
 }
-
-.chart-body {
-    padding: 20px;
+.chart-actions option {
+    justify-content: center !important;
+    text-align: center !important;
+    align-items: center !important;
 }
 
 /* Metric Highlight */
@@ -397,17 +398,52 @@ body {
     border-radius: 12px;
 }
 
+/* Centered Modal Footer */
+.modal-footer.modal-footer-centered {
+    justify-content: center; /* Center the modal footer buttons */
+}
+
+/* Input Focus Styling */
+#customYearInputSpots:focus {
+    border-color: #0BC8CA;
+    box-shadow: 0 0 0 0.2rem rgba(11, 200, 202, 0.25);
+}
+
 /* Apply Button Styles */
-#applyCustomYear, #applyCustomYearTourist {
+#applyCustomYear, #applyCustomYearTourist, #applyCustomYearSpots {
     background-color: #0BC8CA;
     border-color: #0BC8CA;
     color: white;
 }
 
-#applyCustomYear:hover, #applyCustomYearTourist:hover {
+#applyCustomYear:hover, #applyCustomYearTourist:hover, #applyCustomYearSpots:hover {
     background-color: #0BC8CA;
     border-color: #0BC8CA;
-    color: white;
+    box-shadow: 0 4px 8px rgba(11, 200, 202, 0.3);
+}
+
+#applyCustomYear:active, #applyCustomYearTourist:active, #applyCustomYearSpots:active {
+    background-color: #0A9A9C; /* Darker shade of #0BC8CA */
+    border-color: #0A9A9C;
+    box-shadow: none;
+}
+
+/* Loading State for Apply Button */
+.btn.loading::after {
+    content: '';
+    display: inline-block;
+    width: 1em;
+    height: 1em;
+    border: 2px solid #fff;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-left: 0.5em;
+    vertical-align: middle;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
 }
 
 /* Responsive Adjustments */
@@ -448,4 +484,29 @@ body {
 .leaflet-div-icon {
     background: transparent;
     border: none;
+}
+
+.analytics-container .form-select {
+    background-color: #FF7E3F;
+    color: white;
+    background-image: none; 
+    -webkit-appearance: none; 
+    -moz-appearance: none; 
+    appearance: none; 
+    border: none; 
+}
+
+.analytics-container .form-select:hover,
+.analytics-container .form-select:focus,
+.analytics-container .form-select:active {
+    background-color: #FF7E3F; 
+    color: white;
+}
+
+#totalIncidentsValue{
+    color: #FF6B6B ;
+}
+
+#incidentError{
+    margin-top: 100px;;
 }

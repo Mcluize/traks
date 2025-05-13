@@ -38,9 +38,13 @@ Route::group([
     Route::get('analytics/incident-status', [AnalyticsController::class, 'getIncidentStatus'])
          ->name('analytics.incident-status');
 
-    // Popular Spots Modal Data
-    Route::get('analytics/popular-spots/{filter}', [AnalyticsController::class, 'getPopularSpots'])
+    // Consolidated Popular Spots endpoint with optional year parameter
+    Route::get('analytics/popular-spots/{filter}/{year?}', [AnalyticsController::class, 'getPopularSpots'])
          ->name('analytics.popular-spots');
+
+    // User Growth endpoint
+    Route::get('analytics/user-growth', [AnalyticsController::class, 'getUserGrowth'])
+         ->name('analytics.user-growth');
 
     // Notifications (static view)
     Route::get('notification', function () {
@@ -90,5 +94,5 @@ Route::group([
     Route::get('api/account-counts',             [AdminAccountController::class, 'getAccountCounts']);
     Route::get('/admin/analytics/map-data/{activityFilter}/{timeFilter}', [AnalyticsController::class, 'getMapData']);
     Route::get('analytics/tourist-activities', [AnalyticsController::class, 'getTouristActivities'])
-    ->name('analytics.tourist-activities');
+         ->name('analytics.tourist-activities');
 });

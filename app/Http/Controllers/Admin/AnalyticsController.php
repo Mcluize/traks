@@ -67,17 +67,8 @@ class AnalyticsController extends Controller
         $weeklyCheckinsData = $touristActivitiesData['checkins'];
         $weeklyIncidentsData = $touristActivitiesData['incidents'];
         $totalActivities = $touristActivitiesData['totalActivities'];
-
-        // User Growth
-        $userGrowth = $this->supabaseService->fetchTable('users');
-        $userGrowthByDate = [];
-        foreach ($userGrowth as $user) {
-            $date = Carbon::parse($user['created_at'], 'Asia/Manila')->format('Y-m-d');
-            $userGrowthByDate[$date] = ($userGrowthByDate[$date] ?? 0) + 1;
-        }
-        ksort($userGrowthByDate);
-        $userGrowthLabels = array_keys($userGrowthByDate);
-        $userGrowthData = array_values($userGrowthByDate);
+        $totalIncidents = $touristActivitiesData['totalIncidents'];
+        $initialPeriod = $touristActivitiesData['period'];
 
         // User Type Distribution
         $userTypeCounts = array_count_values(array_column($users, 'user_type'));
@@ -122,6 +113,11 @@ class AnalyticsController extends Controller
         $adminAccountsChangeClass = $adminAccountsChange > 0 ? 'increase' : ($adminAccountsChange < 0 ? 'decrease' : 'neutral');
         $adminAccountsChangeIcon = $adminAccountsChange > 0 ? 'fa-arrow-up' : ($adminAccountsChange < 0 ? 'fa-arrow-down' : 'fa-equals');
 
+        // Get min and max years for custom year validation
+        $minMaxYears = $this->supabaseService->getMinMaxYears();
+        $minYear = $minMaxYears['min'] ?? 1900;
+        $maxYear = $minMaxYears['max'] ?? now('Asia/Manila')->year;
+
         return view('vendor.backpack.ui.analytics', compact(
             'touristArrivals', 'touristChange', 'touristChangeClass', 'touristChangeIcon',
             'incidentReports', 'incidentChange', 'incidentChangeClass', 'incidentChangeIcon',
@@ -129,12 +125,113 @@ class AnalyticsController extends Controller
             'adminAccounts', 'adminAccountsChange', 'adminAccountsChangeClass', 'adminAccountsChangeIcon',
             'incidentStatusLabels', 'incidentStatusData',
             'weeklyLabels', 'weeklyCheckinsData', 'weeklyIncidentsData',
-            'userGrowthLabels', 'userGrowthData',
             'userTypeLabels', 'userTypeData',
             'popularSpotsLabels', 'popularSpotsData',
             'touristSpots', 'incidents', 'checkins', 'users',
-            'latestIncidents', 'totalActivities'
+            'latestIncidents', 'totalActivities',
+            'totalIncidents', 'initialPeriod',
+            'minYear', 'maxYear'
         ));
+    }
+
+    public function getUserGrowth(Request $request)
+    {
+        $period = $request->query('period', 'this_month');
+        $year = $request->query('year');
+
+        $now = Carbon::now('Asia/Manila');
+
+        if ($period === 'custom_year') {
+            if (!$year || !is_numeric($year) || strlen($year) != 4) {
+                return response()->json(['error' => 'Invalid year'], 400);
+            }
+            $startDate = Carbon::createFromDate($year, 1, 1, 'Asia/Manila')->startOfDay();
+            $endDate = Carbon::createFromDate($year, 12, 31, 'Asia/Manila')->endOfDay();
+            $groupBy = 'month';
+        } else {
+            if ($period === 'this_week') {
+                $startDate = $now->startOfWeek();
+                $endDate = $now->endOfWeek();
+                $groupBy = 'day';
+            } elseif ($period === 'this_month') {
+                $startDate = $now->startOfMonth();
+                $endDate = $now->endOfMonth();
+                $groupBy = 'week';
+            } elseif ($period === 'this_year') {
+                $startDate = $now->startOfYear();
+                $endDate = $now->endOfYear();
+                $groupBy = 'month';
+            } elseif ($period === 'all_time') {
+                $startDate = null;
+                $endDate = null;
+                $groupBy = 'month';
+            } else {
+                return response()->json(['error' => 'Invalid period'], 400);
+            }
+        }
+
+        if ($period === 'all_time') {
+            $users = $this->supabaseService->fetchTable('users', [], false, 'created_at');
+        } else {
+            $filters = [
+                'created_at' => 'gte.' . $startDate->toIso8601String(),
+                'created_at' => 'lte.' . $endDate->toIso8601String()
+            ];
+            $users = $this->supabaseService->fetchTable('users', $filters, false, 'created_at');
+        }
+
+        if ($period === 'this_week') {
+            $labels = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+            $userGrowthByDay = array_fill(0, 7, 0);
+            foreach ($users as $user) {
+                $day = Carbon::parse($user['created_at'], 'Asia/Manila')->format('l');
+                $index = array_search($day, $labels);
+                if ($index !== false) {
+                    $userGrowthByDay[$index]++;
+                }
+            }
+            $data = $userGrowthByDay;
+        } elseif ($period === 'this_month') {
+            $numWeeks = ceil($endDate->day / 7);
+            $labels = [];
+            for ($i = 1; $i <= $numWeeks; $i++) {
+                $labels[] = "Week $i";
+            }
+            $userGrowthByWeek = array_fill(0, $numWeeks, 0);
+            foreach ($users as $user) {
+                $date = Carbon::parse($user['created_at'], 'Asia/Manila');
+                $week = ceil($date->day / 7);
+                if ($week >= 1 && $week <= $numWeeks) {
+                    $userGrowthByWeek[$week - 1]++;
+                }
+            }
+            $data = $userGrowthByWeek;
+        } elseif ($period === 'this_year' || $period === 'custom_year') {
+            $labels = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+            $userGrowthByMonth = array_fill(0, 12, 0);
+            foreach ($users as $user) {
+                $month = Carbon::parse($user['created_at'], 'Asia/Manila')->month;
+                $userGrowthByMonth[$month - 1]++;
+            }
+            $data = $userGrowthByMonth;
+        } elseif ($period === 'all_time') {
+            $userGrowthByMonth = [];
+            foreach ($users as $user) {
+                $date = Carbon::parse($user['created_at'], 'Asia/Manila')->format('Y-m');
+                $userGrowthByMonth[$date] = ($userGrowthByMonth[$date] ?? 0) + 1;
+            }
+            ksort($userGrowthByMonth);
+            $labels = array_keys($userGrowthByMonth);
+            $labels = array_map(function($date) {
+                return Carbon::createFromFormat('Y-m', $date, 'Asia/Manila')->format('M Y');
+            }, $labels);
+            $data = array_values($userGrowthByMonth);
+        }
+
+        return response()->json([
+            'labels' => $labels,
+            'data' => $data
+        ]);
     }
 
     public function getIncidentStatus(Request $request)
@@ -143,16 +240,16 @@ class AnalyticsController extends Controller
         $year = $request->query('year');
 
         if ($period === 'today') {
-            $dateFilter = Carbon::today('Asia/Manila');
+            $start = Carbon::today('Asia/Manila')->startOfDay()->toIso8601String();
+            $end = Carbon::today('Asia/Manila')->endOfDay()->toIso8601String();
             $filters = [
-                'timestamp' => 'gte.' . $dateFilter->startOfDay()->toIso8601String(),
-                'timestamp' => 'lt.' . $dateFilter->endOfDay()->toIso8601String()
+                'and' => "(timestamp.gte.{$start},timestamp.lt.{$end})"
             ];
         } elseif ($period === 'custom_year' && $year) {
-            $dateFilter = Carbon::createFromDate($year, 1, 1, 'Asia/Manila');
+            $start = Carbon::createFromDate($year, 1, 1, 'Asia/Manila')->startOfYear()->toIso8601String();
+            $end = Carbon::createFromDate($year, 12, 31, 'Asia/Manila')->endOfYear()->toIso8601String();
             $filters = [
-                'timestamp' => 'gte.' . $dateFilter->startOfYear()->toIso8601String(),
-                'timestamp' => 'lt.' . $dateFilter->endOfYear()->toIso8601String()
+                'and' => "(timestamp.gte.{$start},timestamp.lt.{$end})"
             ];
         } elseif ($period === 'all_time') {
             $filters = [];
@@ -174,20 +271,41 @@ class AnalyticsController extends Controller
         ]);
     }
 
-    public function getPopularSpots($filter)
+    public function getPopularSpots($filter, $year = null)
     {
-        $cacheKey = 'popular_spots_' . $filter;
-        $data = Cache::remember($cacheKey, 60, function () use ($filter) {
-            $dateFilter = $this->getDateFilter($filter);
-            $filters = [];
-            if (is_array($dateFilter)) {
+        $cacheKey = 'popular_spots_' . $filter . ($year ? '_' . $year : '');
+        $data = Cache::remember($cacheKey, 60, function () use ($filter, $year) {
+            if ($filter === 'custom_year') {
+                if (!$year || !is_numeric($year) || strlen($year) != 4) {
+                    return ['error' => 'Invalid year'];
+                }
+                $minMaxYears = $this->supabaseService->getMinMaxYears();
+                $minYear = $minMaxYears['min'] ?? 1900;
+                $maxYear = $minMaxYears['max'] ?? now('Asia/Manila')->year;
+                if ($year < $minYear || $year > $maxYear) {
+                    return ['error' => "Year out of range ($minYear - $maxYear)"];
+                }
+                $startDate = Carbon::createFromDate($year, 1, 1, 'Asia/Manila')->startOfDay();
+                $endDate = Carbon::createFromDate($year, 12, 31, 'Asia/Manila')->endOfDay();
                 $filters = [
-                    'timestamp' => 'gte.' . $dateFilter['gte'],
-                    'timestamp' => 'lt.' . $dateFilter['lt']
+                    'timestamp' => 'gte.' . $startDate->toIso8601String(),
+                    'timestamp' => 'lt.' . $endDate->toIso8601String()
                 ];
+                $checkins = $this->supabaseService->fetchTable('checkins', $filters);
+                if (empty($checkins)) {
+                    return ['error' => 'No data available for the selected year'];
+                }
+            } else {
+                $dateFilter = $this->getDateFilter($filter);
+                $filters = [];
+                if (is_array($dateFilter)) {
+                    $filters = [
+                        'timestamp' => 'gte.' . $dateFilter['gte'],
+                        'timestamp' => 'lt.' . $dateFilter['lt']
+                    ];
+                }
+                $checkins = $this->supabaseService->fetchTable('checkins', $filters);
             }
-            $checkins = $this->supabaseService->fetchTable('checkins', $filters);
-            Log::info('Fetched checkins for filter', ['filter' => $filter, 'checkins' => $checkins]);
 
             $spotVisits = [];
             if ($filter === 'today') {
@@ -265,42 +383,59 @@ class AnalyticsController extends Controller
         $period = $request->query('period', 'this_week');
         $now = now('Asia/Manila');
 
-        // Determine start and end dates based on period
-        if ($period === 'this_week') {
-            $startDate = $now->startOfWeek();
-            $endDate = $now->endOfWeek();
-            $periodLabel = 'This Week';
-            $groupBy = 'day';
-        } elseif ($period === 'this_month') {
-            $startDate = $now->startOfMonth();
-            $endDate = $now->endOfMonth();
-            $periodLabel = 'This Month';
-            $groupBy = 'week';
-        } elseif ($period === 'this_year') {
-            $startDate = $now->startOfYear();
-            $endDate = $now->endOfYear();
-            $periodLabel = 'This Year';
-            $groupBy = 'month';
-        } elseif ($period === 'custom_year') {
+        if ($period === 'custom_year') {
             $year = $request->query('year');
             if (!$year || !is_numeric($year) || strlen($year) != 4) {
-                return response()->json(['error' => 'Invalid year'], 400);
+                return response()->json(['error' => 'Invalid year'], 200);
+            }
+            $minMaxYears = $this->supabaseService->getMinMaxYears();
+            $minYear = $minMaxYears['min'] ?? 1900;
+            $maxYear = $minMaxYears['max'] ?? now('Asia/Manila')->year;
+            if ($year < $minYear || $year > $maxYear) {
+                return response()->json(['error' => 'Year out of range'], 200);
             }
             $startDate = Carbon::createFromDate($year, 1, 1, 'Asia/Manila')->startOfDay();
             $endDate = Carbon::createFromDate($year, 12, 31, 'Asia/Manila')->endOfDay();
             $periodLabel = "Year $year";
             $groupBy = 'month';
-        } else {
-            return response()->json(['error' => 'Invalid period'], 400);
-        }
 
-        // Fetch data from Supabase
-        $filters = [
-            'timestamp' => 'gte.' . $startDate->toIso8601String(),
-            'timestamp' => 'lt.' . $endDate->toIso8601String()
-        ];
-        $checkins = $this->supabaseService->fetchTable('checkins', $filters);
-        $incidents = $this->supabaseService->fetchTable('emergency_reports', $filters);
+            $filters = [
+                'timestamp' => 'gte.' . $startDate->toIso8601String(),
+                'timestamp' => 'lt.' . $endDate->toIso8601String()
+            ];
+            $checkins = $this->supabaseService->fetchTable('checkins', $filters);
+            $incidents = $this->supabaseService->fetchTable('emergency_reports', $filters);
+
+            if (empty($checkins) && empty($incidents)) {
+                return response()->json(['error' => 'No data available for the selected year'], 200);
+            }
+        } else {
+            if ($period === 'this_week') {
+                $startDate = $now->startOfWeek();
+                $endDate = $now->endOfWeek();
+                $periodLabel = 'This Week';
+                $groupBy = 'day';
+            } elseif ($period === 'this_month') {
+                $startDate = $now->startOfMonth();
+                $endDate = $now->endOfMonth();
+                $periodLabel = 'This Month';
+                $groupBy = 'week';
+            } elseif ($period === 'this_year') {
+                $startDate = $now->startOfYear();
+                $endDate = $now->endOfYear();
+                $periodLabel = 'This Year';
+                $groupBy = 'month';
+            } else {
+                return response()->json(['error' => 'Invalid period'], 400);
+            }
+
+            $filters = [
+                'timestamp' => 'gte.' . $startDate->toIso8601String(),
+                'timestamp' => 'lt.' . $endDate->toIso8601String()
+            ];
+            $checkins = $this->supabaseService->fetchTable('checkins', $filters);
+            $incidents = $this->supabaseService->fetchTable('emergency_reports', $filters);
+        }
 
         // Prepare labels and data based on grouping
         if ($groupBy === 'day') {
@@ -357,12 +492,14 @@ class AnalyticsController extends Controller
         }
 
         $totalActivities = array_sum($checkinsData);
+        $totalIncidents = array_sum($incidentsData);
 
         return response()->json([
             'labels' => $labels,
             'checkins' => $checkinsData,
             'incidents' => $incidentsData,
             'totalActivities' => $totalActivities,
+            'totalIncidents' => $totalIncidents,
             'period' => $periodLabel
         ]);
     }
