@@ -29,6 +29,11 @@ class SupabaseService
             $headers['Prefer'] = 'count=exact';
         }
 
+        // Add status filter for warning_zones
+        if ($table === 'warning_zones' && !isset($filters['status'])) {
+            $filters['status'] = 'eq.active';
+        }
+
         $queryParams = array_merge(['select' => $select], $filters);
 
         $query = Http::withHeaders($headers)
@@ -59,6 +64,11 @@ class SupabaseService
         try {
             \Log::info("Connecting to Supabase: {$this->url}/rest/v1/{$table}");
             
+            // Set default status for warning_zones
+            if ($table === 'warning_zones') {
+                $data['status'] = 'active';
+            }
+
             $response = Http::withHeaders([
                 'apikey' => $this->key,
                 'Authorization' => 'Bearer ' . $this->key,
@@ -252,5 +262,15 @@ class SupabaseService
             'min' => $minYear,
             'max' => $maxYear
         ];
+    }
+    
+    public function fetchUserZones()
+    {
+        return $this->fetchTable('user_zones', [], false, 'zone_id, user_id, type, description, latitude, longitude, total_weight, status, created_at');
+    }
+
+    public function updateUserZoneStatus($zoneId, $status)
+    {
+        return $this->updateTable('user_zones', 'zone_id', $zoneId, ['status' => $status]);
     }
 }

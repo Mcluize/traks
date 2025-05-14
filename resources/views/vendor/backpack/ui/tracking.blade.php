@@ -187,7 +187,7 @@
         flex-shrink: 0;
     }
     
-    /* Check-in Markers - Using original icons */
+    /* Check-in Markers */
     .legend-marker.first-checkin {
         background-image: url('{{ asset('images/marker-icon-2x-green.png') }}');
     }
@@ -204,7 +204,7 @@
         background-image: url('{{ asset('images/marker-icon-2x-yellow.png') }}');
     }
     
-    /* Warning Zone Markers - Ensure original appearance */
+    /* Warning Zone Markers */
     .legend-marker.danger-zone {
         background-image: url('{{ asset('images/warning-danger.png') }}');
     }
@@ -219,6 +219,23 @@
     }
     .legend-marker.other-warning {
         background-image: url('{{ asset('images/warning-other.png') }}');
+    }
+    
+    /* User Zone Markers */
+    .legend-marker.road-blocked {
+        background-image: url('{{ asset('images/road-blocked.png') }}');
+    }
+    .legend-marker.flooded {
+        background-image: url('{{ asset('images/flooded.png') }}');
+    }
+    .legend-marker.landslide {
+        background-image: url('{{ asset('images/landslide.png') }}');
+    }
+    .legend-marker.fire {
+        background-image: url('{{ asset('images/fire.png') }}');
+    }
+    .legend-marker.others {
+        background-image: url('{{ asset('images/others.png') }}');
     }
     
     .legend-path {
@@ -265,8 +282,49 @@
             left: 10px !important;
         }
     }
+
+    /* Custom Button Styles for Warning Modals */
+    .modal-footer .btn-secondary {
+        background-color: #6c757d;
+        border-color: #6c757d;
+        transition: none;
+    }
+    .modal-footer .btn-secondary:hover,
+    .modal-footer .btn-secondary:focus,
+    .modal-footer .btn-secondary:active {
+        background-color: #6c757d;
+        border-color: #6c757d;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+    .modal-footer .btn-warning {
+        background-color: #FF7E3F !important;
+        border-color: #FF7E3F;
+        transition: none;
+    }
+    .modal-footer .btn-warning:hover,
+    .modal-footer .btn-warning:focus,
+    .modal-footer .btn-warning:active {
+        background-color: #FF7E3F;
+        border-color: #FF7E3F;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+    }
+    .custom-cancel-btn {
+        background-color: #6c757d !important;
+        border-color: #6c757d !important;
+        transition: none !important;
+        color: white !important;
+    }
+    .custom-cancel-btn:hover,
+    .custom-cancel-btn:focus,
+    .custom-cancel-btn:active {
+        background-color: #6c757d !important;
+        border-color: #6c757d !important;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3) !important;
+    }
 </style>
 <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.Default.css" />
 @endpush
 
 @section('content')
@@ -289,6 +347,7 @@
                     <div class="legend-tabs">
                         <button class="tab-btn active" data-tab="all">All</button>
                         <button class="tab-btn" data-tab="warning">Warning Zones</button>
+                        <button class="tab-btn" data-tab="user-zones">User Zones</button>
                         <button class="tab-btn" data-tab="checkin">Check-ins</button>
                     </div>
                 </div>
@@ -349,9 +408,42 @@
                 
                 <div class="section-divider"></div>
                 
+                <!-- Updated User Zones Legend Tab with Clustering Symbol -->
+                <div class="legend-section user-zones-legend" id="user-zones-tab">
+                    <h4>User Zones</h4>
+                    <h5>Markers</h5>
+                    <div class="legend-item">
+                        <div class="legend-marker road-blocked"></div>
+                        <span>Road Blocked</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-marker flooded"></div>
+                        <span>Flooded</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-marker landslide"></div>
+                        <span>Landslide</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-marker fire"></div>
+                        <span>Fire</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-marker others"></div>
+                        <span>Others</span>
+                    </div>
+                    <!-- Clustering Symbol -->
+                    <h5>Clusters</h5>
+                    <div class="legend-item">
+                        <div class="legend-cluster" style="width: 24px; height: 24px; background-color: green; border-radius: 50%; text-align: center; line-height: 24px; color: white; font-size: 12px; margin-right: 10px;">?</div>
+                        <span>Clustered User Zones (Number of Total Votes)</span>
+                    </div>
+                </div>
+                
+                <div class="section-divider"></div>
+                
                 <div class="legend-section checkin-legend" id="checkin-tab">
                     <h4>Check-in Legend</h4>
-                    
                     <h5>Markers</h5>
                     <div class="legend-item">
                         <div class="legend-marker first-checkin"></div>
@@ -369,7 +461,6 @@
                         <div class="legend-marker current-location"></div>
                         <span>Current Location - Yellow Marker</span>
                     </div>
-                    
                     <h5>Paths</h5>
                     <div class="legend-item">
                         <div class="legend-path"></div>
@@ -384,67 +475,67 @@
 
             <!-- Warning Modal -->
             <div class="modal fade" id="warningModal" tabindex="-1" role="dialog" aria-labelledby="warningModalLabel" aria-hidden="true" data-backdrop="false">
-            <div class="modal-dialog" role="document">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="warningModalLabel">Add Warning Zone</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">×</span>
-                        </button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="form-group">
-                            <label for="warning-type">Warning Type</label>
-                            <select id="warning-type" class="form-control">
-                                <option value="danger">Danger Zone</option>
-                                <option value="high-risk">High Risk Area</option>
-                                <option value="flood">Flood Area</option>
-                                <option value="security">Security Concern</option>
-                                <option value="other">Other</option>
-                            </select>
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="warningModalLabel">Add Warning Zone</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">×</span>
+                            </button>
                         </div>
-                        <div class="form-group">
-                            <label for="warning-zone-tag">Zone Tag</label>
-                            <input type="text" id="warning-zone-tag" class="form-control" placeholder="e.g., Flood Warning">
-                        </div>
-                        <div class="form-group">
-                            <label for="warning-description">Description</label>
-                            <textarea id="warning-description" class="form-control" rows="3" placeholder="Describe the warning or danger..."></textarea>
-                        </div>
-                        <div class="form-group">
-                            <label>Drawing Mode</label>
-                            <div class="drawing-options">
-                                <label class="radio-container">
-                                    <input type="radio" name="drawing-mode" value="marker" checked>
-                                    <span class="radio-label">Marker</span>
-                                </label>
-                                <label class="radio-container">
-                                    <input type="radio" name="drawing-mode" value="circle">
-                                    <span class="radio-label">Circle</span>
-                                </label>
-                                <label class="radio-container">
-                                    <input type="radio" name="drawing-mode" value="polygon">
-                                    <span class="radio-label">Polygon</span>
-                                </label>
+                        <div class="modal-body">
+                            <div class="form-group">
+                                <label for="warning-type">Warning Type</label>
+                                <select id="warning-type" class="form-control">
+                                    <option value="danger">Danger Zone</option>
+                                    <option value="high-risk">High Risk Area</option>
+                                    <option value="flood">Flood Area</option>
+                                    <option value="security">Security Concern</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="warning-zone-tag">Zone Tag</label>
+                                <input type="text" id="warning-zone-tag" class="form-control" placeholder="e.g., Flood Warning">
+                            </div>
+                            <div class="form-group">
+                                <label for="warning-description">Description</label>
+                                <textarea id="warning-description" class="form-control" rows="3" placeholder="Describe the warning or danger..."></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Drawing Mode</label>
+                                <div class="drawing-options">
+                                    <label class="radio-container">
+                                        <input type="radio" name="drawing-mode" value="marker" checked>
+                                        <span class="radio-label">Marker</span>
+                                    </label>
+                                    <label class="radio-container">
+                                        <input type="radio" name="drawing-mode" value="circle">
+                                        <span class="radio-label">Circle</span>
+                                    </label>
+                                    <label class="radio-container">
+                                        <input type="radio" name="drawing-mode" value="polygon">
+                                        <span class="radio-label">Polygon</span>
+                                    </label>
+                                </div>
+                            </div>
+                            <div id="circle-radius-container" style="display:none;">
+                                <label for="circle-radius">Radius (meters)</label>
+                                <input type="range" id="circle-radius" min="50" max="2000" value="200" step="50">
+                                <span id="radius-value">200m</span>
+                            </div>
+                            <button id="go-to-map-btn" class="btn btn-info">Go to Map</button>
+                            <div class="instructions">
+                                <p>After pressing "Go to Map", draw the selected shape on the map. For polygons, click multiple points and double-click to finish.</p>
                             </div>
                         </div>
-                        <div id="circle-radius-container" style="display:none;">
-                            <label for="circle-radius">Radius (meters)</label>
-                            <input type="range" id="circle-radius" min="50" max="2000" value="200" step="50">
-                            <span id="radius-value">200m</span>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary custom-cancel-btn" id="cancel-warning-btn" data-dismiss="modal">Cancel</button>
+                            <button type="button" class="btn btn-primary" id="save-warning-btn" disabled>Save Warning</button>
                         </div>
-                        <button id="go-to-map-btn" class="btn btn-info">Go to Map</button>
-                        <div class="instructions">
-                            <p>After pressing "Go to Map", draw the selected shape on the map. For polygons, click multiple points and double-click to finish.</p>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" id="cancel-warning-btn" data-dismiss="modal">Cancel</button>
-                        <button type="button" class="btn btn-primary" id="save-warning-btn" disabled>Save Warning</button>
                     </div>
                 </div>
             </div>
-        </div>
 
             <!-- Warning Details Modal -->
             <div class="modal fade" id="warningDetailsModal" tabindex="-1" role="dialog" aria-labelledby="warningDetailsModalLabel" aria-hidden="true" data-backdrop="false">
@@ -460,31 +551,31 @@
                             <!-- Content will be populated dynamically -->
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                            <button type="button" class="btn btn-danger delete-warning-btn">Delete Warning</button>
+                            <button type="button" class="btn btn-secondary custom-cancel-btn" data-dismiss="modal">Cancel</button>
+                            <button type="button" class="btn btn-warning deactivate-warning-btn">Deactivate Zone</button>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Delete Confirmation Modal -->
-            <div class="modal fade" id="deleteWarningModal" tabindex="-1" role="dialog" aria-labelledby="deleteWarningModalLabel" aria-hidden="true" data-backdrop="false">
+            <!-- Deactivate Confirmation Modal -->
+            <div class="modal fade" id="deactivateWarningModal" tabindex="-1" role="dialog" aria-labelledby="deactivateWarningModalLabel" aria-hidden="true" data-backdrop="false">
                 <div class="modal-dialog" role="document">
                     <div class="modal-content">
                         <div class="modal-header">
-                            <h5 class="modal-title" id="deleteWarningModalLabel">Confirm Deletion</h5>
+                            <h5 class="modal-title" id="deactivateWarningModalLabel">Confirm Deactivation</h5>
                             <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                                 <span aria-hidden="true">×</span>
                             </button>
                         </div>
                         <div class="modal-body">
-                            <p>Are you sure you want to delete this warning zone?</p>
+                            <p>Are you sure you want to deactivate this warning zone?</p>
                             <p class="warning-title font-weight-bold"></p>
                             <p class="warning-type"></p>
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                            <button type="button" class="btn btn-danger" id="confirm-delete-btn">Delete Warning</button>
+                            <button type="button" class="btn btn-secondary custom-cancel-btn" data-dismiss="modal">Cancel</button>
+                            <button type="button" class="btn btn-warning" id="confirm-deactivate-btn">Deactivate Zone</button>
                         </div>
                     </div>
                 </div>
@@ -504,7 +595,7 @@
                             <!-- Success message will be populated dynamically -->
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                            <button type="button" class="btn btn-secondary custom-cancel-btn" data-dismiss="modal">Close</button>
                         </div>
                     </div>
                 </div>
@@ -524,7 +615,7 @@
                             <!-- Error message will be populated dynamically -->
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                            <button type="button" class="btn btn-secondary custom-cancel-btn" data-dismiss="modal">Close</button>
                         </div>
                     </div>
                 </div>
@@ -548,7 +639,7 @@
                             </div>
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" id="cancelPinModal" data-dismiss="modal">Cancel</button>
+                            <button type="button" class="btn btn-secondary custom-cancel-btn" id="cancelPinModal" data-dismiss="modal">Cancel</button>
                             <button type="button" class="btn btn-primary" id="unlockLocationBtn" style="background-color: #FF7E3F;">Unlock</button>
                         </div>
                     </div>
@@ -570,7 +661,7 @@
                             <div id="pinChangeError" class="text-danger" style="display:none;">Failed to update PIN.</div>
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" id="cancelPinChange" data-dismiss="modal">Cancel</button>
+                            <button type="button" class="btn btn-secondary custom-cancel-btn" id="cancelPinChange" data-dismiss="modal">Cancel</button>
                             <button type="button" class="btn btn-success" id="saveNewPinBtn">Save New PIN</button>
                         </div>
                     </div>
@@ -596,7 +687,7 @@
                             </form>
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                            <button type="button" class="btn btn-secondary custom-cancel-btn" data-dismiss="modal">Close</button>
                             <button type="button" class="btn btn-primary" id="applyYearBtn">Apply</button>
                         </div>
                     </div>
@@ -640,10 +731,10 @@
                 <div class="pagination-container"></div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" id="close-checkin-btn" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-secondary custom-cancel-btn" id="close-checkin-btn" data-dismiss="modal">Close</button>
             </div>
         </div>
-    </div>
+    </ optiodiv>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
@@ -651,6 +742,7 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
+<script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster.js"></script>
 <script>
 // Define Supabase configuration
 const supabaseUrl = '{{ config('services.supabase.url') }}';
@@ -677,9 +769,23 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
 }).addTo(map);
 
-// Create layer groups for check-ins and warnings
+// Create layer groups for check-ins, warnings, and user zones
 const warningLayer = L.layerGroup().addTo(map);
 const checkinLayer = L.layerGroup().addTo(map);
+const userZonesLayer = L.markerClusterGroup({
+    spiderfyOnMaxZoom: true,
+    showCoverageOnHover: false,
+    zoomToBoundsOnClick: true,
+    iconCreateFunction: function(cluster) {
+        const markers = cluster.getAllChildMarkers();
+        const totalVotes = markers.reduce((sum, marker) => sum + (marker.zoneData.total_weight || 0), 0);
+        return L.divIcon({
+            html: `<div style="background-color: green; border-radius: 50%; width: 30px; height: 30px; text-align: center; line-height: 30px; color: white;">${totalVotes}</div>`,
+            className: 'custom-cluster-icon',
+            iconSize: [30, 30]
+        });
+    }
+}).addTo(map);
 
 // Define marker icons with fallbacks
 const greenIcon = L.icon({
@@ -772,6 +878,50 @@ const warningIcons = {
     })
 };
 
+// User zone icons
+const userZoneIcons = {
+    'Road Blocked': L.icon({
+        iconUrl: '{{ asset('images/road-blocked.png') }}',
+        shadowUrl: '{{ asset('images/marker-shadow.png') }}',
+        iconSize: [32, 32],
+        iconAnchor: [16, 32],
+        popupAnchor: [0, -32],
+        shadowSize: [41, 41]
+    }),
+    'Flooded': L.icon({
+        iconUrl: '{{ asset('images/flooded.png') }}',
+        shadowUrl: '{{ asset('images/marker-shadow.png') }}',
+        iconSize: [32, 32],
+        iconAnchor: [16, 32],
+        popupAnchor: [0, -32],
+        shadowSize: [41, 41]
+    }),
+    'Landslide': L.icon({
+        iconUrl: '{{ asset('images/landslide.png') }}',
+        shadowUrl: '{{ asset('images/marker-shadow.png') }}',
+        iconSize: [32, 32],
+        iconAnchor: [16, 32],
+        popupAnchor: [0, -32],
+        shadowSize: [41, 41]
+    }),
+    'Fire': L.icon({
+        iconUrl: '{{ asset('images/fire.png') }}',
+        shadowUrl: '{{ asset('images/marker-shadow.png') }}',
+        iconSize: [32, 32],
+        iconAnchor: [16, 32],
+        popupAnchor: [0, -32],
+        shadowSize: [41, 41]
+    }),
+    'Others': L.icon({
+        iconUrl: '{{ asset('images/others.png') }}',
+        shadowUrl: '{{ asset('images/marker-shadow.png') }}',
+        iconSize: [32, 32],
+        iconAnchor: [16, 32],
+        popupAnchor: [0, -32],
+        shadowSize: [41, 41]
+    })
+};
+
 // Circle and polygon styles based on warning type
 const circleStyles = {
     'danger': { color: '#FF0000', fillColor: '#FF0000', fillOpacity: 0.2 },
@@ -800,8 +950,11 @@ let currentLocationData = null;
 let isLocationVisible = false;
 
 // Variables to manage filter state
-let currentFilter = 'all_time'; // Tracks the currently applied filter
-let selectedCustomYear = null;  // Tracks the selected custom year
+let currentFilter = 'all_time';
+let selectedCustomYear = null;
+
+// Map to keep track of markers by zone_id
+const markerMap = new Map();
 
 // Function to check if tourist ID is valid (user_type = 'user')
 async function isValidTourist(touristId) {
@@ -836,7 +989,7 @@ async function fetchLatestLocation(touristId) {
             throw error;
         }
         if (data.length === 0) {
-            return null; // No location found
+            return null;
         }
         return data[0];
     } catch (error) {
@@ -845,7 +998,7 @@ async function fetchLatestLocation(touristId) {
     }
 }
 
-// Fetch check-ins from Supabase with corrected query
+// Fetch check-ins from Supabase
 async function fetchCheckins(touristId, filter) {
     try {
         let query = supabase
@@ -930,7 +1083,7 @@ function createCurvedPath(coords) {
 
 // Plot check-ins on the map
 function plotCheckins(checkins) {
-    checkinLayer.clearLayers(); // Clear only check-in layers
+    checkinLayer.clearLayers();
 
     const spotCounts = {};
     checkins.forEach(checkin => {
@@ -1008,19 +1161,16 @@ async function displaySummary(checkins, touristId) {
 
     window.checkinsData = checkins;
 
-    // Event listener for View Table button (only if there are check-ins)
     if (checkins.length > 0) {
         document.querySelector('[data-target="#checkinModal"]').addEventListener('click', () => {
             displayTableWithPagination(checkins, 1);
         });
     }
 
-    // Event listener for View/Hide Current Location button
     const locationBtn = document.getElementById('view-current-location-btn') || document.getElementById('hide-current-location-btn');
     if (locationBtn) {
         locationBtn.addEventListener('click', async () => {
             if (isLocationVisible) {
-                // Hide location logic
                 if (locationUpdateInterval) {
                     clearInterval(locationUpdateInterval);
                     locationUpdateInterval = null;
@@ -1032,7 +1182,6 @@ async function displaySummary(checkins, touristId) {
                 isLocationVisible = false;
                 displaySummary(checkins, touristId);
             } else {
-                // Show location logic
                 currentTouristId = touristId;
                 $('#locationPinModal').modal('show');
             }
@@ -1135,12 +1284,184 @@ function showErrorModal(message) {
     $('#errorModal').modal('show');
 }
 
+// Function to refresh user zones
+async function refreshUserZones() {
+    try {
+        const { data, error } = await supabase.from('user_zones').select('*').neq('status', 'inactive');
+        if (error) throw error;
+
+        const newZoneIds = new Set(data.map(zone => zone.zone_id));
+
+        // Remove markers that are no longer in the data
+        markerMap.forEach((marker, zoneId) => {
+            if (!newZoneIds.has(zoneId)) {
+                userZonesLayer.removeLayer(marker);
+                markerMap.delete(zoneId);
+            }
+        });
+
+        data.forEach(zone => {
+            if (zone.latitude && zone.longitude) {
+                if (markerMap.has(zone.zone_id)) {
+                    const marker = markerMap.get(zone.zone_id);
+                    // Update marker data if changed
+                    if (JSON.stringify(marker.zoneData) !== JSON.stringify(zone)) {
+                        marker.zoneData = zone;
+                        marker.setPopupContent(getPopupContent(zone));
+                        // If position changed, update position
+                        if (marker.getLatLng().lat !== zone.latitude || marker.getLatLng().lng !== zone.longitude) {
+                            marker.setLatLng([zone.latitude, zone.longitude]);
+                        }
+                    }
+                } else {
+                    // Add new marker
+                    const markerIcon = userZoneIcons[zone.type] || L.icon({
+                        iconUrl: '{{ asset('images/others.png') }}',
+                        shadowUrl: '{{ asset('images/marker-shadow.png') }}',
+                        iconSize: [32, 32],
+                        iconAnchor: [16, 32],
+                        popupAnchor: [0, -32],
+                        shadowSize: [41, 41]
+                    });
+                    const marker = L.marker([zone.latitude, zone.longitude], { icon: markerIcon });
+                    marker.zoneData = zone;
+                    marker.addTo(userZonesLayer).bindPopup(getPopupContent(zone));
+                    markerMap.set(zone.zone_id, marker);
+                }
+            }
+        });
+
+        // Refresh cluster icons
+        userZonesLayer.refreshClusters();
+    } catch (error) {
+        console.error('Error refreshing user zones:', error);
+        showErrorModal('Failed to refresh user zones: ' + error.message);
+    }
+}
+
+// Debounce function
+function debounce(func, wait) {
+    let timeout;
+    return function(...args) {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(this, args), wait);
+    };
+}
+
+// Debounced refresh function
+const debouncedRefreshUserZones = debounce(refreshUserZones, 1000);
+
+// Load and plot user zones initially with real-time subscription
+async function loadUserZones() {
+    try {
+        await refreshUserZones();
+
+        // Subscribe to real-time updates for user zones
+        supabase
+            .channel('user_zones_channel')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'user_zones' }, payload => {
+                console.log('Received real-time event:', payload);
+                debouncedRefreshUserZones();
+            })
+            .subscribe();
+
+        // Periodic refresh every 5 seconds
+        setInterval(refreshUserZones, 5000);
+    } catch (error) {
+        console.error('Error loading user zones:', error);
+        showErrorModal('Failed to load user zones: ' + error.message);
+    }
+}
+
+// Helper function to generate popup content
+function getPopupContent(zone) {
+    let content = `
+        <b>Type:</b> ${zone.type}<br>
+        <b>Description:</b> ${zone.description || 'N/A'}<br>
+        <b>Reported by:</b> ${zone.user_id}<br>
+        <b>Votes:</b> ${zone.total_weight || 0}<br>
+        <b>Status:</b> ${zone.status}<br>
+        <b>Reported on:</b> ${new Date(zone.created_at).toLocaleString()}
+    `;
+    if (zone.status === 'pending') {
+        content += `
+            <div class="admin-controls" style="margin-top: 10px;">
+                <button class="btn btn-success btn-sm" onclick="verifyZone('${zone.zone_id}')">Verify</button>
+                <button class="btn btn-danger btn-sm" onclick="removeZone('${zone.zone_id}')">Remove</button>
+            </div>
+        `;
+    } else if (zone.status === 'verified') {
+        content += `
+            <div class="admin-controls" style="margin-top: 10px;">
+                <button class="btn btn-secondary btn-sm" onclick="cancelAction()">Cancel</button>
+                <button class="btn btn-sm custom-deactivate-btn" onclick="deactivateZone('${zone.zone_id}')">Deactivate Zone</button>
+            </div>
+        `;
+    }
+    return content;
+}
+
+// Verify user zone
+async function verifyZone(zoneId) {
+    try {
+        const { error } = await supabase.from('user_zones').update({ status: 'verified' }).eq('zone_id', zoneId);
+        if (error) throw error;
+        showSuccessModal('Zone verified successfully');
+    } catch (error) {
+        console.error('Error verifying zone:', error);
+        showErrorModal('Failed to verify zone: ' + error.message);
+    }
+}
+
+// Remove user zone
+async function removeZone(zoneId) {
+    try {
+        const { error } = await supabase.from('user_zones').update({ status: 'removed' }).eq('zone_id', zoneId);
+        if (error) throw error;
+        showSuccessModal('Zone removed successfully');
+    } catch (error) {
+        console.error('Error removing zone:', error);
+        showErrorModal('Failed to remove zone: ' + error.message);
+    }
+}
+
+// Cancel action for user zone
+function cancelAction() {
+    map.closePopup();
+}
+
+// Deactivate user zone
+// Replace the existing deactivateZone function
+async function deactivateZone(zoneId) {
+    try {
+        const { error } = await supabase.from('user_zones').update({ status: 'inactive' }).eq('zone_id', zoneId);
+        if (error) throw error;
+
+        
+        const marker = markerMap.get(zoneId);
+        if (marker) {
+            marker.setIcon(L.divIcon({
+                html: '<div class="deactivated-zone">X</div>',
+                className: 'deactivated-zone-icon',
+                iconSize: [32, 32],
+                iconAnchor: [16, 16]
+            }));
+            marker.zoneData.status = 'inactive';
+            marker.bindPopup(getPopupContent(marker.zoneData)); 
+        }
+
+        showSuccessModal('Zone deactivated successfully');
+    } catch (error) {
+        console.error('Error deactivating zone:', error);
+        showErrorModal('Failed to deactivate zone: ' + error.message);
+    }
+}
+
 // Event listeners for search, filter, legend toggle, and PIN modals
 document.addEventListener('DOMContentLoaded', async () => {
     const searchInput = document.querySelector('.search-input');
     const filterSelect = document.querySelector('.filter-select');
 
-    // Function to update the Change Year button visibility
     function updateChangeYearButtonVisibility() {
         if (currentFilter === 'custom_year' && selectedCustomYear) {
             document.getElementById('edit-year-btn').style.display = 'block';
@@ -1151,7 +1472,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     async function fetchAndDisplayData() {
         const touristIdInput = searchInput.value.trim();
-        const filter = currentFilter; // Use currentFilter instead of filterSelect.value
+        const filter = currentFilter;
         if (!touristIdInput) {
             showNoData('Please enter a tourist ID.');
             checkinLayer.clearLayers();
@@ -1163,7 +1484,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             checkinLayer.clearLayers();
             return;
         }
-        // Clear existing interval and reset marker/data when a new tourist is selected
         if (locationUpdateInterval) {
             clearInterval(locationUpdateInterval);
             locationUpdateInterval = null;
@@ -1174,7 +1494,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         currentLocationData = null;
         isLocationVisible = false;
-        checkinLayer.clearLayers(); // Reset all check-in data
+        checkinLayer.clearLayers();
         showLoading();
         try {
             const isValid = await isValidTourist(touristId);
@@ -1198,42 +1518,37 @@ document.addEventListener('DOMContentLoaded', async () => {
     filterSelect.addEventListener('change', function() {
         const selectedValue = this.value;
         if (selectedValue === 'custom_year') {
-            const tempFilter = currentFilter; // Store the current applied filter
+            const tempFilter = currentFilter;
             $('#customYearModal').modal('show');
-            // Use .one() to ensure the handler runs only once per modal open
             $('#customYearModal').one('hidden.bs.modal', function() {
                 if (!selectedCustomYear) {
-                    // Revert to the previous filter if no year was applied
                     filterSelect.value = tempFilter;
                     currentFilter = tempFilter;
                     updateChangeYearButtonVisibility();
                 }
             });
         } else {
-            currentFilter = selectedValue; // Update currentFilter for non-custom filters
-            selectedCustomYear = null;     // Reset custom year
+            currentFilter = selectedValue;
+            selectedCustomYear = null;
             updateChangeYearButtonVisibility();
             fetchAndDisplayData();
         }
     });
 
-    // Handle "Change Year" button click to re-open the modal
     document.getElementById('edit-year-btn').addEventListener('click', function() {
         $('#customYearModal').modal('show');
     });
 
-    // Handle custom year modal show event
     $('#customYearModal').on('show.bs.modal', function() {
         document.getElementById('yearInput').value = selectedCustomYear || '';
     });
 
-    // Handle apply year button click
     document.getElementById('applyYearBtn').addEventListener('click', function() {
         const year = document.getElementById('yearInput').value;
         if (year && /^\d{4}$/.test(year)) {
             selectedCustomYear = year;
-            currentFilter = 'custom_year';     // Update currentFilter
-            filterSelect.value = 'custom_year'; // Ensure dropdown reflects "Custom Year"
+            currentFilter = 'custom_year';
+            filterSelect.value = 'custom_year';
             updateChangeYearButtonVisibility();
             $('#customYearModal').modal('hide');
             fetchAndDisplayData();
@@ -1242,7 +1557,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
-    // Existing event listeners below remain unchanged
     window.addEventListener('resize', () => {
         map.invalidateSize();
     });
@@ -1257,12 +1571,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     });
 
-    // Ensure proper modal cleanup on hide
     $('#warningDetailsModal').on('hidden.bs.modal', function () {
         $(this).removeData('bs.modal');
     });
 
-    // Explicitly handle close button clicks for all modals
     document.querySelectorAll('.modal .close, .modal .btn[data-dismiss="modal"]').forEach(button => {
         button.addEventListener('click', function() {
             const modalId = this.closest('.modal').id;
@@ -1270,7 +1582,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     });
 
-    // Improved legend toggle functionality
     const legendToggle = document.getElementById('legend-toggle');
     const legendsContainer = document.getElementById('legends-container');
     
@@ -1280,31 +1591,29 @@ document.addEventListener('DOMContentLoaded', async () => {
             legendToggle.innerHTML = '<i class="fa fa-map-signs"></i> Legend';
         } else {
             legendsContainer.style.display = 'block';
-            // Reset to "All" tab when opening
             const allTabBtn = document.querySelector('.tab-btn[data-tab="all"]');
             if (allTabBtn) {
                 document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
                 allTabBtn.classList.add('active');
                 document.getElementById('warning-tab').style.display = 'block';
+                document.getElementById('user-zones-tab').style.display = 'block';
                 document.getElementById('checkin-tab').style.display = 'block';
-                document.querySelector('.section-divider').style.display = 'block';
+                document.querySelectorAll('.section-divider').forEach(divider => divider.style.display = 'block');
             }
             legendToggle.innerHTML = '<i class="fa fa-map-signs"></i> Hide Legend';
         }
     });
 
-    // Setup legend tabs
     setTimeout(setupLegendTabs, 500);
 
-    // Load existing warning zones
     try {
         await loadWarningZones();
+        await loadUserZones();
     } catch (error) {
-        console.error('Failed to load warning zones on initialization:', error);
-        showErrorModal(`Error loading warning zones: ${error.message}`);
+        console.error('Failed to load initial data:', error);
+        showErrorModal(`Error loading data: ${error.message}`);
     }
 
-    // Event listener for unlockLocationBtn with periodic updates
     document.getElementById('unlockLocationBtn').addEventListener('click', async () => {
         const pin = document.getElementById('pinInput').value;
         if (!pin) {
@@ -1324,7 +1633,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
             const data = await response.json();
             if (data.message) {
-                // PIN correct, fetch and display initial location
                 $('#locationPinModal').modal('hide');
                 const location = await fetchLatestLocation(currentTouristId);
                 if (location) {
@@ -1340,10 +1648,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                         currentLocationMarker.setLatLng([latitude, longitude]);
                     }
                     isLocationVisible = true;
-                    map.setView([latitude, longitude], 13); // Set view only on initial unlock
+                    map.setView([latitude, longitude], 13);
                     displaySummary(window.checkinsData || [], currentTouristId);
 
-                    // Start interval to update location every 5 seconds without setting view
                     locationUpdateInterval = setInterval(async () => {
                         try {
                             const updatedLocation = await fetchLatestLocation(currentTouristId);
@@ -1380,12 +1687,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
-    // Event listener for cancelPinModal
     document.getElementById('cancelPinModal').addEventListener('click', () => {
         $('#locationPinModal').modal('hide');
     });
 
-    // Event listener for changePinBtn
     document.getElementById('changePinBtn').addEventListener('click', async () => {
         const pin = document.getElementById('pinInput').value;
         if (!pin) {
@@ -1418,7 +1723,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
-    // Event listener for saveNewPinBtn
     document.getElementById('saveNewPinBtn').addEventListener('click', async () => {
         const currentPin = document.getElementById('pinInput').value;
         const newPin = document.getElementById('newPinInput').value;
@@ -1459,13 +1763,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
-    // Event listener for cancelPinChange
     document.getElementById('cancelPinChange').addEventListener('click', () => {
         $('#changePinModal').modal('hide');
         $('#locationPinModal').modal('show');
     });
 
-    // Reset modals on show
     $('#locationPinModal').on('shown.bs.modal', function () {
         document.getElementById('pinInput').value = '';
         document.getElementById('pinError').style.display = 'none';
@@ -1476,7 +1778,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('pinChangeError').style.display = 'none';
     });
 
-    // Clear interval when the page is unloaded
     window.addEventListener('beforeunload', () => {
         if (locationUpdateInterval) {
             clearInterval(locationUpdateInterval);
@@ -1488,8 +1789,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 function setupLegendTabs() {
     const tabButtons = document.querySelectorAll('.tab-btn');
     const warningTab = document.getElementById('warning-tab');
+    const userZonesTab = document.getElementById('user-zones-tab');
     const checkinTab = document.getElementById('checkin-tab');
-    const divider = document.querySelector('.section-divider');
+    const dividers = document.querySelectorAll('.section-divider');
     
     tabButtons.forEach(button => {
         button.addEventListener('click', function() {
@@ -1499,16 +1801,24 @@ function setupLegendTabs() {
             const tabName = this.getAttribute('data-tab');
             if (tabName === 'all') {
                 warningTab.style.display = 'block';
+                userZonesTab.style.display = 'block';
                 checkinTab.style.display = 'block';
-                divider.style.display = 'block';
+                dividers.forEach(divider => divider.style.display = 'block');
             } else if (tabName === 'warning') {
                 warningTab.style.display = 'block';
+                userZonesTab.style.display = 'none';
                 checkinTab.style.display = 'none';
-                divider.style.display = 'none';
+                dividers.forEach(divider => divider.style.display = 'none');
+            } else if (tabName === 'user-zones') {
+                warningTab.style.display = 'none';
+                userZonesTab.style.display = 'block';
+                checkinTab.style.display = 'none';
+                dividers.forEach(divider => divider.style.display = 'none');
             } else if (tabName === 'checkin') {
                 warningTab.style.display = 'none';
+                userZonesTab.style.display = 'none';
                 checkinTab.style.display = 'block';
-                divider.style.display = 'none';
+                dividers.forEach(divider => divider.style.display = 'none');
             }
         });
     });
@@ -1519,13 +1829,11 @@ let drawHandler;
 let selectedShape = null;
 let currentDrawingType = 'marker';
 
-// Add event listener for the "Add Warning Zone" button
 document.getElementById('add-warning-btn').addEventListener('click', function() {
     resetWarningForm();
     $('#warningModal').modal('show');
 });
 
-// Add event listener for the "Go to Map" button
 document.getElementById('go-to-map-btn').addEventListener('click', function() {
     const drawingType = document.querySelector('input[name="drawing-mode"]:checked').value;
     currentDrawingType = drawingType;
@@ -1540,7 +1848,6 @@ document.getElementById('go-to-map-btn').addEventListener('click', function() {
     $('#warningModal').modal('hide');
 });
 
-// Handle drawn shape
 map.on('draw:created', function(e) {
     if (selectedShape) {
         map.removeLayer(selectedShape);
@@ -1552,7 +1859,6 @@ map.on('draw:created', function(e) {
     $('#warningModal').modal('show');
 });
 
-// Handle drawing cancellation
 map.on('draw:canceled', function() {
     if (selectedShape) {
         map.removeLayer(selectedShape);
@@ -1562,7 +1868,6 @@ map.on('draw:canceled', function() {
     $('#warningModal').modal('show');
 });
 
-// Handle save warning button click
 document.getElementById('save-warning-btn').addEventListener('click', async function() {
     if (!selectedShape) {
         showErrorModal('Please draw a shape on the map.');
@@ -1588,7 +1893,8 @@ document.getElementById('save-warning-btn').addEventListener('click', async func
             latitude: latlng.lat,
             longitude: latlng.lng,
             shape_type: 'marker',
-            created_at: new Date().toISOString()
+            created_at: new Date().toISOString(),
+            status: 'active'
         };
     } else if (currentDrawingType === 'circle') {
         const center = selectedShape.getLatLng();
@@ -1601,7 +1907,8 @@ document.getElementById('save-warning-btn').addEventListener('click', async func
             longitude: center.lng,
             radius: radius,
             shape_type: 'circle',
-            created_at: new Date().toISOString()
+            created_at: new Date().toISOString(),
+            status: 'active'
         };
     } else if (currentDrawingType === 'polygon') {
         const latlngs = selectedShape.getLatLngs()[0];
@@ -1612,7 +1919,8 @@ document.getElementById('save-warning-btn').addEventListener('click', async func
             description: warningDescription,
             polygon_coords: polygonCoords,
             shape_type: 'polygon',
-            created_at: new Date().toISOString()
+            created_at: new Date().toISOString(),
+            status: 'active'
         };
     }
     
@@ -1630,10 +1938,9 @@ document.getElementById('save-warning-btn').addEventListener('click', async func
     }
 });
 
-// Load existing warning zones when map initializes
 async function loadWarningZones() {
     try {
-        const { data, error } = await supabase.from('warning_zones').select('*');
+        const { data, error } = await supabase.from('warning_zones').select('*').eq('status', 'active');
         if (error) {
             console.error('Supabase error on fetch warning zones:', error);
             throw new Error(`Failed to load warning zones: ${error.message}`);
@@ -1641,12 +1948,12 @@ async function loadWarningZones() {
         
         console.log('Fetched warning zones:', data);
         if (data && data.length > 0) {
-            warningLayer.clearLayers(); // Clear existing warnings to avoid duplicates
+            warningLayer.clearLayers();
             data.forEach(warning => {
                 addWarningToMap(warning);
             });
         } else {
-            console.log('No warning zones found in the database.');
+            console.log('No active warning zones found in the database.');
         }
     } catch (error) {
         console.error('Error loading warning zones:', error);
@@ -1654,7 +1961,6 @@ async function loadWarningZones() {
     }
 }
 
-// Add a warning to the map
 function addWarningToMap(warning) {
     let warningElement;
     if (warning.shape_type === 'marker') {
@@ -1696,7 +2002,6 @@ function addWarningToMap(warning) {
     });
 }
 
-// Show warning details in modal
 function showWarningDetails(warning) {
     const content = document.querySelector('.warning-details-content');
     content.innerHTML = `
@@ -1709,31 +2014,30 @@ function showWarningDetails(warning) {
         ${warning.shape_type === 'circle' ? `<p><strong>Radius:</strong> ${warning.radius}m</p>` : ''}
     `;
     
-    document.querySelector('.delete-warning-btn').setAttribute('data-id', warning.zone_id);
+    document.querySelector('.deactivate-warning-btn').setAttribute('data-id', warning.zone_id);
     $('#warningDetailsModal').modal('show');
 }
 
-document.querySelector('.delete-warning-btn').addEventListener('click', function() {
+document.querySelector('.deactivate-warning-btn').addEventListener('click', function() {
     const warningId = this.getAttribute('data-id');
     
-    let warningToDelete = null;
+    let warningToDeactivate = null;
     warningLayer.eachLayer(layer => {
         if (layer.warningData && layer.warningData.zone_id == warningId) {
-            warningToDelete = layer.warningData;
+            warningToDeactivate = layer.warningData;
         }
     });
     
-    if (warningToDelete) {
-        currentWarningToDelete = warningId;
-        const confirmModal = document.getElementById('deleteWarningModal');
-        confirmModal.querySelector('.warning-title').textContent = warningToDelete.zone_tag;
-        confirmModal.querySelector('.warning-type').textContent = `Type: ${warningToDelete.type.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}`;
+    if (warningToDeactivate) {
+        currentWarningToDeactivate = warningId;
+        const confirmModal = document.getElementById('deactivateWarningModal');
+        confirmModal.querySelector('.warning-title').textContent = warningToDeactivate.zone_tag;
+        confirmModal.querySelector('.warning-type').textContent = `Type: ${warningToDeactivate.type.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}`;
         $('#warningDetailsModal').modal('hide');
-        $('#deleteWarningModal').modal('show');
+        $('#deactivateWarningModal').modal('show');
     }
 });
 
-// Reset the warning form
 function resetWarningForm() {
     document.getElementById('warning-zone-tag').value = '';
     document.getElementById('warning-description').value = '';
@@ -1754,14 +2058,13 @@ function resetWarningForm() {
     document.getElementById('save-warning-btn').disabled = true;
 }
 
-// Handle delete confirmation
-document.getElementById('confirm-delete-btn').addEventListener('click', async function() {
-    const warningId = currentWarningToDelete;
+document.getElementById('confirm-deactivate-btn').addEventListener('click', async function() {
+    const warningId = currentWarningToDeactivate;
     try {
-        const { error } = await supabase.from('warning_zones').delete().eq('zone_id', warningId);
+        const { error } = await supabase.from('warning_zones').update({ status: 'inactive' }).eq('zone_id', warningId);
         if (error) {
-            console.error('Supabase error on delete:', error);
-            throw new Error(`Failed to delete warning zone: ${error.message}`);
+            console.error('Supabase error on deactivate:', error);
+            throw new Error(`Failed to deactivate warning zone: ${error.message}`);
         }
         
         warningLayer.eachLayer(layer => {
@@ -1770,12 +2073,12 @@ document.getElementById('confirm-delete-btn').addEventListener('click', async fu
             }
         });
         
-        $('#deleteWarningModal').modal('hide');
-        showSuccessModal('Warning zone deleted successfully!');
+        $('#deactivateWarningModal').modal('hide');
+        showSuccessModal('Warning zone deactivated successfully!');
     } catch (error) {
-        console.error('Error deleting warning zone:', error);
-        $('#deleteWarningModal').modal('hide');
-        showErrorModal(`Failed to delete warning zone: ${error.message}`);
+        console.error('Error deactivating warning zone:', error);
+        $('#deactivateWarningModal').modal('hide');
+        showErrorModal(`Failed to deactivate warning zone: ${error.message}`);
     }
 });
 </script>
