@@ -27,14 +27,21 @@
     </table>
 </div>
 
-<!-- Pagination -->
-<div class="row mt-3">
-    <div class="col-md-6">
+<!-- Result Summary -->
+<div class="row mt-2 mb-2">
+    <div class="col-md-12">
         <div class="dataTables_info">
-            Showing {{ count($incidents) }} of {{ $total }} entries
+            @if($total > 0)
+                Showing {{ count($incidents) }} of {{ $total }} entries
+            @endif
         </div>
     </div>
-    <div class="col-md-6">
+</div>
+
+<!-- Pagination -->
+@if($total > 0)
+<div class="row">
+    <div class="col-md-12">
         <nav aria-label="Page navigation">
             <ul class="pagination justify-content-end">
                 @if ($currentPage > 1)
@@ -56,3 +63,4 @@
         </nav>
     </div>
 </div>
+@endif

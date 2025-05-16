@@ -29,6 +29,14 @@
         <div class="col-12">
             <div class="card">
                 <div class="card-body">
+                    <!-- Loading Indicator -->
+                    <div id="loading-indicator" class="loading-overlay d-none">
+                        <div class="spinner">
+                            <i class="la la-spinner la-spin la-3x"></i>
+                            <span>Loading data...</span>
+                        </div>
+                    </div>
+                    
                     <!-- Filter Controls -->
                     <div class="filter-section mb-4">
                         <div class="row align-items-center">
@@ -73,7 +81,7 @@
                     </div>
 
                     <!-- Table Container -->
-                    <div id="incident-table-container">
+                    <div id="incident-table-container" class="{{ $isLoading ? 'loading' : '' }}">
                         @include('vendor.backpack.ui.incident-table-partial', [
                             'incidents' => $incidents,
                             'total' => $total ?? count($incidents),
@@ -88,6 +96,55 @@
 </div>
 @endsection
 
+@push('after_styles')
+<style>
+    /* Loading overlay styles */
+    .loading-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(255, 255, 255, 0.7);
+        z-index: 1000;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    #incident-table-container.loading {
+        position: relative;
+        min-height: 200px;
+    }
+
+    #incident-table-container.loading:after {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(255, 255, 255, 0.7);
+        z-index: 999;
+    }
+
+    .spinner {
+        text-align: center;
+    }
+
+    .spinner span {
+        display: block;
+        margin-top: 10px;
+        color: #0BC8CA;
+        font-weight: 500;
+    }
+
+    .la-spinner {
+        color: #0BC8CA;
+    }
+</style>
+@endpush
+
 @push('after_scripts')
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
@@ -97,6 +154,7 @@ $(document).ready(function() {
     let searchDate = "{{ $search_date ?? '' }}";
     let currentPage = {{ $currentPage ?? 1 }};
     let isLoading = false;
+    let searchTimeout = null;
 
     function toggleYearFilter() {
         if (currentFilter === 'all_time') {
@@ -107,12 +165,30 @@ $(document).ready(function() {
         }
     }
 
-    function updateTable(showLoading = true) {
-        if (isLoading) return;
+    function showLoading() {
         isLoading = true;
+        $('#loading-indicator').removeClass('d-none');
+        $('.filter-buttons button').prop('disabled', true);
+        $('#incident-search').prop('disabled', true);
+        $('#date-search').prop('disabled', true);
+        $('#year-select').prop('disabled', true);
+    }
 
-        if (showLoading) {
-            $('#incident-table-container').html('<div class="text-center p-3"><i class="la la-spinner la-spin"></i> Loading incidents...</div>');
+    function hideLoading() {
+        isLoading = false;
+        $('#loading-indicator').addClass('d-none');
+        $('.filter-buttons button').prop('disabled', false);
+        $('#incident-search').prop('disabled', false);
+        $('#date-search').prop('disabled', false);
+        $('#year-select').prop('disabled', false);
+    }
+
+    function updateTable(showLoadingIndicator = true) {
+        if (isLoading) return;
+        
+        if (showLoadingIndicator) {
+            showLoading();
+            $('#incident-table-container').addClass('loading');
         }
 
         let year = currentFilter === 'all_time' ? $('#year-select').val() : '';
@@ -131,6 +207,7 @@ $(document).ready(function() {
                 if (response.tableHtml && response.years) {
                     // Update table container
                     $('#incident-table-container').html(response.tableHtml);
+                    $('#incident-table-container').removeClass('loading');
                     attachPaginationHandlers();
 
                     // Update year dropdown if 'all_time' filter is active
@@ -151,16 +228,16 @@ $(document).ready(function() {
                     }
                 } else {
                     console.error('Invalid response format');
+                    $('#incident-table-container').html('<div class="alert alert-danger">Invalid data received. Please try again.</div>');
                 }
             },
             error: function(xhr) {
                 console.error('Error:', xhr.status, xhr.responseText);
-                if (showLoading) {
-                    $('#incident-table-container').html('<div class="alert alert-danger">Failed to load data. Please try again.</div>');
-                }
+                $('#incident-table-container').removeClass('loading');
+                $('#incident-table-container').html('<div class="alert alert-danger">Failed to load data. Please try again.</div>');
             },
             complete: function() {
-                isLoading = false;
+                hideLoading();
             }
         });
     }
@@ -179,10 +256,23 @@ $(document).ready(function() {
         });
     }
 
-    $('#incident-search').on('keyup', function() {
-        currentSearch = $(this).val();
-        currentPage = 1;
-        updateTable(true);
+    $('#incident-search').on('input', function() {
+        // Clear any existing timeout
+        if (searchTimeout) {
+            clearTimeout(searchTimeout);
+        }
+
+        // Set a new timeout to prevent rapid firing of requests
+        searchTimeout = setTimeout(() => {
+            const newSearch = $(this).val().trim();
+            // Only update if the search value has actually changed
+            if (newSearch !== currentSearch) {
+                currentSearch = newSearch;
+                currentPage = 1;
+                updateTable(true);
+            }
+            searchTimeout = null;
+        }, 300); // 300ms delay
     });
 
     $('#date-search').on('change', function() {
@@ -199,6 +289,8 @@ $(document).ready(function() {
     });
 
     $('.btn-filter').click(function() {
+        if (isLoading) return;
+        
         $('.btn-filter').removeClass('active');
         $(this).addClass('active');
         currentFilter = $(this).data('filter');
@@ -210,7 +302,12 @@ $(document).ready(function() {
     toggleYearFilter();
     updateTable(true);
 
-    setInterval(() => updateTable(false), 5000);
+    // Background refresh - don't show loading indicators for these
+    setInterval(() => {
+        if (!isLoading) {
+            updateTable(false);
+        }
+    }, 30000); // Every 30 seconds instead of 5 seconds to reduce server load
 });
 </script>
 @endpush

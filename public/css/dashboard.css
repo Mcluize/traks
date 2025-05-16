@@ -926,6 +926,7 @@
         color: #484A58;
         font-size: 14px;
         font-family: 'Poppins', sans-serif;
+        background-color: transparent;
     }
 
     .dropdown-menu.custom-dropdown .dropdown-item:hover {

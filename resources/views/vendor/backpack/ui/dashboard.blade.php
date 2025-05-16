@@ -14,7 +14,7 @@
             <div>
                 <h2 class="header-container">
                     <span1>Tracking Overview</span1> 
-                    <small class="d-block">It's <span class="day-bold">{{ now()->format('l') }}</span>, {{ now()->format('F d Y') }}</small>
+                    <small class="d-block">It's <span class="day-bold">{{ now('Asia/Manila')->format('l') }}</span>, {{ now('Asia/Manila')->format('F d Y') }}</small>
                 </h2>
             </div>
         </div>

@@ -4,12 +4,11 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Services\SupabaseService;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Cache;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 
-class AnalyticsController extends Controller
+class DashboardController extends Controller
 {
     protected $supabaseService;
 
@@ -18,311 +17,356 @@ class AnalyticsController extends Controller
         $this->supabaseService = $supabaseService;
     }
 
-    public function index()
+    public function getTouristArrivals($filter)
     {
-        // Stat Cards
-        $todayCheckins = $this->supabaseService->fetchTable('checkins', [
-            'timestamp' => 'gte.' . Carbon::today('Asia/Manila')->startOfDay()->toIso8601String(),
-            'timestamp' => 'lt.' . Carbon::today('Asia/Manila')->endOfDay()->toIso8601String()
-        ]);
-        Log::info('Today checkins', ['checkins' => $todayCheckins]);
-        $touristArrivals = count(array_unique(array_column($todayCheckins, 'tourist_id')));
-
-        $yesterdayCheckins = $this->supabaseService->fetchTable('checkins', [
-            'timestamp' => 'gte.' . Carbon::yesterday('Asia/Manila')->startOfDay()->toIso8601String(),
-            'timestamp' => 'lt.' . Carbon::today('Asia/Manila')->startOfDay()->toIso8601String()
-        ]);
-        $touristArrivalsYesterday = count(array_unique(array_column($yesterdayCheckins, 'tourist_id')));
-        $touristChange = $touristArrivalsYesterday ? round((($touristArrivals - $touristArrivalsYesterday) / $touristArrivalsYesterday) * 100) : 0;
-
-        $incidentReports = $this->supabaseService->fetchTable('emergency_reports', [], true);
-        $incidentReportsLastWeek = $this->supabaseService->fetchTable('emergency_reports', ['timestamp' => 'gte.' . now('Asia/Manila')->subWeek()->toIso8601String()], true);
-        $incidentChange = $incidentReportsLastWeek ? round((($incidentReports - $incidentReportsLastWeek) / $incidentReportsLastWeek) * 100) : 0;
-
-        $users = $this->supabaseService->fetchTable('users');
-        $touristAccounts = count(array_filter($users, fn($user) => $user['user_type'] === 'user'));
-        $touristAccountsLastMonth = count(array_filter($users, fn($user) => Carbon::parse($user['created_at'], 'Asia/Manila')->gte(now('Asia/Manila')->subMonth()) && $user['user_type'] === 'user'));
-        $touristAccountsChange = $touristAccountsLastMonth ? round((($touristAccounts - $touristAccountsLastMonth) / $touristAccountsLastMonth) * 100) : 0;
-
-        $adminAccounts = count(array_filter($users, fn($user) => 
-            in_array($user['user_type'], ['admin', 'super_admin']) && 
-            ($user['status'] ?? '') !== 'locked'
-        ));
-        $adminAccountsLastMonth = count(array_filter($users, fn($user) => 
-            Carbon::parse($user['created_at'], 'Asia/Manila')->gte(now('Asia/Manila')->subMonth()) && 
-            in_array($user['user_type'], ['admin', 'super_admin']) && 
-            ($user['status'] ?? '') !== 'locked'
-        ));
-        $adminAccountsChange = $adminAccountsLastMonth ? round((($adminAccounts - $adminAccountsLastMonth) / $adminAccountsLastMonth) * 100) : 0;
-
-        // Incident Status
-        $incidentStatus = $this->supabaseService->fetchTable('emergency_reports');
-        $incidentStatusCounts = array_count_values(array_map('strtolower', array_column($incidentStatus, 'status')));
-        $incidentStatusLabels = array_map('ucfirst', array_keys($incidentStatusCounts));
-        $incidentStatusData = array_values($incidentStatusCounts);
-
-        // Tourist Activities (formerly Weekly Analytics)
-        $touristActivitiesData = $this->getTouristActivities(new Request(['period' => 'this_week']))->getData(true);
-        $weeklyLabels = $touristActivitiesData['labels'];
-        $weeklyCheckinsData = $touristActivitiesData['checkins'];
-        $weeklyIncidentsData = $touristActivitiesData['incidents'];
-        $totalActivities = $touristActivitiesData['totalActivities'];
-        $totalIncidents = $touristActivitiesData['totalIncidents'];
-        $initialPeriod = $touristActivitiesData['period'];
-
-        // User Type Distribution
-        $userTypeCounts = array_count_values(array_column($users, 'user_type'));
-        $userTypeLabels = array_keys($userTypeCounts);
-        $userTypeData = array_values($userTypeCounts);
-
-        // Popular Tourist Spots
-        $checkins = $this->supabaseService->fetchTable('checkins');
-        $touristSpots = $this->supabaseService->fetchTable('tourist_spots');
-        $spotVisits = [];
-        foreach ($checkins as $checkin) {
-            $spotId = $checkin['spot_id'];
-            $spotVisits[$spotId] = ($spotVisits[$spotId] ?? 0) + 1;
-        }
-        arsort($spotVisits);
-        $popularSpots = array_slice($spotVisits, 0, 4, true);
-        $popularSpotsLabels = array_map(function($id) use ($touristSpots) {
-            $index = array_search($id, array_column($touristSpots, 'spot_id'));
-            return $index !== false ? $touristSpots[$index]['name'] : 'Unknown';
-        }, array_keys($popularSpots));
-        $popularSpotsData = array_values($popularSpots);
-
-        // Map Data
-        $touristSpots = $this->supabaseService->fetchTable('tourist_spots');
-        $incidents = $this->supabaseService->fetchTable('emergency_reports');
-        $checkins = $this->supabaseService->fetchTable('checkins');
-        $users = $this->supabaseService->fetchTable('users');
-
-        // Latest Incidents
-        $latestIncidents = array_slice($incidents, 0, 5);
-
-        // Define change classes and icons
-        $touristChangeClass = $touristChange > 0 ? 'increase' : ($touristChange < 0 ? 'decrease' : 'neutral');
-        $touristChangeIcon = $touristChange > 0 ? 'fa-arrow-up' : ($touristChange < 0 ? 'fa-arrow-down' : 'fa-equals');
-
-        $incidentChangeClass = $incidentChange > 0 ? 'increase' : ($incidentChange < 0 ? 'decrease' : 'neutral');
-        $incidentChangeIcon = $incidentChange > 0 ? 'fa-arrow-up' : ($incidentChange < 0 ? 'fa-arrow-down' : 'fa-equals');
-
-        $touristAccountsChangeClass = $touristAccountsChange > 0 ? 'increase' : ($touristAccountsChange < 0 ? 'decrease' : 'neutral');
-        $touristAccountsChangeIcon = $touristAccountsChange > 0 ? 'fa-arrow-up' : ($touristAccountsChange < 0 ? 'fa-arrow-down' : 'fa-equals');
-
-        $adminAccountsChangeClass = $adminAccountsChange > 0 ? 'increase' : ($adminAccountsChange < 0 ? 'decrease' : 'neutral');
-        $adminAccountsChangeIcon = $adminAccountsChange > 0 ? 'fa-arrow-up' : ($adminAccountsChange < 0 ? 'fa-arrow-down' : 'fa-equals');
-
-        // Get min and max years for custom year validation
-        $minMaxYears = $this->supabaseService->getMinMaxYears();
-        $minYear = $minMaxYears['min'] ?? 1900;
-        $maxYear = $minMaxYears['max'] ?? now('Asia/Manila')->year;
-
-        return view('vendor.backpack.ui.analytics', compact(
-            'touristArrivals', 'touristChange', 'touristChangeClass', 'touristChangeIcon',
-            'incidentReports', 'incidentChange', 'incidentChangeClass', 'incidentChangeIcon',
-            'touristAccounts', 'touristAccountsChange', 'touristAccountsChangeClass', 'touristAccountsChangeIcon',
-            'adminAccounts', 'adminAccountsChange', 'adminAccountsChangeClass', 'adminAccountsChangeIcon',
-            'incidentStatusLabels', 'incidentStatusData',
-            'weeklyLabels', 'weeklyCheckinsData', 'weeklyIncidentsData',
-            'userTypeLabels', 'userTypeData',
-            'popularSpotsLabels', 'popularSpotsData',
-            'touristSpots', 'incidents', 'checkins', 'users',
-            'latestIncidents', 'totalActivities',
-            'totalIncidents', 'initialPeriod',
-            'minYear', 'maxYear'
-        ));
-    }
-
-    public function getUserGrowth(Request $request)
-    {
-        $period = $request->query('period', 'this_month');
-        $year = $request->query('year');
-
         $now = Carbon::now('Asia/Manila');
+        $filters = [
+            'select' => 'tourist_id'
+        ];
 
-        if ($period === 'custom_year') {
-            if (!$year || !is_numeric($year) || strlen($year) != 4) {
+        if (strpos($filter, 'custom_year:') === 0) {
+            $year = substr($filter, strlen('custom_year:'));
+            if (is_numeric($year) && strlen($year) == 4) {
+                $localStart = Carbon::createFromDate($year, 1, 1, 'Asia/Manila');
+                $localEnd = Carbon::createFromDate($year, 12, 31, 'Asia/Manila')->endOfDay();
+                $start = $localStart->format('Y-m-d\TH:i:s');
+                $end = $localEnd->format('Y-m-d\TH:i:s');
+                $filters['and'] = "(timestamp.gte.{$start},timestamp.lte.{$end})";
+            } else {
                 return response()->json(['error' => 'Invalid year'], 400);
             }
-            $startDate = Carbon::createFromDate($year, 1, 1, 'Asia/Manila')->startOfDay();
-            $endDate = Carbon::createFromDate($year, 12, 31, 'Asia/Manila')->endOfDay();
-            $groupBy = 'month';
         } else {
-            if ($period === 'this_week') {
-                $startDate = $now->startOfWeek();
-                $endDate = $now->endOfWeek();
-                $groupBy = 'day';
-            } elseif ($period === 'this_month') {
-                $startDate = $now->startOfMonth();
-                $endDate = $now->endOfMonth();
-                $groupBy = 'week';
-            } elseif ($period === 'this_year') {
-                $startDate = $now->startOfYear();
-                $endDate = $now->endOfYear();
-                $groupBy = 'month';
-            } elseif ($period === 'all_time') {
-                $startDate = null;
-                $endDate = null;
-                $groupBy = 'month';
-            } else {
-                return response()->json(['error' => 'Invalid period'], 400);
+            switch ($filter) {
+                case 'today':
+                    $localStart = Carbon::today('Asia/Manila')->startOfDay();
+                    $localEnd = Carbon::today('Asia/Manila')->endOfDay();
+                    $start = $localStart->format('Y-m-d\TH:i:s');
+                    $end = $localEnd->format('Y-m-d\TH:i:s');
+                    $filters['and'] = "(timestamp.gte.{$start},timestamp.lte.{$end})";
+                    break;
+
+                case 'this_week':
+                    $localStart = $now->copy()->startOfWeek(Carbon::MONDAY);
+                    $localEnd = $now->copy()->endOfWeek(Carbon::SUNDAY)->endOfDay();
+                    $start = $localStart->format('Y-m-d\TH:i:s');
+                    $end = $localEnd->format('Y-m-d\TH:i:s');
+                    $filters['and'] = "(timestamp.gte.{$start},timestamp.lte.{$end})";
+                    break;
+
+                case 'this_month':
+                    $localStart = $now->copy()->startOfMonth();
+                    $localEnd = $now->copy()->endOfMonth()->endOfDay();
+                    $start = $localStart->format('Y-m-d\TH:i:s');
+                    $end = $localEnd->format('Y-m-d\TH:i:s');
+                    $filters['and'] = "(timestamp.gte.{$start},timestamp.lte.{$end})";
+                    break;
+
+                case 'this_year':
+                    $localStart = $now->copy()->startOfYear();
+                    $localEnd = $now->copy()->endOfYear()->endOfDay();
+                    $start = $localStart->format('Y-m-d\TH:i:s');
+                    $end = $localEnd->format('Y-m-d\TH:i:s');
+                    $filters['and'] = "(timestamp.gte.{$start},timestamp.lte.{$end})";
+                    break;
+
+                case 'all_time':
+                    break;
+
+                default:
+                    return response()->json(['error' => 'Invalid filter'], 400);
             }
         }
 
-        if ($period === 'all_time') {
-            $users = $this->supabaseService->fetchTable('users', [], false, 'created_at');
-        } else {
-            $filters = [
-                'created_at' => 'gte.' . $startDate->toIso8601String(),
-                'created_at' => 'lte.' . $endDate->toIso8601String()
-            ];
-            $users = $this->supabaseService->fetchTable('users', $filters, false, 'created_at');
+        \Log::info("Tourist arrivals filters for {$filter}", [
+            'start' => $filters['and'] ?? 'all_time',
+            'filter' => $filter
+        ]);
+
+        $checkinsData = $this->supabaseService->fetchTable('checkins', $filters, false);
+        if ($checkinsData === null) {
+            \Log::error('Failed to fetch checkins data');
+            return response()->json(['error' => 'Failed to fetch checkins data'], 500);
         }
 
-        if ($period === 'this_week') {
-            $labels = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-            $userGrowthByDay = array_fill(0, 7, 0);
-            foreach ($users as $user) {
-                $day = Carbon::parse($user['created_at'], 'Asia/Manila')->format('l');
-                $index = array_search($day, $labels);
-                if ($index !== false) {
-                    $userGrowthByDay[$index]++;
-                }
-            }
-            $data = $userGrowthByDay;
-        } elseif ($period === 'this_month') {
-            $numWeeks = ceil($endDate->day / 7);
-            $labels = [];
-            for ($i = 1; $i <= $numWeeks; $i++) {
-                $labels[] = "Week $i";
-            }
-            $userGrowthByWeek = array_fill(0, $numWeeks, 0);
-            foreach ($users as $user) {
-                $date = Carbon::parse($user['created_at'], 'Asia/Manila');
-                $week = ceil($date->day / 7);
-                if ($week >= 1 && $week <= $numWeeks) {
-                    $userGrowthByWeek[$week - 1]++;
-                }
-            }
-            $data = $userGrowthByWeek;
-        } elseif ($period === 'this_year' || $period === 'custom_year') {
-            $labels = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-            $userGrowthByMonth = array_fill(0, 12, 0);
-            foreach ($users as $user) {
-                $month = Carbon::parse($user['created_at'], 'Asia/Manila')->month;
-                $userGrowthByMonth[$month - 1]++;
-            }
-            $data = $userGrowthByMonth;
-        } elseif ($period === 'all_time') {
-            $userGrowthByMonth = [];
-            foreach ($users as $user) {
-                $date = Carbon::parse($user['created_at'], 'Asia/Manila')->format('Y-m');
-                $userGrowthByMonth[$date] = ($userGrowthByMonth[$date] ?? 0) + 1;
-            }
-            ksort($userGrowthByMonth);
-            $labels = array_keys($userGrowthByMonth);
-            $labels = array_map(function($date) {
-                return Carbon::createFromFormat('Y-m', $date, 'Asia/Manila')->format('M Y');
-            }, $labels);
-            $data = array_values($userGrowthByMonth);
+        $touristIds = array_column($checkinsData, 'tourist_id');
+        $touristIds = array_filter($touristIds, fn($id) => !is_null($id));
+        if (empty($touristIds)) {
+            return response()->json(['count' => 0, 'touristIds' => []]);
         }
+
+        $userFilters = [
+            'select' => 'user_id',
+            'user_type' => 'eq.user',
+            'user_id' => 'in.(' . implode(',', $touristIds) . ')'
+        ];
+
+        \Log::info('Users Filters: ' . json_encode($userFilters));
+
+        $usersData = $this->supabaseService->fetchTable('users', $userFilters, false);
+        if ($usersData === null) {
+            \Log::error('Failed to fetch users data');
+            return response()->json(['error' => 'Failed to fetch users data'], 500);
+        }
+
+        $touristUserIds = array_column($usersData, 'user_id');
+        $uniqueTouristIds = array_unique($touristUserIds);
+        $count = count($uniqueTouristIds);
 
         return response()->json([
-            'labels' => $labels,
-            'data' => $data
+            'count' => $count,
+            'touristIds' => $uniqueTouristIds
         ]);
     }
 
-    public function getIncidentStatus(Request $request)
+    public function getCheckinsBySpot($filter)
     {
-        $period = $request->query('period', 'month');
-        $year = $request->query('year');
+        $now = Carbon::now('Asia/Manila');
+        $filters = [];
 
-        if ($period === 'today') {
-            $start = Carbon::today('Asia/Manila')->startOfDay()->toIso8601String();
-            $end = Carbon::today('Asia/Manila')->endOfDay()->toIso8601String();
-            $filters = [
-                'and' => "(timestamp.gte.{$start},timestamp.lt.{$end})"
-            ];
-        } elseif ($period === 'custom_year' && $year) {
-            $start = Carbon::createFromDate($year, 1, 1, 'Asia/Manila')->startOfYear()->toIso8601String();
-            $end = Carbon::createFromDate($year, 12, 31, 'Asia/Manila')->endOfYear()->toIso8601String();
-            $filters = [
-                'and' => "(timestamp.gte.{$start},timestamp.lt.{$end})"
-            ];
-        } elseif ($period === 'all_time') {
-            $filters = [];
-        } else {
-            $dateFilter = now('Asia/Manila')->subMonth();
-            if ($period === 'week') $dateFilter = now('Asia/Manila')->subWeek();
-            elseif ($period === 'year') $dateFilter = now('Asia/Manila')->subYear();
-            $filters = ['timestamp' => 'gte.' . $dateFilter->toIso8601String()];
-        }
-
-        $incidentStatus = $this->supabaseService->fetchTable('emergency_reports', $filters);
-        $incidentStatusCounts = array_count_values(array_map('strtolower', array_column($incidentStatus, 'status')));
-        $incidentStatusLabels = array_map('ucfirst', array_keys($incidentStatusCounts));
-        $incidentStatusData = array_values($incidentStatusCounts);
-
-        return response()->json([
-            'labels' => $incidentStatusLabels,
-            'values' => $incidentStatusData
-        ]);
-    }
-
-    public function getPopularSpots($filter, $year = null)
-    {
-        $cacheKey = 'popular_spots_' . $filter . ($year ? '_' . $year : '');
-        $data = Cache::remember($cacheKey, 60, function () use ($filter, $year) {
-            if ($filter === 'custom_year') {
-                if (!$year || !is_numeric($year) || strlen($year) != 4) {
-                    return ['error' => 'Invalid year'];
-                }
-                $minMaxYears = $this->supabaseService->getMinMaxYears();
-                $minYear = $minMaxYears['min'] ?? 1900;
-                $maxYear = $minMaxYears['max'] ?? now('Asia/Manila')->year;
-                if ($year < $minYear || $year > $maxYear) {
-                    return ['error' => "Year out of range ($minYear - $maxYear)"];
-                }
-                $startDate = Carbon::createFromDate($year, 1, 1, 'Asia/Manila')->startOfDay();
-                $endDate = Carbon::createFromDate($year, 12, 31, 'Asia/Manila')->endOfDay();
+        if (strpos($filter, 'custom_year:') === 0) {
+            $year = substr($filter, strlen('custom_year:'));
+            if (is_numeric($year) && strlen($year) == 4) {
+                $localStart = Carbon::createFromDate($year, 1, 1, 'Asia/Manila');
+                $localEnd = Carbon::createFromDate($year, 12, 31, 'Asia/Manila')->endOfDay();
+                $start = $localStart->format('Y-m-d\TH:i:s');
+                $end = $localEnd->format('Y-m-d\TH:i:s');
                 $filters = [
-                    'timestamp' => 'gte.' . $startDate->toIso8601String(),
-                    'timestamp' => 'lt.' . $endDate->toIso8601String()
+                    'select' => '*, tourist_spots!inner(name, latitude, longitude)',
+                    'and' => "(timestamp.gte.{$start},timestamp.lte.{$end})"
                 ];
-                $checkins = $this->supabaseService->fetchTable('checkins', $filters);
-                if (empty($checkins)) {
-                    return ['error' => 'No data available for the selected year'];
+            } else {
+                return response()->json(['error' => 'Invalid year'], 400);
+            }
+        } else {
+            switch ($filter) {
+                case 'today':
+                    $localStart = Carbon::today('Asia/Manila')->startOfDay();
+                    $localEnd = Carbon::today('Asia/Manila')->endOfDay();
+                    $start = $localStart->format('Y-m-d\TH:i:s');
+                    $end = $localEnd->format('Y-m-d\TH:i:s');
+                    $filters = [
+                        'select' => '*, tourist_spots!inner(name, latitude, longitude)',
+                        'and' => "(timestamp.gte.{$start},timestamp.lte.{$end})"
+                    ];
+                    break;
+                case 'this_week':
+                    $localStart = $now->copy()->startOfWeek(Carbon::MONDAY);
+                    $localEnd = $now->copy()->endOfWeek(Carbon::SUNDAY)->endOfDay();
+                    $start = $localStart->format('Y-m-d\TH:i:s');
+                    $end = $localEnd->format('Y-m-d\TH:i:s');
+                    $filters = [
+                        'select' => '*, tourist_spots!inner(name, latitude, longitude)',
+                        'and' => "(timestamp.gte.{$start},timestamp.lte.{$end})"
+                    ];
+                    break;
+                case 'this_month':
+                    $localStart = $now->copy()->startOfMonth();
+                    $localEnd = $now->copy()->endOfMonth()->endOfDay();
+                    $start = $localStart->format('Y-m-d\TH:i:s');
+                    $end = $localEnd->format('Y-m-d\TH:i:s');
+                    $filters = [
+                        'select' => '*, tourist_spots!inner(name, latitude, longitude)',
+                        'and' => "(timestamp.gte.{$start},timestamp.lte.{$end})"
+                    ];
+                    break;
+                case 'this_year':
+                    $localStart = $now->copy()->startOfYear();
+                    $localEnd = $now->copy()->endOfYear()->endOfDay();
+                    $start = $localStart->format('Y-m-d\TH:i:s');
+                    $end = $localEnd->format('Y-m-d\TH:i:s');
+                    $filters = [
+                        'select' => '*, tourist_spots!inner(name, latitude, longitude)',
+                        'and' => "(timestamp.gte.{$start},timestamp.lte.{$end})"
+                    ];
+                    break;
+                case 'all_time':
+                    $filters = [
+                        'select' => '*, tourist_spots!inner(name, latitude, longitude)'
+                    ];
+                    break;
+                default:
+                    return response()->json(['error' => 'Invalid filter'], 400);
+            }
+        }
+
+        \Log::info("Checkins by spot filters for {$filter}", [
+            'start' => $filters['and'] ?? 'all_time',
+            'filter' => $filter
+        ]);
+
+        $data = $this->supabaseService->fetchTable('checkins', $filters, false);
+        if ($data === null) {
+            return response()->json(['error' => 'Failed to fetch data'], 500);
+        }
+
+        $spots = [];
+        foreach ($data as $checkin) {
+            $spotId = $checkin['spot_id'];
+            if (!isset($spots[$spotId])) {
+                $spots[$spotId] = [
+                    'name' => $checkin['tourist_spots']['name'],
+                    'latitude' => $checkin['tourist_spots']['latitude'],
+                    'longitude' => $checkin['tourist_spots']['longitude'],
+                    'count' => 0
+                ];
+            }
+            $spots[$spotId]['count']++;
+        }
+
+        return response()->json(array_values($spots));
+    }
+
+    public function getIncidentReports($filter)
+    {
+        return $this->supabaseService->getIncidentReports($filter);
+    }
+
+    public function getLatestTourists()
+    {
+        try {
+            $filters = [
+                'user_type' => 'eq.user',
+                'order' => 'created_at.desc',
+                'limit' => 3,
+            ];
+
+            Log::info('Fetching latest tourists with filters: ' . json_encode($filters));
+            $data = $this->supabaseService->fetchTable('users', $filters, false);
+
+            if ($data === null || !is_array($data)) {
+                Log::warning('Supabase returned null or invalid data for latest tourists');
+                return response()->json(['tourists' => [], 'message' => 'No tourists found'], 200);
+            }
+
+            Log::info('Raw data from Supabase: ' . json_encode($data));
+
+            $ids = array_map(function ($user) {
+                $touristId = $user['user_id'] ?? $user['id'] ?? null;
+                if ($touristId === null) {
+                    Log::warning('User record missing ID field: ' . json_encode($user));
+                }
+                return $touristId;
+            }, $data);
+
+            $validIds = array_filter($ids, fn($id) => $id !== null);
+
+            Log::info('Processed tourist IDs: ' . json_encode($validIds));
+
+            return response()->json([
+                'tourists' => $validIds,
+                'message' => empty($validIds) ? 'No valid tourist IDs found' : 'Latest tourists retrieved successfully'
+            ], 200);
+        } catch (\Exception $e) {
+            Log::error('Error in getLatestTourists: ' . $e->getMessage() . ' | Stack: ' . $e->getTraceAsString());
+            return response()->json(['error' => 'Server error fetching tourists: ' . $e->getMessage()], 500);
+        }
+    }
+
+    public function getAccountCounts()
+    {
+        try {
+            $users = $this->supabaseService->fetchTable('users');
+
+            if ($users === null || !is_array($users)) {
+                Log::warning('Supabase returned null or invalid data for account counts');
+                return response()->json(['touristCount' => 0, 'adminCount' => 0], 200);
+            }
+
+            $activeUsers = array_filter($users, fn($user) => $user['status'] !== 'locked');
+            $touristCount = count(array_filter($activeUsers, fn($user) => $user['user_type'] === 'user'));
+            $adminCount = count(array_filter($activeUsers, fn($user) => $user['user_type'] === 'admin'));
+
+            Log::info('Account counts retrieved', ['touristCount' => $touristCount, 'adminCount' => $adminCount]);
+
+            return response()->json([
+                'touristCount' => $touristCount,
+                'adminCount' => $adminCount
+            ], 200);
+        } catch (\Exception $e) {
+            Log::error('Error in getAccountCounts: ' . $e->getMessage());
+            return response()->json(['touristCount' => 0, 'adminCount' => 0, 'error' => 'Server error fetching account counts'], 500);
+        }
+    }
+
+    public function getPopularSpots($filter)
+    {
+        $cacheKey = 'popular_spots_' . $filter;
+        $data = Cache::remember($cacheKey, 60, function () use ($filter) {
+            $now = Carbon::now('Asia/Manila');
+            $filters = ['select' => 'spot_id,tourist_id'];
+
+            if (strpos($filter, 'custom_year:') === 0) {
+                $year = substr($filter, strlen('custom_year:'));
+                if (is_numeric($year) && strlen($year) == 4) {
+                    $localStart = Carbon::createFromDate($year, 1, 1, 'Asia/Manila');
+                    $localEnd = Carbon::createFromDate($year, 12, 31, 'Asia/Manila')->endOfDay();
+                    $start = $localStart->format('Y-m-d\TH:i:s');
+                    $end = $localEnd->format('Y-m-d\TH:i:s');
+                    $filters['and'] = "(timestamp.gte.{$start},timestamp.lte.{$end})";
+                } else {
+                    throw new \Exception('Invalid year');
                 }
             } else {
-                $dateFilter = $this->getDateFilter($filter);
-                $filters = [];
-                if (is_array($dateFilter)) {
-                    $filters = [
-                        'timestamp' => 'gte.' . $dateFilter['gte'],
-                        'timestamp' => 'lt.' . $dateFilter['lt']
-                    ];
+                switch ($filter) {
+                    case 'today':
+                        $localStart = Carbon::today('Asia/Manila')->startOfDay();
+                        $localEnd = Carbon::today('Asia/Manila')->endOfDay();
+                        $start = $localStart->format('Y-m-d\TH:i:s');
+                        $end = $localEnd->format('Y-m-d\TH:i:s');
+                        $filters['and'] = "(timestamp.gte.{$start},timestamp.lte.{$end})";
+                        break;
+                    case 'this_week':
+                        $localStart = $now->copy()->startOfWeek(Carbon::MONDAY);
+                        $localEnd = $now->copy()->endOfWeek(Carbon::SUNDAY)->endOfDay();
+                        $start = $localStart->format('Y-m-d\TH:i:s');
+                        $end = $localEnd->format('Y-m-d\TH:i:s');
+                        $filters['and'] = "(timestamp.gte.{$start},timestamp.lte.{$end})";
+                        break;
+                    case 'this_month':
+                        $localStart = $now->copy()->startOfMonth();
+                        $localEnd = $now->copy()->endOfMonth()->endOfDay();
+                        $start = $localStart->format('Y-m-d\TH:i:s');
+                        $end = $localEnd->format('Y-m-d\TH:i:s');
+                        $filters['and'] = "(timestamp.gte.{$start},timestamp.lte.{$end})";
+                        break;
+                    case 'this_year':
+                        $localStart = $now->copy()->startOfYear();
+                        $localEnd = $now->copy()->endOfYear()->endOfDay();
+                        $start = $localStart->format('Y-m-d\TH:i:s');
+                        $end = $localEnd->format('Y-m-d\TH:i:s');
+                        $filters['and'] = "(timestamp.gte.{$start},timestamp.lte.{$end})";
+                        break;
+                    case 'all_time':
+                        break;
+                    default:
+                        $localStart = $now->copy()->subMonth()->startOfMonth();
+                        $localEnd = $now->copy()->subMonth()->endOfMonth()->endOfDay();
+                        $start = $localStart->format('Y-m-d\TH:i:s');
+                        $end = $localEnd->format('Y-m-d\TH:i:s');
+                        $filters['and'] = "(timestamp.gte.{$start},timestamp.lte.{$end})";
+                        break;
                 }
-                $checkins = $this->supabaseService->fetchTable('checkins', $filters);
             }
+
+            \Log::info("Popular spots filters for {$filter}", [
+                'start' => $filters['and'] ?? 'all_time',
+                'filter' => $filter
+            ]);
+
+            $checkins = $this->supabaseService->fetchTable('checkins', $filters);
 
             $spotVisits = [];
-            if ($filter === 'today') {
-                $today = Carbon::today('Asia/Manila')->toDateString();
+            if ($filter === 'today' || strpos($filter, 'custom_year:') === 0) {
                 $uniqueTouristsPerSpot = [];
                 foreach ($checkins as $checkin) {
                     $spotId = $checkin['spot_id'];
                     $touristId = $checkin['tourist_id'];
-                    $checkinDate = Carbon::parse($checkin['timestamp'], 'Asia/Manila')->toDateString();
-                    if ($checkinDate === $today) {
-                        if (!isset($uniqueTouristsPerSpot[$spotId])) {
-                            $uniqueTouristsPerSpot[$spotId] = [];
-                        }
-                        if (!in_array($touristId, $uniqueTouristsPerSpot[$spotId])) {
-                            $uniqueTouristsPerSpot[$spotId][] = $touristId;
-                            $spotVisits[$spotId] = ($spotVisits[$spotId] ?? 0) + 1;
-                        }
+                    if (!isset($uniqueTouristsPerSpot[$spotId])) {
+                        $uniqueTouristsPerSpot[$spotId] = [];
+                    }
+                    if (!array_key_exists($touristId, $uniqueTouristsPerSpot[$spotId])) {
+                        $uniqueTouristsPerSpot[$spotId][$touristId] = true;
+                        $spotVisits[$spotId] = ($spotVisits[$spotId] ?? 0) + 1;
                     }
                 }
             } else {
@@ -334,15 +378,16 @@ class AnalyticsController extends Controller
                 }
             }
 
-            arsort($spotVisits);
-            $topSpotIds = array_slice(array_keys($spotVisits), 0, 4);
+            $touristSpots = Cache::remember('tourist_spots', 3600, function () {
+                return $this->supabaseService->fetchTable('tourist_spots', ['select' => 'spot_id,name']);
+            });
 
-            $touristSpots = $this->supabaseService->fetchTable('tourist_spots');
-            $data = [];
-            foreach ($topSpotIds as $id) {
-                $name = $touristSpots[array_search($id, array_column($touristSpots, 'spot_id'))]['name'] ?? 'Unknown';
-                $data[] = ['spot' => $name, 'visits' => $spotVisits[$id] ?? 0];
-            }
+            $spotIdToName = array_column($touristSpots, 'name', 'spot_id');
+            $data = array_map(function($id) use ($spotVisits, $spotIdToName) {
+                $name = $spotIdToName[$id] ?? 'Unknown';
+                return ['spot' => $name, 'visits' => $spotVisits[$id] ?? 0];
+            }, array_keys($spotVisits));
+
             return $data;
         });
 
@@ -352,155 +397,41 @@ class AnalyticsController extends Controller
     private function getDateFilter($filter)
     {
         $now = Carbon::now('Asia/Manila');
+        \Log::info('Current Time in getDateFilter (Asia/Manila): ' . $now->toDateTimeString());
+
         switch ($filter) {
             case 'today':
-                return [
-                    'gte' => $now->startOfDay()->toIso8601String(),
-                    'lt' => $now->endOfDay()->toIso8601String()
-                ];
+                $localStart = Carbon::today('Asia/Manila')->startOfDay();
+                $localEnd = Carbon::today('Asia/Manila')->endOfDay();
+                $start = $localStart->format('Y-m-d\TH:i:s');
+                $end = $localEnd->format('Y-m-d\TH:i:s');
+                return ['and' => "(timestamp.gte.{$start},timestamp.lte.{$end})"];
             case 'this_week':
-                return [
-                    'gte' => $now->startOfWeek()->toIso8601String(),
-                    'lt' => $now->endOfWeek()->toIso8601String()
-                ];
+                $localStart = $now->copy()->startOfWeek(Carbon::MONDAY);
+                $localEnd = $now->copy()->endOfWeek(Carbon::SUNDAY)->endOfDay();
+                $start = $localStart->format('Y-m-d\TH:i:s');
+                $end = $localEnd->format('Y-m-d\TH:i:s');
+                return ['and' => "(timestamp.gte.{$start},timestamp.lte.{$end})"];
             case 'this_month':
-                return [
-                    'gte' => $now->startOfMonth()->toIso8601String(),
-                    'lt' => $now->endOfMonth()->toIso8601String()
-                ];
+                $localStart = $now->copy()->startOfMonth();
+                $localEnd = $now->copy()->endOfMonth()->endOfDay();
+                $start = $localStart->format('Y-m-d\TH:i:s');
+                $end = $localEnd->format('Y-m-d\TH:i:s');
+                return ['and' => "(timestamp.gte.{$start},timestamp.lte.{$end})"];
+            case 'this_year':
+                $localStart = $now->copy()->startOfYear();
+                $localEnd = $now->copy()->endOfYear()->endOfDay();
+                $start = $localStart->format('Y-m-d\TH:i:s');
+                $end = $localEnd->format('Y-m-d\TH:i:s');
+                return ['and' => "(timestamp.gte.{$start},timestamp.lte.{$end})"];
             case 'all_time':
-                return null;
+                return [];
             default:
-                return [
-                    'gte' => $now->subMonth()->startOfMonth()->toIso8601String(),
-                    'lt' => $now->subMonth()->endOfMonth()->toIso8601String()
-                ];
+                $localStart = $now->copy()->subMonth()->startOfMonth();
+                $localEnd = $now->copy()->subMonth()->endOfMonth()->endOfDay();
+                $start = $localStart->format('Y-m-d\TH:i:s');
+                $end = $localEnd->format('Y-m-d\TH:i:s');
+                return ['and' => "(timestamp.gte.{$start},timestamp.lte.{$end})"];
         }
-    }
-
-    public function getTouristActivities(Request $request)
-    {
-        $period = $request->query('period', 'this_week');
-        $now = now('Asia/Manila');
-
-        if ($period === 'custom_year') {
-            $year = $request->query('year');
-            if (!$year || !is_numeric($year) || strlen($year) != 4) {
-                return response()->json(['error' => 'Invalid year'], 200);
-            }
-            $minMaxYears = $this->supabaseService->getMinMaxYears();
-            $minYear = $minMaxYears['min'] ?? 1900;
-            $maxYear = $minMaxYears['max'] ?? now('Asia/Manila')->year;
-            if ($year < $minYear || $year > $maxYear) {
-                return response()->json(['error' => 'Year out of range'], 200);
-            }
-            $startDate = Carbon::createFromDate($year, 1, 1, 'Asia/Manila')->startOfDay();
-            $endDate = Carbon::createFromDate($year, 12, 31, 'Asia/Manila')->endOfDay();
-            $periodLabel = "Year $year";
-            $groupBy = 'month';
-
-            $filters = [
-                'timestamp' => 'gte.' . $startDate->toIso8601String(),
-                'timestamp' => 'lt.' . $endDate->toIso8601String()
-            ];
-            $checkins = $this->supabaseService->fetchTable('checkins', $filters);
-            $incidents = $this->supabaseService->fetchTable('emergency_reports', $filters);
-
-            if (empty($checkins) && empty($incidents)) {
-                return response()->json(['error' => 'No data available for the selected year'], 200);
-            }
-        } else {
-            if ($period === 'this_week') {
-                $startDate = $now->startOfWeek();
-                $endDate = $now->endOfWeek();
-                $periodLabel = 'This Week';
-                $groupBy = 'day';
-            } elseif ($period === 'this_month') {
-                $startDate = $now->startOfMonth();
-                $endDate = $now->endOfMonth();
-                $periodLabel = 'This Month';
-                $groupBy = 'week';
-            } elseif ($period === 'this_year') {
-                $startDate = $now->startOfYear();
-                $endDate = $now->endOfYear();
-                $periodLabel = 'This Year';
-                $groupBy = 'month';
-            } else {
-                return response()->json(['error' => 'Invalid period'], 400);
-            }
-
-            $filters = [
-                'timestamp' => 'gte.' . $startDate->toIso8601String(),
-                'timestamp' => 'lt.' . $endDate->toIso8601String()
-            ];
-            $checkins = $this->supabaseService->fetchTable('checkins', $filters);
-            $incidents = $this->supabaseService->fetchTable('emergency_reports', $filters);
-        }
-
-        // Prepare labels and data based on grouping
-        if ($groupBy === 'day') {
-            $labels = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-            $checkinsData = array_fill(0, 7, 0);
-            $incidentsData = array_fill(0, 7, 0);
-
-            foreach ($checkins as $checkin) {
-                $day = Carbon::parse($checkin['timestamp'], 'Asia/Manila')->format('l');
-                $index = array_search($day, $labels);
-                if ($index !== false) $checkinsData[$index]++;
-            }
-            foreach ($incidents as $incident) {
-                $day = Carbon::parse($incident['timestamp'], 'Asia/Manila')->format('l');
-                $index = array_search($day, $labels);
-                if ($index !== false) $incidentsData[$index]++;
-            }
-        } elseif ($groupBy === 'week') {
-            $numWeeks = ceil($endDate->day / 7);
-            $labels = [];
-            for ($i = 1; $i <= $numWeeks; $i++) {
-                $labels[] = "Week $i";
-            }
-            $checkinsData = array_fill(0, $numWeeks, 0);
-            $incidentsData = array_fill(0, $numWeeks, 0);
-
-            foreach ($checkins as $checkin) {
-                $date = Carbon::parse($checkin['timestamp'], 'Asia/Manila');
-                $week = ceil($date->day / 7);
-                if ($week >= 1 && $week <= $numWeeks) {
-                    $checkinsData[$week - 1]++;
-                }
-            }
-            foreach ($incidents as $incident) {
-                $date = Carbon::parse($incident['timestamp'], 'Asia/Manila');
-                $week = ceil($date->day / 7);
-                if ($week >= 1 && $week <= $numWeeks) {
-                    $incidentsData[$week - 1]++;
-                }
-            }
-        } elseif ($groupBy === 'month') {
-            $labels = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-            $checkinsData = array_fill(0, 12, 0);
-            $incidentsData = array_fill(0, 12, 0);
-
-            foreach ($checkins as $checkin) {
-                $month = Carbon::parse($checkin['timestamp'], 'Asia/Manila')->month;
-                $checkinsData[$month - 1]++;
-            }
-            foreach ($incidents as $incident) {
-                $month = Carbon::parse($incident['timestamp'], 'Asia/Manila')->month;
-                $incidentsData[$month - 1]++;
-            }
-        }
-
-        $totalActivities = array_sum($checkinsData);
-        $totalIncidents = array_sum($incidentsData);
-
-        return response()->json([
-            'labels' => $labels,
-            'checkins' => $checkinsData,
-            'incidents' => $incidentsData,
-            'totalActivities' => $totalActivities,
-            'totalIncidents' => $totalIncidents,
-            'period' => $periodLabel
-        ]);
     }
 }

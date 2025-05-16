@@ -38,13 +38,13 @@ Route::group([
     Route::get('analytics/incident-status', [AnalyticsController::class, 'getIncidentStatus'])
          ->name('analytics.incident-status');
 
-    // Consolidated Popular Spots endpoint with optional year parameter
-    Route::get('analytics/popular-spots/{filter}/{year?}', [AnalyticsController::class, 'getPopularSpots'])
+    // Popular Spots endpoint using query parameters
+    Route::get('analytics/popular-spots', [AnalyticsController::class, 'getPopularSpots'])
          ->name('analytics.popular-spots');
 
-    // User Growth endpoint
-    Route::get('analytics/user-growth', [AnalyticsController::class, 'getUserGrowth'])
-         ->name('analytics.user-growth');
+    // Tourist Growth endpoint
+    Route::get('analytics/tourist-growth', [AnalyticsController::class, 'getTouristGrowth'])
+    ->name('analytics.tourist-growth');
 
     // Notifications (static view)
     Route::get('notification', function () {

@@ -510,3 +510,74 @@ body {
 #incidentError{
     margin-top: 100px;;
 }
+
+#customYearModalSpots {
+    z-index: 1060 !important;
+}
+
+#spotsFilter{
+    text-align: center;   
+}
+
+#spotsModal .loading-state {
+    display: none;
+    margin-top: 10px;
+    font-size: 14px;
+    color: #6c757d;
+    text-align: center;
+}
+
+.analytics-container .form-select.custom-year-selected {
+    background-color: #FF7E3F; 
+    color: white !important;
+}
+#spotsModal .modal-body.loading .loading-state {
+        display: block;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 16px;
+        color: #6c757d;
+    }
+    #spotsModal .modal-body.loading table {
+        opacity: 0.5;
+    }
+
+    #customYearModalSpotsTable {
+        z-index: 1060 !important; 
+    }
+    #spotsModal {
+        z-index: 1050 !important;
+    }
+    .modal {
+    z-index: 1050 !important;
+}
+.pagination {
+    background: transparent;
+    padding: 10px;
+    border-radius: 5px;
+    box-shadow: none;
+    margin-left:100px;
+}
+
+.page-item.active .page-link {
+    background-color: #FF7E3F;
+    border-color: #FF7E3F;
+    color: white;
+}
+
+.page-link {
+    color: #AAAAAA;
+}
+
+.page-link:hover {
+    color: #FF7E3F;
+}
+
+.page-item.disabled .page-link {
+    color: #AAAAAA;
+    pointer-events: none;
+    background-color: transparent;
+    border-color: transparent;
+}

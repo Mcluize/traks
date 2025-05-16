@@ -18,7 +18,7 @@ class SupabaseService
 
     public function fetchTable($table, $filters = [], $count = false, $select = '*')
     {
-        \Log::info("Final Supabase URL: {$this->url}/rest/v1/{$table}", ['filters' => $filters, 'select' => $select]);
+        \Log::info("Supabase fetchTable for {$table}", ['filters' => $filters, 'select' => $select]);
 
         $headers = [
             'apikey' => $this->key,
@@ -30,7 +30,7 @@ class SupabaseService
         }
 
         // Add status filter for warning_zones
-        if ($table === 'warning_zones' && !isset($filters['status'])) {
+        if ($table === 'warning_zones' && !isset($filters['status']) && !isset($filters['and'])) {
             $filters['status'] = 'eq.active';
         }
 
@@ -48,9 +48,12 @@ class SupabaseService
                 }
                 return 0;
             }
-            return $query->json();
+            $result = $query->json();
+            \Log::info("Supabase fetchTable result count for {$table}", ['count' => count($result)]);
+            return $result;
         } else {
             \Log::error('Supabase fetchTable failed', [
+                'table' => $table,
                 'status' => $query->status(),
                 'body' => $query->body(),
                 'headers' => $query->headers()
@@ -162,79 +165,84 @@ class SupabaseService
     }
 
     public function getIncidentReports($filter)
-    {
-        $now = Carbon::now();
-        $filters = [
-            'select' => 'user_id, latitude, longitude, timestamp, status' 
-        ];
+{
+    $now = Carbon::now('Asia/Manila');
+    $filters = [
+        'select' => 'user_id, latitude, longitude, timestamp, status'
+    ];
 
-        if (strpos($filter, 'custom_year:') === 0) {
-            $year = substr($filter, strlen('custom_year:'));
-            if (is_numeric($year) && strlen($year) == 4) {
-                $localStart = Carbon::createFromDate($year, 1, 1, 'Asia/Manila');
-                $localEnd = $localStart->copy()->addYear();
-                $start = $localStart->toIso8601String();
-                $end = $localEnd->toIso8601String();
-                $filters['and'] = "(timestamp.gte.{$start},timestamp.lt.{$end})";
-            } else {
-                return response()->json(['error' => 'Invalid year'], 400);
-            }
+    if (strpos($filter, 'custom_year:') === 0) {
+        $year = substr($filter, strlen('custom_year:'));
+        if (is_numeric($year) && strlen($year) == 4) {
+            $localStart = Carbon::createFromDate($year, 1, 1, 'Asia/Manila');
+            $localEnd = Carbon::createFromDate($year, 12, 31, 'Asia/Manila')->endOfDay();
+            $start = $localStart->format('Y-m-d\TH:i:s');
+            $end = $localEnd->format('Y-m-d\TH:i:s');
+            $filters['and'] = "(timestamp.gte.{$start},timestamp.lte.{$end})";
         } else {
-            switch ($filter) {
-                case 'today':
-                    $localStart = Carbon::today();
-                    $localEnd = $localStart->copy()->addDay();
-                    $start = $localStart->toIso8601String();
-                    $end = $localEnd->toIso8601String();
-                    $filters['and'] = "(timestamp.gte.{$start},timestamp.lt.{$end})";
-                    break;
-
-                case 'this_week':
-                    $localStart = $now->copy()->startOfWeek();
-                    $localEnd = $localStart->copy()->addWeek();
-                    $start = $localStart->toIso8601String();
-                    $end = $localEnd->toIso8601String();
-                    $filters['and'] = "(timestamp.gte.{$start},timestamp.lt.{$end})";
-                    break;
-
-                case 'this_month':
-                    $localStart = $now->copy()->startOfMonth();
-                    $localEnd = $localStart->copy()->addMonth();
-                    $start = $localStart->toIso8601String();
-                    $end = $localEnd->toIso8601String();
-                    $filters['and'] = "(timestamp.gte.{$start},timestamp.lt.{$end})";
-                    break;
-
-                case 'this_year':
-                    $localStart = $now->copy()->startOfYear();
-                    $localEnd = $now->copy()->addYear()->startOfYear();
-                    $start = $localStart->toIso8601String();
-                    $end = $localEnd->toIso8601String();
-                    $filters['and'] = "(timestamp.gte.{$start},timestamp.lt.{$end})";
-                    break;
-
-                case 'all_time':
-                    break;
-
-                default:
-                    return response()->json(['error' => 'Invalid filter'], 400);
-            }
+            return response()->json(['error' => 'Invalid year'], 400);
         }
+    } else {
+        switch ($filter) {
+            case 'today':
+                $localStart = Carbon::today('Asia/Manila')->startOfDay();
+                $localEnd = Carbon::today('Asia/Manila')->endOfDay();
+                $start = $localStart->format('Y-m-d\TH:i:s');
+                $end = $localEnd->format('Y-m-d\TH:i:s');
+                $filters['and'] = "(timestamp.gte.{$start},timestamp.lte.{$end})";
+                break;
 
-        $incidents = $this->fetchTable('emergency_reports', $filters, false);
-        if ($incidents === null) {
-            return response()->json(['error' => 'Failed to fetch data'], 500);
+            case 'this_week':
+                $localStart = $now->copy()->startOfWeek(Carbon::MONDAY);
+                $localEnd = $now->copy()->endOfWeek(Carbon::SUNDAY)->endOfDay();
+                $start = $localStart->format('Y-m-d\TH:i:s');
+                $end = $localEnd->format('Y-m-d\TH:i:s');
+                $filters['and'] = "(timestamp.gte.{$start},timestamp.lte.{$end})";
+                break;
+
+            case 'this_month':
+                $localStart = $now->copy()->startOfMonth();
+                $localEnd = $now->copy()->endOfMonth()->endOfDay();
+                $start = $localStart->format('Y-m-d\TH:i:s');
+                $end = $localEnd->format('Y-m-d\TH:i:s');
+                $filters['and'] = "(timestamp.gte.{$start},timestamp.lte.{$end})";
+                break;
+
+            case 'this_year':
+                $localStart = $now->copy()->startOfYear();
+                $localEnd = $now->copy()->endOfYear()->endOfDay();
+                $start = $localStart->format('Y-m-d\TH:i:s');
+                $end = $localEnd->format('Y-m-d\TH:i:s');
+                $filters['and'] = "(timestamp.gte.{$start},timestamp.lte.{$end})";
+                break;
+
+            case 'all_time':
+                break;
+
+            default:
+                return response()->json(['error' => 'Invalid filter'], 400);
         }
-
-        foreach ($incidents as &$incident) {
-            $incident['timestamp'] = Carbon::parse($incident['timestamp'])->format('Y-m-d H:i:s');
-        }
-
-        return response()->json([
-            'count' => count($incidents),
-            'incidents' => $incidents
-        ]);
     }
+
+    \Log::info("Incident report filters for {$filter}", [
+        'start' => $filters['and'] ?? 'all_time',
+        'filter' => $filter
+    ]);
+
+    $incidents = $this->fetchTable('emergency_reports', $filters, false);
+    if ($incidents === null) {
+        return response()->json(['error' => 'Failed to fetch data'], 500);
+    }
+
+    foreach ($incidents as &$incident) {
+        $incident['timestamp'] = Carbon::parse($incident['timestamp'])->format('Y-m-d H:i:s');
+    }
+
+    return response()->json([
+        'count' => count($incidents),
+        'incidents' => $incidents
+    ]);
+}
 
     public function getMinMaxYears()
     {
@@ -267,7 +275,7 @@ class SupabaseService
     public function fetchUserZones()
     {
         return $this->fetchTable('user_zones', [], false, 'zone_id, user_id, type, description, latitude, longitude, total_weight, status, created_at');
-    }
+    }   
 
     public function updateUserZoneStatus($zoneId, $status)
     {

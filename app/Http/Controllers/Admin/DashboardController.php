@@ -19,8 +19,8 @@ class DashboardController extends Controller
 
     public function getTouristArrivals($filter)
     {
-        $now = Carbon::now();
-        $localToday = Carbon::today();
+        $now = Carbon::now('Asia/Manila'); // Explicitly set to Asia/Manila
+        $localToday = Carbon::today('Asia/Manila'); // Use Manila time for today
         $localTomorrow = $localToday->copy()->addDay();
         $utcTodayStart = $localToday->copy()->utc();
         $utcTomorrowStart = $localTomorrow->copy()->utc();
@@ -29,6 +29,8 @@ class DashboardController extends Controller
         ];
 
         \Log::info('Filter: ' . $filter);
+        \Log::info('Local Today (Asia/Manila): ' . $localToday->toDateTimeString());
+        \Log::info('Local Tomorrow (Asia/Manila): ' . $localTomorrow->toDateTimeString());
 
         if (strpos($filter, 'custom_year:') === 0) {
             $year = substr($filter, strlen('custom_year:'));
@@ -40,6 +42,7 @@ class DashboardController extends Controller
                 $start = $utcStart->toIso8601String();
                 $end = $utcEnd->toIso8601String();
                 $filters['and'] = "(timestamp.gte.{$start},timestamp.lt.{$end})";
+                \Log::info('Custom Year Range - Start (UTC): ' . $start . ', End (UTC): ' . $end);
             } else {
                 return response()->json(['error' => 'Invalid year'], 400);
             }
@@ -49,6 +52,7 @@ class DashboardController extends Controller
                     $start = $utcTodayStart->toIso8601String();
                     $end = $utcTomorrowStart->toIso8601String();
                     $filters['and'] = "(timestamp.gte.{$start},timestamp.lt.{$end})";
+                    \Log::info('Today Range - Start (UTC): ' . $start . ', End (UTC): ' . $end);
                     break;
 
                 case 'this_week':
@@ -59,6 +63,7 @@ class DashboardController extends Controller
                     $start = $utcStartOfWeek->toIso8601String();
                     $end = $utcEndOfWeek->toIso8601String();
                     $filters['and'] = "(timestamp.gte.{$start},timestamp.lt.{$end})";
+                    \Log::info('This Week Range - Start (UTC): ' . $start . ', End (UTC): ' . $end);
                     break;
 
                 case 'this_month':
@@ -69,6 +74,7 @@ class DashboardController extends Controller
                     $start = $utcStartOfMonth->toIso8601String();
                     $end = $utcEndOfMonth->toIso8601String();
                     $filters['and'] = "(timestamp.gte.{$start},timestamp.lt.{$end})";
+                    \Log::info('This Month Range - Start (UTC): ' . $start . ', End (UTC): ' . $end);
                     break;
 
                 case 'this_year':
@@ -79,6 +85,7 @@ class DashboardController extends Controller
                     $start = $utcStart->toIso8601String();
                     $end = $utcEnd->toIso8601String();
                     $filters['and'] = "(timestamp.gte.{$start},timestamp.lt.{$end})";
+                    \Log::info('This Year Range - Start (UTC): ' . $start . ', End (UTC): ' . $end);
                     break;
 
                 case 'all_time':
@@ -129,12 +136,16 @@ class DashboardController extends Controller
 
     public function getCheckinsBySpot($filter)
     {
-        $now = Carbon::now();
-        $localToday = Carbon::today();
+        $now = Carbon::now('Asia/Manila'); // Explicitly set to Asia/Manila
+        $localToday = Carbon::today('Asia/Manila'); // Use Manila time for today
         $localTomorrow = $localToday->copy()->addDay();
         $utcTodayStart = $localToday->copy()->utc();
         $utcTomorrowStart = $localTomorrow->copy()->utc();
         $filters = [];
+
+        \Log::info('Filter: ' . $filter);
+        \Log::info('Local Today (Asia/Manila): ' . $localToday->toDateTimeString());
+        \Log::info('Local Tomorrow (Asia/Manila): ' . $localTomorrow->toDateTimeString());
 
         if (strpos($filter, 'custom_year:') === 0) {
             $year = substr($filter, strlen('custom_year:'));
@@ -149,6 +160,7 @@ class DashboardController extends Controller
                     'select' => '*, tourist_spots!inner(name, latitude, longitude)',
                     'and' => "(timestamp.gte.{$start},timestamp.lt.{$end})"
                 ];
+                \Log::info('Custom Year Range - Start (UTC): ' . $start . ', End (UTC): ' . $end);
             } else {
                 return response()->json(['error' => 'Invalid year'], 400);
             }
@@ -161,6 +173,7 @@ class DashboardController extends Controller
                         'select' => '*, tourist_spots!inner(name, latitude, longitude)',
                         'and' => "(timestamp.gte.{$start},timestamp.lt.{$end})"
                     ];
+                    \Log::info('Today Range - Start (UTC): ' . $start . ', End (UTC): ' . $end);
                     break;
                 case 'this_week':
                     $localStartOfWeek = $now->copy()->startOfWeek();
@@ -173,6 +186,7 @@ class DashboardController extends Controller
                         'select' => '*, tourist_spots!inner(name, latitude, longitude)',
                         'and' => "(timestamp.gte.{$start},timestamp.lt.{$end})"
                     ];
+                    \Log::info('This Week Range - Start (UTC): ' . $start . ', End (UTC): ' . $end);
                     break;
                 case 'this_month':
                     $localStartOfMonth = $now->copy()->startOfMonth();
@@ -185,6 +199,7 @@ class DashboardController extends Controller
                         'select' => '*, tourist_spots!inner(name, latitude, longitude)',
                         'and' => "(timestamp.gte.{$start},timestamp.lt.{$end})"
                     ];
+                    \Log::info('This Month Range - Start (UTC): ' . $start . ', End (UTC): ' . $end);
                     break;
                 case 'this_year':
                     $localStart = $now->copy()->startOfYear();
@@ -197,6 +212,7 @@ class DashboardController extends Controller
                         'select' => '*, tourist_spots!inner(name, latitude, longitude)',
                         'and' => "(timestamp.gte.{$start},timestamp.lt.{$end})"
                     ];
+                    \Log::info('This Year Range - Start (UTC): ' . $start . ', End (UTC): ' . $end);
                     break;
                 case 'all_time':
                     $filters = [
@@ -306,8 +322,11 @@ class DashboardController extends Controller
     {
         $cacheKey = 'popular_spots_' . $filter;
         $data = Cache::remember($cacheKey, 60, function () use ($filter) {
-            $now = Carbon::now();
+            $now = Carbon::now('Asia/Manila'); // Explicitly set to Asia/Manila
             $filters = ['select' => 'spot_id,tourist_id'];
+
+            \Log::info('Filter: ' . $filter);
+            \Log::info('Current Time (Asia/Manila): ' . $now->toDateTimeString());
 
             if (strpos($filter, 'custom_year:') === 0) {
                 $year = substr($filter, strlen('custom_year:'));
@@ -317,6 +336,7 @@ class DashboardController extends Controller
                     $start = $localStart->toIso8601String();
                     $end = $localEnd->toIso8601String();
                     $filters['and'] = "(timestamp.gte.{$start},timestamp.lt.{$end})";
+                    \Log::info('Custom Year Range - Start (UTC): ' . $start . ', End (UTC): ' . $end);
                 } else {
                     throw new \Exception('Invalid year');
                 }
@@ -326,21 +346,25 @@ class DashboardController extends Controller
                         $start = $now->startOfDay()->toIso8601String();
                         $end = $now->endOfDay()->toIso8601String();
                         $filters['and'] = "(timestamp.gte.{$start},timestamp.lt.{$end})";
+                        \Log::info('Today Range - Start (UTC): ' . $start . ', End (UTC): ' . $end);
                         break;
                     case 'this_week':
                         $start = $now->startOfWeek()->toIso8601String();
                         $end = $now->endOfWeek()->toIso8601String();
                         $filters['and'] = "(timestamp.gte.{$start},timestamp.lt.{$end})";
+                        \Log::info('This Week Range - Start (UTC): ' . $start . ', End (UTC): ' . $end);
                         break;
                     case 'this_month':
                         $start = $now->startOfMonth()->toIso8601String();
                         $end = $now->endOfMonth()->toIso8601String();
                         $filters['and'] = "(timestamp.gte.{$start},timestamp.lt.{$end})";
+                        \Log::info('This Month Range - Start (UTC): ' . $start . ', End (UTC): ' . $end);
                         break;
                     case 'this_year':
                         $start = $now->startOfYear()->toIso8601String();
                         $end = $now->addYear()->startOfYear()->toIso8601String();
                         $filters['and'] = "(timestamp.gte.{$start},timestamp.lt.{$end})";
+                        \Log::info('This Year Range - Start (UTC): ' . $start . ', End (UTC): ' . $end);
                         break;
                     case 'all_time':
                         break;
@@ -348,6 +372,8 @@ class DashboardController extends Controller
                         $start = $now->subMonth()->startOfMonth()->toIso8601String();
                         $end = $now->subMonth()->endOfMonth()->toIso8601String();
                         $filters['and'] = "(timestamp.gte.{$start},timestamp.lt.{$end})";
+                        \Log::info('Default Range - Start (UTC): ' . $start . ', End (UTC): ' . $end);
+                        break;
                 }
             }
 
@@ -394,29 +420,36 @@ class DashboardController extends Controller
 
     private function getDateFilter($filter)
     {
-        $now = Carbon::now('Asia/Manila');
+        $now = Carbon::now('Asia/Manila'); // Already set to Asia/Manila in the original code
+        \Log::info('Current Time in getDateFilter (Asia/Manila): ' . $now->toDateTimeString());
+
         switch ($filter) {
             case 'today':
                 $start = $now->startOfDay()->toIso8601String();
                 $end = $now->endOfDay()->toIso8601String();
+                \Log::info('getDateFilter Today Range - Start (UTC): ' . $start . ', End (UTC): ' . $end);
                 return ['and' => "(timestamp.gte.{$start},timestamp.lt.{$end})"];
             case 'this_week':
                 $start = $now->startOfWeek()->toIso8601String();
                 $end = $now->endOfWeek()->toIso8601String();
+                \Log::info('getDateFilter This Week Range - Start (UTC): ' . $start . ', End (UTC): ' . $end);
                 return ['and' => "(timestamp.gte.{$start},timestamp.lt.{$end})"];
             case 'this_month':
                 $start = $now->startOfMonth()->toIso8601String();
                 $end = $now->endOfMonth()->toIso8601String();
+                \Log::info('getDateFilter This Month Range - Start (UTC): ' . $start . ', End (UTC): ' . $end);
                 return ['and' => "(timestamp.gte.{$start},timestamp.lt.{$end})"];
             case 'this_year':
                 $start = $now->startOfYear()->toIso8601String();
                 $end = $now->addYear()->startOfYear()->toIso8601String();
+                \Log::info('getDateFilter This Year Range - Start (UTC): ' . $start . ', End (UTC): ' . $end);
                 return ['and' => "(timestamp.gte.{$start},timestamp.lt.{$end})"];
             case 'all_time':
                 return [];
             default:
                 $start = $now->subMonth()->startOfMonth()->toIso8601String();
                 $end = $now->subMonth()->endOfMonth()->toIso8601String();
+                \Log::info('getDateFilter Default Range - Start (UTC): ' . $start . ', End (UTC): ' . $end);
                 return ['and' => "(timestamp.gte.{$start},timestamp.lt.{$end})"];
         }
     }

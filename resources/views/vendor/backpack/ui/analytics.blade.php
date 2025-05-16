@@ -86,6 +86,18 @@
     .chart-body.loading canvas {
         opacity: 0.5;
     }
+    #customYearModalSpotsTable {
+        z-index: 1060 !important;
+    }
+    #spotsModal {
+        z-index: 1050 !important;
+    }
+    .modal-body.loading #spotsTableBody {
+        display: none;
+    }
+    .modal-body.loading .loading-state {
+        display: block;
+    }
 </style>
 
 <div class="analytics-container">
@@ -237,7 +249,7 @@
         <div class="col-md-6">
             <div class="chart-card">
                 <div class="chart-header">
-                    <h3>User Growth Over Time</h3>
+                    <h3>Tourist Growth Over Time</h3> <!-- Updated title -->
                     <div class="chart-actions">
                         <select class="form-select form-select-sm" id="userGrowthPeriodFilter">
                             <option value="this_week">This Week</option>
@@ -374,6 +386,26 @@
         </div>
     </div>
 
+    <!-- Custom Year Modal for All Tourist Spots Table -->
+    <div class="modal fade" id="customYearModalSpotsTable" tabindex="-1" aria-labelledby="customYearModalSpotsTableLabel" aria-hidden="true" data-bs-backdrop="false">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="customYearModalSpotsTableLabel">Select Year for All Tourist Spots</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="number" id="customYearInputSpotsTable" class="form-control" placeholder="Enter year (e.g., 2023)" min="{{ $minYear }}" max="{{ $maxYear }}">
+                    <div id="customYearErrorSpotsTable" class="invalid-feedback"></div>
+                </div>
+                <div class="modal-footer modal-footer-centered">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="applyCustomYearSpotsTable">Apply</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Popular Spots Modal -->
     <div class="modal fade" id="spotsModal" tabindex="-1" aria-labelledby="spotsModalLabel" aria-hidden="true" data-bs-backdrop="false">
         <div class="modal-dialog">
@@ -394,6 +426,7 @@
                         <thead><tr><th>Spot Name</th><th>Visits</th></tr></thead>
                         <tbody id="spotsTableBody"></tbody>
                     </table>
+                    <div class="loading-state" style="display: none;">Loading...</div>
                 </div>
             </div>
         </div>
@@ -811,7 +844,7 @@ $(document).ready(function() {
         data: {
             labels: [],
             datasets: [{
-                label: 'New Users',
+                label: 'New Tourists',
                 data: [],
                 borderColor: '#5D78FF',
                 backgroundColor: 'rgba(93, 120, 255, 0.1)',
@@ -846,17 +879,22 @@ $(document).ready(function() {
 
     function updateUserGrowthChart(period, year = null) {
         $('#userGrowthChartBody').addClass('loading');
-        var url = '/admin/analytics/user-growth?period=' + period;
+        var url = '/admin/analytics/tourist-growth?period=' + period; // Corrected endpoint
         if (year) {
             url += '&year=' + year;
         }
         $.get(url)
             .done(function(data) {
-                $('#userGrowthError').hide();
-                $('#userGrowthChart').show();
-                userGrowthChart.data.labels = data.labels;
-                userGrowthChart.data.datasets[0].data = data.data;
-                userGrowthChart.update();
+                if (data.data.length === 0) {
+                    $('#userGrowthError').text('No data available for the selected period.').show();
+                    $('#userGrowthChart').hide();
+                } else {
+                    $('#userGrowthError').hide();
+                    $('#userGrowthChart').show();
+                    userGrowthChart.data.labels = data.labels;
+                    userGrowthChart.data.datasets[0].data = data.data;
+                    userGrowthChart.update();
+                }
             })
             .fail(function(xhr) {
                 $('#userGrowthError').text('Failed to load data.').show();
@@ -973,7 +1011,7 @@ $(document).ready(function() {
             var year = filter.split('_')[2];
             previousSpotsFilter = filter;
             $('#popularSpotsChartBody').addClass('loading');
-            $.get(`/admin/analytics/popular-spots/custom_year/${year}`)
+            $.get(`/admin/analytics/popular-spots?filter=custom_year&year=${year}`)
                 .done(function(data) {
                     if (data.error) {
                         $('#spotsError').text(data.error).show();
@@ -999,7 +1037,7 @@ $(document).ready(function() {
             $('#spotsFilterChart option[value^="custom_year_"]').remove();
             previousSpotsFilter = filter;
             $('#popularSpotsChartBody').addClass('loading');
-            $.get(`/admin/analytics/popular-spots/${filter}`)
+            $.get(`/admin/analytics/popular-spots?filter=${filter}`)
                 .done(function(data) {
                     if (data.error) {
                         $('#spotsError').text(data.error).show();
@@ -1032,7 +1070,7 @@ $(document).ready(function() {
         $('#spotsError').hide();
         if (year && /^\d{4}$/.test(year) && year >= minYear && year <= maxYear) {
             $('#popularSpotsChartBody').addClass('loading');
-            $.get(`/admin/analytics/popular-spots/custom_year/${year}`)
+            $.get(`/admin/analytics/popular-spots?filter=custom_year&year=${year}`)
                 .done(function(data) {
                     if (data.error) {
                         $('#spotsError').text(data.error).show();
@@ -1065,24 +1103,6 @@ $(document).ready(function() {
             $('#customYearErrorSpots').text('Please enter a valid 4-digit year between ' + minYear + ' and ' + maxYear + '.');
             $button.removeClass('loading').prop('disabled', false);
         }
-    });
-
-    $('#customYearInputSpots').on('input', function() {
-        $(this).removeClass('is-invalid');
-        $('#customYearErrorSpots').text('');
-    });
-
-    $('#customYearModalSpots').on('show.bs.modal', function () {
-        $('#customYearInputSpots').val('');
-        $('#customYearErrorSpots').text('');
-    });
-
-    $('#customYearModalSpots').on('hidden.bs.modal', function () {
-        if (!$('#customYearModalSpots').data('applied')) {
-            $('#spotsFilterChart option[value^="custom_year_"]').remove();
-            $('#spotsFilterChart').val(previousSpotsFilter);
-        }
-        $('#customYearModalSpots').data('applied', false);
     });
 
     var map = L.map('activityMap').setView([7.08, 125.6], 11);
@@ -1195,21 +1215,113 @@ $(document).ready(function() {
     });
 
     $('#spotsFilter').change(function() {
-        updateSpotsTable($(this).val());
+        var filter = $(this).val();
+        if (filter === 'custom_year') {
+            $('#customYearModalSpotsTable').modal('show');
+        } else {
+            updateSpotsTable(filter);
+        }
     });
 
-    function updateSpotsTable(filter) {
-        $.get(`/admin/analytics/popular-spots/${filter}`, function(data) {
+    $('#applyCustomYearSpotsTable').click(function() {
+        var $button = $(this);
+        $button.addClass('loading').prop('disabled', true);
+        var year = $('#customYearInputSpotsTable').val();
+        $('#customYearErrorSpotsTable').text('');
+        if (year && /^\d{4}$/.test(year) && year >= minYear && year <= maxYear) {
+            updateSpotsTable('custom_year', year);
+            $('#spotsFilter option[value^="custom_year_"]').remove();
+            $('#spotsFilter').append(`<option value="custom_year_${year}" selected>Year ${year}</option>`);
+            $('#customYearModalSpotsTable').data('applied', true);
+            $button.removeClass('loading').prop('disabled', false);
+            $('#customYearModalSpotsTable').modal('hide');
+        } else {
+            $('#customYearInputSpotsTable').addClass('is-invalid');
+            $('#customYearErrorSpotsTable').text('Please enter a valid 4-digit year between ' + minYear + ' and ' + maxYear + '.');
+            $button.removeClass('loading').prop('disabled', false);
+        }
+    });
+
+    $('#customYearInputSpotsTable').on('input', function() {
+        $(this).removeClass('is-invalid');
+        $('#customYearErrorSpotsTable').text('');
+    });
+
+    $('#customYearModalSpotsTable').on('show.bs.modal', function() {
+        $('#customYearInputSpotsTable').val('');
+        $('#customYearErrorSpotsTable').text('');
+    });
+
+    $('#customYearModalSpotsTable').on('hidden.bs.modal', function() {
+        if (!$('#customYearModalSpotsTable').data('applied')) {
+            $('#spotsFilter option[value^="custom_year_"]').remove();
+            $('#spotsFilter').val('today');
+            updateSpotsTable('today');
+        }
+        $('#customYearModalSpotsTable').data('applied', false);
+    });
+
+    function updateSpotsTable(filter, year = null, page = 1) {
+    var $modalBody = $('#spotsModal .modal-body');
+    $modalBody.addClass('loading');
+    var url = `/admin/analytics/popular-spots?filter=${filter}&all=1&page=${page}&modal=true`;
+    if (filter === 'custom_year' && year) {
+        url += `&year=${year}`;
+    } else if (filter.startsWith('custom_year_')) {
+        var extractedYear = filter.split('_')[2];
+        url = url.replace(`filter=${filter}`, `filter=custom_year&year=${extractedYear}`);
+    }
+    $('#spotsTableBody').hide();
+    $('.loading-state', $modalBody).show();
+    $.get(url)
+        .done(function(response) {
             $('#spotsTableBody').empty();
-            data.forEach(spot => {
-                $('#spotsTableBody').append(`<tr><td>${spot.spot}</td><td>${spot.visits}</td></tr>`);
-            });
-        }).fail(function(xhr, status, error) {
-            console.error('Failed to fetch popular spots:', error);
-            $('#spotsModal').modal('hide');
-            $('.modal-backdrop').remove();
+            if (response.error) {
+                $('#spotsTableBody').html(`<tr><td colspan="2" class="text-center text-danger">${response.error}</td></tr>`);
+            } else if (response.data.length === 0) {
+                $('#spotsTableBody').html('<tr><td colspan="2" class="text-center">No data available for the selected period.</td></tr>');
+            } else {
+                response.data.forEach(spot => {
+                    $('#spotsTableBody').append(`<tr><td>${spot.spot}</td><td>${spot.visits}</td></tr>`);
+                });
+                
+                $('#spotsModal .pagination').remove();
+                var totalPages = Math.ceil(response.total / response.per_page);
+                if (totalPages > 1) {
+                    var paginationHtml = `<nav aria-label="Page navigation" class="d-flex justify-content-center">
+                         <ul class="pagination mt-3">`;
+                    // Previous button
+                    paginationHtml += `<li class="page-item ${page === 1 ? 'disabled' : ''}"><a class="page-link" href="#" data-page="${page - 1}">< Previous</a></li>`;
+                    // Page numbers
+                    for (var i = 1; i <= totalPages; i++) {
+                        paginationHtml += `<li class="page-item ${i === page ? 'active' : ''}"><a class="page-link" href="#" data-page="${i}">${i}</a></li>`;
+                    }
+                    // Next button
+                    paginationHtml += `<li class="page-item ${page === totalPages ? 'disabled' : ''}"><a class="page-link" href="#" data-page="${page + 1}">Next ></a></li>`;
+                    paginationHtml += `</ul></nav>`;
+                    $('#spotsTableBody').after(paginationHtml);
+                }
+            }
+            $('#spotsTableBody').show();
+        })
+        .fail(function(xhr, status, error) {
+            $('#spotsTableBody').html(`<tr><td colspan="2" class="text-center text-danger">Failed to load data: ${error}</td></tr>`);
+            $('#spotsTableBody').show();
+        })
+        .always(function() {
+            $modalBody.removeClass('loading');
+            $('.loading-state', $modalBody).hide();
         });
     }
+
+    // Handle pagination clicks
+    $(document).on('click', '.page-link', function(e) {
+        e.preventDefault();
+        var page = $(this).data('page');
+        var filter = $('#spotsFilter').val();
+        var year = filter.startsWith('custom_year_') ? filter.split('_')[2] : null;
+        updateSpotsTable(filter, year, page);
+    });
 
     $('#spotsModal').on('shown.bs.modal', function () {
         $('.modal-backdrop').on('click', function () {
