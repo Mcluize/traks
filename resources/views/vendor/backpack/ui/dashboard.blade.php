@@ -231,12 +231,12 @@
             <span>Popular Tourist Spots</span>
             <div class="filter-container">
                 <select class="form-select form-select-sm" id="spotsFilterDashboard">
-                    <option value="today">Today</option>
+                    <option value="today" selected>Today</option>
                     <option value="this_week">This Week</option>
                     <option value="this_month">This Month</option>
                     <option value="this_year">This Year</option>
                     <option value="custom_year">Custom Year</option>
-                    <option value="all_time" selected>All Time</option>
+                    <option value="all_time">All Time</option>
                 </select>
                 <button id="editYearBtn" class="edit-year-btn" style="display:none;">Edit Year</button>
             </div>
@@ -302,6 +302,8 @@
         let latestMapRequestId = 0;
         let latestSpotsRequestId = 0;
 
+        let touristInterval, incidentInterval, mapInterval, spotsInterval, accountInterval;
+
         // Simple debounce function to prevent overlapping requests
         function debounce(func, wait) {
             let timeout;
@@ -342,6 +344,9 @@
                         });
                         dashboardData.mapData = data;
                         mapLoadingOverlay.style.display = 'none';
+                        if (!mapInterval) {
+                            mapInterval = setInterval(updateMapRealtime, 5000);
+                        }
                     }
                 })
                 .catch(error => {
@@ -362,6 +367,9 @@
                     $('#customYearModal').data('card', 'map');
                     $('#customYearModal').modal('show');
                 } else {
+                    if (mapInterval) {
+                        clearInterval(mapInterval);
+                    }
                     currentMapFilter = filter;
                     updateMap(filter, true);
                 }
@@ -392,7 +400,7 @@
             }
         });
 
-        let currentSpotsFilter = 'all_time';
+        let currentSpotsFilter = 'today';
         const chartLoading = document.getElementById('chartLoading');
 
         function updatePopularSpotsChart(filter, showLoading = false) {
@@ -418,6 +426,9 @@
                     }
                     popularSpotsDashboardChart.update();
                     chartLoading.style.display = 'none';
+                    if (!spotsInterval) {
+                        spotsInterval = setInterval(updatePopularSpotsChartRealtime, 5000);
+                    }
                 }
             }).fail(function(xhr, status, error) {
                 if (requestId === latestSpotsRequestId) {
@@ -431,7 +442,6 @@
             });
         }
 
-        // **New Function: Control "Edit Year" button visibility**
         function updateEditYearButtonVisibility() {
             if (currentSpotsFilter.startsWith('custom_year:')) {
                 $('#editYearBtn').show();
@@ -440,26 +450,25 @@
             }
         }
 
-        // Initialize chart and button visibility
         updatePopularSpotsChart(currentSpotsFilter, true);
-        updateEditYearButtonVisibility(); // Set initial visibility
+        updateEditYearButtonVisibility();
 
-        // **Modified: Dropdown change handler**
         $('#spotsFilterDashboard').change(function() {
             let filter = $(this).val();
             if (filter === 'custom_year') {
-                // Store previous filter and open modal without showing button
                 $(this).data('previousFilter', currentSpotsFilter);
                 $('#customYearModal').data('card', 'popularSpots');
                 $('#customYearModal').modal('show');
             } else {
+                if (spotsInterval) {
+                    clearInterval(spotsInterval);
+                }
                 currentSpotsFilter = filter;
                 updatePopularSpotsChart(filter, true);
-                updateEditYearButtonVisibility(); // Update button visibility
+                updateEditYearButtonVisibility();
             }
         });
 
-        // **Modified: Modal show handler to prefill year if editing**
         $('#customYearModal').on('show.bs.modal', function() {
             const card = $(this).data('card');
             if (card === 'popularSpots' && currentSpotsFilter.startsWith('custom_year:')) {
@@ -500,6 +509,9 @@
                     $('#customYearModal').data('card', 'touristArrivals');
                     $('#customYearModal').modal('show');
                 } else {
+                    if (touristInterval) {
+                        clearInterval(touristInterval);
+                    }
                     currentTouristFilter = filter;
                     updateTouristArrivals(filter, true);
                 }
@@ -523,6 +535,9 @@
                         touristStatsNumber.classList.remove('loading');
                         touristStatsNumber.textContent = data.count;
                         dashboardData.touristArrivals = data;
+                        if (!touristInterval) {
+                            touristInterval = setInterval(updateTouristArrivalsRealtime, 5000);
+                        }
                     }
                 })
                 .catch(error => {
@@ -549,6 +564,9 @@
                     $('#customYearModal').data('card', 'incidentReports');
                     $('#customYearModal').modal('show');
                 } else {
+                    if (incidentInterval) {
+                        clearInterval(incidentInterval);
+                    }
                     currentIncidentFilter = filter;
                     updateIncidentReports(filter, true);
                 }
@@ -572,6 +590,9 @@
                         incidentStatsNumber.classList.remove('loading');
                         incidentStatsNumber.textContent = data.count;
                         dashboardData.incidentReports = data;
+                        if (!incidentInterval) {
+                            incidentInterval = setInterval(updateIncidentReportsRealtime, 5000);
+                        }
                     }
                 })
                 .catch(error => {
@@ -604,6 +625,9 @@
                     loadingOverlay.style.display = 'none';
                     dashboardData.accountCounts.touristCount = data.touristCount || 0;
                     dashboardData.accountCounts.adminCount = data.adminCount || 0;
+                    if (!accountInterval) {
+                        accountInterval = setInterval(updateAccountCountsRealtime, 5000);
+                    }
                 })
                 .catch(error => {
                     console.error('Error fetching account counts:', error);
@@ -617,25 +641,36 @@
         
         updateAccountCounts(true);
 
-        // **Modified: Modal Apply Button Handler**
         document.getElementById('applyYearBtn').addEventListener('click', function() {
             const year = document.getElementById('yearInput').value;
             if (year && /^\d{4}$/.test(year)) {
                 const card = $('#customYearModal').data('card');
                 const filter = `custom_year:${year}`;
                 if (card === 'touristArrivals') {
+                    if (touristInterval) {
+                        clearInterval(touristInterval);
+                    }
                     currentTouristFilter = filter;
                     updateTouristArrivals(filter, true);
                 } else if (card === 'incidentReports') {
+                    if (incidentInterval) {
+                        clearInterval(incidentInterval);
+                    }
                     currentIncidentFilter = filter;
                     updateIncidentReports(filter, true);
                 } else if (card === 'map') {
+                    if (mapInterval) {
+                        clearInterval(mapInterval);
+                    }
                     currentMapFilter = filter;
                     updateMap(filter, true);
                 } else if (card === 'popularSpots') {
+                    if (spotsInterval) {
+                        clearInterval(spotsInterval);
+                    }
                     currentSpotsFilter = filter;
                     updatePopularSpotsChart(filter, true);
-                    updateEditYearButtonVisibility(); // Update button visibility after applying
+                    updateEditYearButtonVisibility();
                 }
                 $('#customYearModal').modal('hide');
             } else {
@@ -898,18 +933,116 @@
             });
         });
         
-        // Debounced interval updates
-        const debouncedTouristUpdate = debounce(() => updateTouristArrivals(currentTouristFilter, false), 5000);
-        const debouncedIncidentUpdate = debounce(() => updateIncidentReports(currentIncidentFilter, false), 5000);
-        const debouncedMapUpdate = debounce(() => updateMap(currentMapFilter, false), 5000);
-        const debouncedSpotsUpdate = debounce(() => updatePopularSpotsChart(currentSpotsFilter, false), 30000);
-        const debouncedAccountUpdate = debounce(() => updateAccountCounts(false), 5000);
+        function updateTouristArrivalsRealtime() {
+            fetch(`/admin/api/tourist-arrivals/${currentTouristFilter}`)
+                .then(response => {
+                    if (!response.ok) throw new Error('Network response was not ok');
+                    return response.json();
+                })
+                .then(data => {
+                    if (!dashboardData.touristArrivals || dashboardData.touristArrivals.count !== data.count) {
+                        touristStatsNumber.textContent = data.count;
+                        dashboardData.touristArrivals = data;
+                        console.log('Tourist arrivals updated');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching tourist arrivals:', error);
+                });
+        }
 
-        setInterval(debouncedTouristUpdate, 5000);
-        setInterval(debouncedIncidentUpdate, 5000);
-        setInterval(debouncedMapUpdate, 5000);
-        setInterval(debouncedSpotsUpdate, 30000);
-        setInterval(debouncedAccountUpdate, 5000);
+        function updateIncidentReportsRealtime() {
+            fetch(`/admin/api/incident-reports/${currentIncidentFilter}`)
+                .then(response => {
+                    if (!response.ok) throw new Error('Network response was not ok');
+                    return response.json();
+                })
+                .then(data => {
+                    if (!dashboardData.incidentReports || dashboardData.incidentReports.count !== data.count) {
+                        incidentStatsNumber.textContent = data.count;
+                        dashboardData.incidentReports = data;
+                        console.log('Incident reports updated');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching incident reports:', error);
+                });
+        }
+
+        function updateMapRealtime() {
+            fetch(`/admin/api/checkins-by-spot/${currentMapFilter}`)
+                .then(response => {
+                    if (!response.ok) throw new Error('Network response was not ok');
+                    return response.json();
+                })
+                .then(data => {
+                    const currentTotal = dashboardData.mapData ? 
+                        dashboardData.mapData.reduce((sum, spot) => sum + spot.count, 0) : 0;
+                    const newTotal = data.reduce((sum, spot) => sum + spot.count, 0);
+                    
+                    if (!dashboardData.mapData || currentTotal !== newTotal) {
+                        markerLayer.clearLayers();
+                        data.forEach(spot => {
+                            L.marker([spot.latitude, spot.longitude]).addTo(markerLayer)
+                                .bindPopup(`<b>${spot.name}</b><br>Check-ins: ${spot.count}`);
+                        });
+                        dashboardData.mapData = data;
+                        console.log('Map data updated');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching check-ins:', error);
+                });
+        }
+
+        function updatePopularSpotsChartRealtime() {
+            $.get(`/admin/api/popular-spots/${currentSpotsFilter}`, function(data) {
+                if (data.error) {
+                    console.error('API Error:', data.error);
+                    return;
+                }
+                
+                const dataChanged = !dashboardData.popularSpots || 
+                    JSON.stringify(data) !== JSON.stringify(dashboardData.popularSpots);
+                    
+                if (dataChanged) {
+                    var topSpots = data.sort((a, b) => b.visits - a.visits).slice(0, 4);
+                    var labels = topSpots.map(item => item.spot);
+                    var values = topSpots.map(item => item.visits);
+                    popularSpotsDashboardChart.data.labels = labels;
+                    popularSpotsDashboardChart.data.datasets[0].data = values;
+                    popularSpotsDashboardChart.update();
+                    dashboardData.popularSpots = data;
+                    console.log('Popular spots updated');
+                }
+            }).fail(function(xhr, status, error) {
+                console.error('Failed to fetch popular spots:', error);
+            });
+        }
+
+        function updateAccountCountsRealtime() {
+            fetch('/admin/api/accounts/count')
+                .then(response => {
+                    if (!response.ok) throw new Error('Network response was not ok');
+                    return response.json();
+                })
+                .then(data => {
+                    const touristCount = data.touristCount || 0;
+                    const adminCount = data.adminCount || 0;
+                    
+                    if (dashboardData.accountCounts.touristCount !== touristCount || 
+                        dashboardData.accountCounts.adminCount !== adminCount) {
+                        document.getElementById('touristCount').textContent = touristCount;
+                        document.getElementById('adminCount').textContent = adminCount;
+                        dashboardData.accountCounts.touristCount = touristCount;
+                        dashboardData.accountCounts.adminCount = adminCount;
+                        console.log('Account counts updated');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching account counts:', error);
+                });
+        }
 
         function updateActiveDropdownItems(dropdownId, currentFilter) {
             const dropdownMenu = document.querySelector(`[aria-labelledby="${dropdownId}"]`);
@@ -922,7 +1055,6 @@
             });
         }
 
-        // Tourist Arrivals Dropdown
         touristDropdownItems.forEach(item => {
             item.addEventListener('click', function(e) {
                 e.preventDefault();
@@ -931,6 +1063,9 @@
                     $('#customYearModal').data('card', 'touristArrivals');
                     $('#customYearModal').modal('show');
                 } else {
+                    if (touristInterval) {
+                        clearInterval(touristInterval);
+                    }
                     currentTouristFilter = filter;
                     updateTouristArrivals(filter, true);
                     updateActiveDropdownItems('touristArrivalsDropdown', currentTouristFilter);
@@ -938,7 +1073,6 @@
             });
         });
 
-        // Incident Reports Dropdown
         incidentDropdownItems.forEach(item => {
             item.addEventListener('click', function(e) {
                 e.preventDefault();
@@ -947,6 +1081,9 @@
                     $('#customYearModal').data('card', 'incidentReports');
                     $('#customYearModal').modal('show');
                 } else {
+                    if (incidentInterval) {
+                        clearInterval(incidentInterval);
+                    }
                     currentIncidentFilter = filter;
                     updateIncidentReports(filter, true);
                     updateActiveDropdownItems('incidentDropdown', currentIncidentFilter);
@@ -954,7 +1091,6 @@
             });
         });
 
-        // Map Dropdown
         mapDropdownItems.forEach(item => {
             item.addEventListener('click', function(e) {
                 e.preventDefault();
@@ -963,6 +1099,9 @@
                     $('#customYearModal').data('card', 'map');
                     $('#customYearModal').modal('show');
                 } else {
+                    if (mapInterval) {
+                        clearInterval(mapInterval);
+                    }
                     currentMapFilter = filter;
                     updateMap(filter, true);
                     updateActiveDropdownItems('mapDropdown', currentMapFilter);
@@ -976,21 +1115,33 @@
                 const card = $('#customYearModal').data('card');
                 const filter = `custom_year:${year}`;
                 if (card === 'touristArrivals') {
+                    if (touristInterval) {
+                        clearInterval(touristInterval);
+                    }
                     currentTouristFilter = filter;
                     updateTouristArrivals(filter, true);
                     updateActiveDropdownItems('touristArrivalsDropdown', currentTouristFilter);
                 } else if (card === 'incidentReports') {
+                    if (incidentInterval) {
+                        clearInterval(incidentInterval);
+                    }
                     currentIncidentFilter = filter;
                     updateIncidentReports(filter, true);
                     updateActiveDropdownItems('incidentDropdown', currentIncidentFilter);
                 } else if (card === 'map') {
+                    if (mapInterval) {
+                        clearInterval(mapInterval);
+                    }
                     currentMapFilter = filter;
                     updateMap(filter, true);
                     updateActiveDropdownItems('mapDropdown', currentMapFilter);
                 } else if (card === 'popularSpots') {
+                    if (spotsInterval) {
+                        clearInterval(spotsInterval);
+                    }
                     currentSpotsFilter = filter;
                     updatePopularSpotsChart(filter, true);
-                    updateEditYearButtonVisibility(); // Ensure this is called here too
+                    updateEditYearButtonVisibility();
                 }
                 $('#customYearModal').modal('hide');
             } else {

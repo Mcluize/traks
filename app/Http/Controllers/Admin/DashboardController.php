@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Services\SupabaseService;
-use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
@@ -19,78 +18,57 @@ class DashboardController extends Controller
 
     public function getTouristArrivals($filter)
     {
-        $now = Carbon::now('Asia/Manila'); // Explicitly set to Asia/Manila
-        $localToday = Carbon::today('Asia/Manila'); // Use Manila time for today
-        $localTomorrow = $localToday->copy()->addDay();
-        $utcTodayStart = $localToday->copy()->utc();
-        $utcTomorrowStart = $localTomorrow->copy()->utc();
-        $filters = [
-            'select' => 'tourist_id'
-        ];
+        $now = date('Y-m-d H:i:s');
+        $todayDate = date('Y-m-d');
+        $filters = ['select' => 'tourist_id'];
 
         \Log::info('Filter: ' . $filter);
-        \Log::info('Local Today (Asia/Manila): ' . $localToday->toDateTimeString());
-        \Log::info('Local Tomorrow (Asia/Manila): ' . $localTomorrow->toDateTimeString());
+        \Log::info('Current DateTime (Raw): ' . $now);
+        \Log::info('Today Date (Raw): ' . $todayDate);
 
         if (strpos($filter, 'custom_year:') === 0) {
             $year = substr($filter, strlen('custom_year:'));
             if (is_numeric($year) && strlen($year) == 4) {
-                $localStart = Carbon::createFromDate($year, 1, 1, 'Asia/Manila');
-                $localEnd = $localStart->copy()->addYear();
-                $utcStart = $localStart->copy()->utc();
-                $utcEnd = $localEnd->copy()->utc();
-                $start = $utcStart->toIso8601String();
-                $end = $utcEnd->toIso8601String();
-                $filters['and'] = "(timestamp.gte.{$start},timestamp.lt.{$end})";
-                \Log::info('Custom Year Range - Start (UTC): ' . $start . ', End (UTC): ' . $end);
+                $start = "$year-01-01 00:00:00";
+                $end = "$year-12-31 23:59:59";
+                $filters['and'] = "(timestamp.gte.{$start},timestamp.lte.{$end})";
+                \Log::info('Custom Year Range - Start: ' . $start . ', End: ' . $end);
             } else {
                 return response()->json(['error' => 'Invalid year'], 400);
             }
         } else {
             switch ($filter) {
                 case 'today':
-                    $start = $utcTodayStart->toIso8601String();
-                    $end = $utcTomorrowStart->toIso8601String();
-                    $filters['and'] = "(timestamp.gte.{$start},timestamp.lt.{$end})";
-                    \Log::info('Today Range - Start (UTC): ' . $start . ', End (UTC): ' . $end);
+                    $start = "$todayDate 00:00:00";
+                    $end = "$todayDate 23:59:59";
+                    $filters['and'] = "(timestamp.gte.{$start},timestamp.lte.{$end})";
+                    \Log::info('Today Range - Start: ' . $start . ', End: ' . $end);
                     break;
-
                 case 'this_week':
-                    $localStartOfWeek = $now->copy()->startOfWeek();
-                    $localEndOfWeek = $localStartOfWeek->copy()->addWeek();
-                    $utcStartOfWeek = $localStartOfWeek->utc();
-                    $utcEndOfWeek = $localEndOfWeek->utc();
-                    $start = $utcStartOfWeek->toIso8601String();
-                    $end = $utcEndOfWeek->toIso8601String();
-                    $filters['and'] = "(timestamp.gte.{$start},timestamp.lt.{$end})";
-                    \Log::info('This Week Range - Start (UTC): ' . $start . ', End (UTC): ' . $end);
+                    $startOfWeek = date('Y-m-d', strtotime('monday this week'));
+                    $endOfWeek = date('Y-m-d', strtotime('sunday this week'));
+                    $start = "$startOfWeek 00:00:00";
+                    $end = "$endOfWeek 23:59:59";
+                    $filters['and'] = "(timestamp.gte.{$start},timestamp.lte.{$end})";
+                    \Log::info('This Week Range - Start: ' . $start . ', End: ' . $end);
                     break;
-
                 case 'this_month':
-                    $localStartOfMonth = $now->copy()->startOfMonth();
-                    $localEndOfMonth = $localStartOfMonth->copy()->addMonth();
-                    $utcStartOfMonth = $localStartOfMonth->utc();
-                    $utcEndOfMonth = $localEndOfMonth->utc();
-                    $start = $utcStartOfMonth->toIso8601String();
-                    $end = $utcEndOfMonth->toIso8601String();
-                    $filters['and'] = "(timestamp.gte.{$start},timestamp.lt.{$end})";
-                    \Log::info('This Month Range - Start (UTC): ' . $start . ', End (UTC): ' . $end);
+                    $startOfMonth = date('Y-m-01');
+                    $endOfMonth = date('Y-m-t');
+                    $start = "$startOfMonth 00:00:00";
+                    $end = "$endOfMonth 23:59:59";
+                    $filters['and'] = "(timestamp.gte.{$start},timestamp.lte.{$end})";
+                    \Log::info('This Month Range - Start: ' . $start . ', End: ' . $end);
                     break;
-
                 case 'this_year':
-                    $localStart = $now->copy()->startOfYear();
-                    $localEnd = $now->copy()->addYear()->startOfYear();
-                    $utcStart = $localStart->copy()->utc();
-                    $utcEnd = $localEnd->copy()->utc();
-                    $start = $utcStart->toIso8601String();
-                    $end = $utcEnd->toIso8601String();
-                    $filters['and'] = "(timestamp.gte.{$start},timestamp.lt.{$end})";
-                    \Log::info('This Year Range - Start (UTC): ' . $start . ', End (UTC): ' . $end);
+                    $year = date('Y');
+                    $start = "$year-01-01 00:00:00";
+                    $end = "$year-12-31 23:59:59";
+                    $filters['and'] = "(timestamp.gte.{$start},timestamp.lte.{$end})";
+                    \Log::info('This Year Range - Start: ' . $start . ', End: ' . $end);
                     break;
-
                 case 'all_time':
                     break;
-
                 default:
                     return response()->json(['error' => 'Invalid filter'], 400);
             }
@@ -136,83 +114,69 @@ class DashboardController extends Controller
 
     public function getCheckinsBySpot($filter)
     {
-        $now = Carbon::now('Asia/Manila'); // Explicitly set to Asia/Manila
-        $localToday = Carbon::today('Asia/Manila'); // Use Manila time for today
-        $localTomorrow = $localToday->copy()->addDay();
-        $utcTodayStart = $localToday->copy()->utc();
-        $utcTomorrowStart = $localTomorrow->copy()->utc();
+        $now = date('Y-m-d H:i:s');
+        $todayDate = date('Y-m-d');
         $filters = [];
 
         \Log::info('Filter: ' . $filter);
-        \Log::info('Local Today (Asia/Manila): ' . $localToday->toDateTimeString());
-        \Log::info('Local Tomorrow (Asia/Manila): ' . $localTomorrow->toDateTimeString());
+        \Log::info('Current DateTime (Raw): ' . $now);
+        \Log::info('Today Date (Raw): ' . $todayDate);
 
         if (strpos($filter, 'custom_year:') === 0) {
             $year = substr($filter, strlen('custom_year:'));
             if (is_numeric($year) && strlen($year) == 4) {
-                $localStart = Carbon::createFromDate($year, 1, 1, 'Asia/Manila');
-                $localEnd = $localStart->copy()->addYear();
-                $utcStart = $localStart->copy()->utc();
-                $utcEnd = $localEnd->copy()->utc();
-                $start = $utcStart->toIso8601String();
-                $end = $utcEnd->toIso8601String();
+                $start = "$year-01-01T00:00:00";
+                $end = "$year-12-31T23:59:59";
                 $filters = [
                     'select' => '*, tourist_spots!inner(name, latitude, longitude)',
-                    'and' => "(timestamp.gte.{$start},timestamp.lt.{$end})"
+                    'and' => "(timestamp.gte.{$start},timestamp.lte.{$end})"
                 ];
-                \Log::info('Custom Year Range - Start (UTC): ' . $start . ', End (UTC): ' . $end);
+                \Log::info('Custom Year Range - Start: ' . $start . ', End: ' . $end);
             } else {
                 return response()->json(['error' => 'Invalid year'], 400);
             }
         } else {
             switch ($filter) {
                 case 'today':
-                    $start = $utcTodayStart->toIso8601String();
-                    $end = $utcTomorrowStart->toIso8601String();
+                    $start = "$todayDate\T00:00:00";
+                    $end = "$todayDate\T23:59:59";
                     $filters = [
                         'select' => '*, tourist_spots!inner(name, latitude, longitude)',
-                        'and' => "(timestamp.gte.{$start},timestamp.lt.{$end})"
+                        'and' => "(timestamp.gte.{$start},timestamp.lte.{$end})"
                     ];
-                    \Log::info('Today Range - Start (UTC): ' . $start . ', End (UTC): ' . $end);
+                    \Log::info('Today Range - Start: ' . $start . ', End: ' . $end);
                     break;
                 case 'this_week':
-                    $localStartOfWeek = $now->copy()->startOfWeek();
-                    $localEndOfWeek = $localStartOfWeek->copy()->addWeek();
-                    $utcStartOfWeek = $localStartOfWeek->utc();
-                    $utcEndOfWeek = $localEndOfWeek->utc();
-                    $start = $utcStartOfWeek->toIso8601String();
-                    $end = $utcEndOfWeek->toIso8601String();
+                    $startOfWeek = date('Y-m-d', strtotime('monday this week'));
+                    $endOfWeek = date('Y-m-d', strtotime('sunday this week'));
+                    $start = "$startOfWeek\T00:00:00";
+                    $end = "$endOfWeek\T23:59:59";
                     $filters = [
                         'select' => '*, tourist_spots!inner(name, latitude, longitude)',
-                        'and' => "(timestamp.gte.{$start},timestamp.lt.{$end})"
+                        'and' => "(timestamp.gte.{$start},timestamp.lte.{$end})"
                     ];
-                    \Log::info('This Week Range - Start (UTC): ' . $start . ', End (UTC): ' . $end);
+                    \Log::info('This Week Range - Start: ' . $start . ', End: ' . $end);
                     break;
                 case 'this_month':
-                    $localStartOfMonth = $now->copy()->startOfMonth();
-                    $localEndOfMonth = $localStartOfMonth->copy()->addMonth();
-                    $utcStartOfMonth = $localStartOfMonth->utc();
-                    $utcEndOfMonth = $localEndOfMonth->utc();
-                    $start = $utcStartOfMonth->toIso8601String();
-                    $end = $utcEndOfMonth->toIso8601String();
+                    $startOfMonth = date('Y-m-01');
+                    $endOfMonth = date('Y-m-t');
+                    $start = "$startOfMonth\T00:00:00";
+                    $end = "$endOfMonth\T23:59:59";
                     $filters = [
                         'select' => '*, tourist_spots!inner(name, latitude, longitude)',
-                        'and' => "(timestamp.gte.{$start},timestamp.lt.{$end})"
+                        'and' => "(timestamp.gte.{$start},timestamp.lte.{$end})"
                     ];
-                    \Log::info('This Month Range - Start (UTC): ' . $start . ', End (UTC): ' . $end);
+                    \Log::info('This Month Range - Start: ' . $start . ', End: ' . $end);
                     break;
                 case 'this_year':
-                    $localStart = $now->copy()->startOfYear();
-                    $localEnd = $now->copy()->addYear()->startOfYear();
-                    $utcStart = $localStart->copy()->utc();
-                    $utcEnd = $localEnd->copy()->utc();
-                    $start = $utcStart->toIso8601String();
-                    $end = $utcEnd->toIso8601String();
+                    $year = date('Y');
+                    $start = "$year-01-01T00:00:00";
+                    $end = "$year-12-31T23:59:59";
                     $filters = [
                         'select' => '*, tourist_spots!inner(name, latitude, longitude)',
-                        'and' => "(timestamp.gte.{$start},timestamp.lt.{$end})"
+                        'and' => "(timestamp.gte.{$start},timestamp.lte.{$end})"
                     ];
-                    \Log::info('This Year Range - Start (UTC): ' . $start . ', End (UTC): ' . $end);
+                    \Log::info('This Year Range - Start: ' . $start . ', End: ' . $end);
                     break;
                 case 'all_time':
                     $filters = [
@@ -322,57 +286,64 @@ class DashboardController extends Controller
     {
         $cacheKey = 'popular_spots_' . $filter;
         $data = Cache::remember($cacheKey, 60, function () use ($filter) {
-            $now = Carbon::now('Asia/Manila'); // Explicitly set to Asia/Manila
+            $now = date('Y-m-d H:i:s');
+            $todayDate = date('Y-m-d');
             $filters = ['select' => 'spot_id,tourist_id'];
 
             \Log::info('Filter: ' . $filter);
-            \Log::info('Current Time (Asia/Manila): ' . $now->toDateTimeString());
+            \Log::info('Current DateTime (Raw): ' . $now);
+            \Log::info('Today Date (Raw): ' . $todayDate);
 
             if (strpos($filter, 'custom_year:') === 0) {
                 $year = substr($filter, strlen('custom_year:'));
                 if (is_numeric($year) && strlen($year) == 4) {
-                    $localStart = Carbon::createFromDate($year, 1, 1, 'Asia/Manila');
-                    $localEnd = $localStart->copy()->addYear();
-                    $start = $localStart->toIso8601String();
-                    $end = $localEnd->toIso8601String();
-                    $filters['and'] = "(timestamp.gte.{$start},timestamp.lt.{$end})";
-                    \Log::info('Custom Year Range - Start (UTC): ' . $start . ', End (UTC): ' . $end);
+                    $start = "$year-01-01T00:00:00";
+                    $end = "$year-12-31T23:59:59";
+                    $filters['and'] = "(timestamp.gte.{$start},timestamp.lte.{$end})";
+                    \Log::info('Custom Year Range - Start: ' . $start . ', End: ' . $end);
                 } else {
                     throw new \Exception('Invalid year');
                 }
             } else {
                 switch ($filter) {
                     case 'today':
-                        $start = $now->startOfDay()->toIso8601String();
-                        $end = $now->endOfDay()->toIso8601String();
-                        $filters['and'] = "(timestamp.gte.{$start},timestamp.lt.{$end})";
-                        \Log::info('Today Range - Start (UTC): ' . $start . ', End (UTC): ' . $end);
+                        $start = "$todayDate\T00:00:00";
+                        $end = "$todayDate\T23:59:59";
+                        $filters['and'] = "(timestamp.gte.{$start},timestamp.lte.{$end})";
+                        \Log::info('Today Range - Start: ' . $start . ', End: ' . $end);
                         break;
                     case 'this_week':
-                        $start = $now->startOfWeek()->toIso8601String();
-                        $end = $now->endOfWeek()->toIso8601String();
-                        $filters['and'] = "(timestamp.gte.{$start},timestamp.lt.{$end})";
-                        \Log::info('This Week Range - Start (UTC): ' . $start . ', End (UTC): ' . $end);
+                        $startOfWeek = date('Y-m-d', strtotime('monday this week'));
+                        $endOfWeek = date('Y-m-d', strtotime('sunday this week'));
+                        $start = "$startOfWeek\T00:00:00";
+                        $end = "$endOfWeek\T23:59:59";
+                        $filters['and'] = "(timestamp.gte.{$start},timestamp.lte.{$end})";
+                        \Log::info('This Week Range - Start: ' . $start . ', End: ' . $end);
                         break;
                     case 'this_month':
-                        $start = $now->startOfMonth()->toIso8601String();
-                        $end = $now->endOfMonth()->toIso8601String();
-                        $filters['and'] = "(timestamp.gte.{$start},timestamp.lt.{$end})";
-                        \Log::info('This Month Range - Start (UTC): ' . $start . ', End (UTC): ' . $end);
+                        $startOfMonth = date('Y-m-01');
+                        $endOfMonth = date('Y-m-t');
+                        $start = "$startOfMonth\T00:00:00";
+                        $end = "$endOfMonth\T23:59:59";
+                        $filters['and'] = "(timestamp.gte.{$start},timestamp.lte.{$end})";
+                        \Log::info('This Month Range - Start: ' . $start . ', End: ' . $end);
                         break;
                     case 'this_year':
-                        $start = $now->startOfYear()->toIso8601String();
-                        $end = $now->addYear()->startOfYear()->toIso8601String();
-                        $filters['and'] = "(timestamp.gte.{$start},timestamp.lt.{$end})";
-                        \Log::info('This Year Range - Start (UTC): ' . $start . ', End (UTC): ' . $end);
+                        $year = date('Y');
+                        $start = "$year-01-01T00:00:00";
+                        $end = "$year-12-31T23:59:59";
+                        $filters['and'] = "(timestamp.gte.{$start},timestamp.lte.{$end})";
+                        \Log::info('This Year Range - Start: ' . $start . ', End: ' . $end);
                         break;
                     case 'all_time':
                         break;
                     default:
-                        $start = $now->subMonth()->startOfMonth()->toIso8601String();
-                        $end = $now->subMonth()->endOfMonth()->toIso8601String();
-                        $filters['and'] = "(timestamp.gte.{$start},timestamp.lt.{$end})";
-                        \Log::info('Default Range - Start (UTC): ' . $start . ', End (UTC): ' . $end);
+                        $startOfLastMonth = date('Y-m-01', strtotime('first day of last month'));
+                        $endOfLastMonth = date('Y-m-t', strtotime('last day of last month'));
+                        $start = "$startOfLastMonth\T00:00:00";
+                        $end = "$endOfLastMonth\T23:59:59";
+                        $filters['and'] = "(timestamp.gte.{$start},timestamp.lte.{$end})";
+                        \Log::info('Default Range - Start: ' . $start . ', End: ' . $end);
                         break;
                 }
             }
@@ -420,37 +391,44 @@ class DashboardController extends Controller
 
     private function getDateFilter($filter)
     {
-        $now = Carbon::now('Asia/Manila'); // Already set to Asia/Manila in the original code
-        \Log::info('Current Time in getDateFilter (Asia/Manila): ' . $now->toDateTimeString());
+        $now = date('Y-m-d H:i:s');
+        $todayDate = date('Y-m-d');
 
         switch ($filter) {
             case 'today':
-                $start = $now->startOfDay()->toIso8601String();
-                $end = $now->endOfDay()->toIso8601String();
-                \Log::info('getDateFilter Today Range - Start (UTC): ' . $start . ', End (UTC): ' . $end);
-                return ['and' => "(timestamp.gte.{$start},timestamp.lt.{$end})"];
+                $start = "$todayDate\T00:00:00";
+                $end = "$todayDate\T23:59:59";
+                \Log::info('getDateFilter Today Range - Start: ' . $start . ', End: ' . $end);
+                return ['and' => "(timestamp.gte.{$start},timestamp.lte.{$end})"];
             case 'this_week':
-                $start = $now->startOfWeek()->toIso8601String();
-                $end = $now->endOfWeek()->toIso8601String();
-                \Log::info('getDateFilter This Week Range - Start (UTC): ' . $start . ', End (UTC): ' . $end);
-                return ['and' => "(timestamp.gte.{$start},timestamp.lt.{$end})"];
+                $startOfWeek = date('Y-m-d', strtotime('monday this week'));
+                $endOfWeek = date('Y-m-d', strtotime('sunday this week'));
+                $start = "$startOfWeek\T00:00:00";
+                $end = "$endOfWeek\T23:59:59";
+                \Log::info('getDateFilter This Week Range - Start: ' . $start . ', End: ' . $end);
+                return ['and' => "(timestamp.gte.{$start},timestamp.lte.{$end})"];
             case 'this_month':
-                $start = $now->startOfMonth()->toIso8601String();
-                $end = $now->endOfMonth()->toIso8601String();
-                \Log::info('getDateFilter This Month Range - Start (UTC): ' . $start . ', End (UTC): ' . $end);
-                return ['and' => "(timestamp.gte.{$start},timestamp.lt.{$end})"];
+                $startOfMonth = date('Y-m-01');
+                $endOfMonth = date('Y-m-t');
+                $start = "$startOfMonth\T00:00:00";
+                $end = "$endOfMonth\T23:59:59";
+                \Log::info('getDateFilter This Month Range - Start: ' . $start . ', End: ' . $end);
+                return ['and' => "(timestamp.gte.{$start},timestamp.lte.{$end})"];
             case 'this_year':
-                $start = $now->startOfYear()->toIso8601String();
-                $end = $now->addYear()->startOfYear()->toIso8601String();
-                \Log::info('getDateFilter This Year Range - Start (UTC): ' . $start . ', End (UTC): ' . $end);
-                return ['and' => "(timestamp.gte.{$start},timestamp.lt.{$end})"];
+                $year = date('Y');
+                $start = "$year-01-01T00:00:00";
+                $end = "$year-12-31T23:59:59";
+                \Log::info('getDateFilter This Year Range - Start: ' . $start . ', End: ' . $end);
+                return ['and' => "(timestamp.gte.{$start},timestamp.lte.{$end})"];
             case 'all_time':
                 return [];
             default:
-                $start = $now->subMonth()->startOfMonth()->toIso8601String();
-                $end = $now->subMonth()->endOfMonth()->toIso8601String();
-                \Log::info('getDateFilter Default Range - Start (UTC): ' . $start . ', End (UTC): ' . $end);
-                return ['and' => "(timestamp.gte.{$start},timestamp.lt.{$end})"];
+                $startOfLastMonth = date('Y-m-01', strtotime('first day of last month'));
+                $endOfLastMonth = date('Y-m-t', strtotime('last day of last month'));
+                $start = "$startOfLastMonth\T00:00:00";
+                $end = "$endOfLastMonth\T23:59:59";
+                \Log::info('getDateFilter Default Range - Start: ' . $start . ', End: ' . $end);
+                return ['and' => "(timestamp.gte.{$start},timestamp.lte.{$end})"];
         }
     }
 }

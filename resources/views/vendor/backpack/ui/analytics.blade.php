@@ -104,52 +104,38 @@
     <!-- Top Stats Cards -->
     <div class="row mb-4">
         <div class="col-md-3">
-            <div class="stat-card">
-                <div class="stat-icon tourist">
-                    <i class="fas fa-users"></i>
-                </div>
+            <div class="stat-card" id="touristArrivals">
+                <div class="stat-icon tourist"><i class="fas fa-users"></i></div>
                 <div class="stat-content">
                     <h3>Tourist Arrivals</h3>
                     <div class="stat-number">{{ $touristArrivals }}</div>
-                    <div class="stat-change {{ $touristChangeClass }}">
-                        <i class="fas {{ $touristChangeIcon }}"></i> {{ $touristChange }}% from yesterday
-                    </div>
+                    <div class="stat-change {{ $touristChangeClass }}"><i class="fas {{ $touristChangeIcon }}"></i> {{ $touristChange }}% from yesterday</div>
                 </div>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="stat-card">
-                <div class="stat-icon incident">
-                    <i class="fas fa-exclamation-triangle"></i>
-                </div>
+            <div class="stat-card" id="incidentReports">
+                <div class="stat-icon incident"><i class="fas fa-exclamation-triangle"></i></div>
                 <div class="stat-content">
                     <h3>Incident Reports</h3>
                     <div class="stat-number">{{ $incidentReports }}</div>
-                    <div class="stat-change {{ $incidentChangeClass }}">
-                        <i class="fas {{ $incidentChangeIcon }}"></i> {{ $incidentChange }}% from last week
-                    </div>
+                    <div class="stat-change {{ $incidentChangeClass }}"><i class="fas {{ $incidentChangeIcon }}"></i> {{ $incidentChange }}% from last week</div>
                 </div>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="stat-card">
-                <div class="stat-icon tourist-account">
-                    <i class="fas fa-id-card"></i>
-                </div>
+            <div class="stat-card" id="touristAccounts">
+                <div class="stat-icon tourist-account"><i class="fas fa-id-card"></i></div>
                 <div class="stat-content">
                     <h3>Tourist Accounts</h3>
                     <div class="stat-number">{{ $touristAccounts }}</div>
-                    <div class="stat-change {{ $touristAccountsChangeClass }}">
-                        <i class="fas {{ $touristAccountsChangeIcon }}"></i> {{ $touristAccountsChange }}% from last month
-                    </div>
+                    <div class="stat-change {{ $touristAccountsChangeClass }}"><i class="fas {{ $touristAccountsChangeIcon }}"></i> {{ $touristAccountsChange }}% from last month</div>
                 </div>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="stat-card">
-                <div class="stat-icon admin-account">
-                    <i class="fas fa-user-shield"></i>
-                </div>
+            <div class="stat-card" id="adminAccounts">
+                <div class="stat-icon admin-account"><i class="fas fa-user-shield"></i></div>
                 <div class="stat-content">
                     <h3>Admin Accounts</h3>
                     <div class="stat-number">{{ $adminAccounts }}</div>
@@ -167,9 +153,9 @@
                     <h3>Incident Report Status</h3>
                     <div class="chart-actions">
                         <select class="form-select form-select-sm time-filter" id="incidentPeriodFilter">
-                            <option value="today">Today</option>
+                            <option value="today" selected>Today</option>
                             <option value="week">This Week</option>
-                            <option value="month" selected>This Month</option>
+                            <option value="month">This Month</option>
                             <option value="year">This Year</option>
                             <option value="all_time">All Time</option>
                             <option value="custom_year">Custom Year</option>
@@ -249,7 +235,7 @@
         <div class="col-md-6">
             <div class="chart-card">
                 <div class="chart-header">
-                    <h3>Tourist Growth Over Time</h3> <!-- Updated title -->
+                    <h3>Tourist Growth Over Time</h3>
                     <div class="chart-actions">
                         <select class="form-select form-select-sm" id="userGrowthPeriodFilter">
                             <option value="this_week">This Week</option>
@@ -308,10 +294,10 @@
                     <h3>Popular Tourist Spots</h3>
                     <div class="chart-actions">
                         <select class="form-select form-select-sm" id="spotsFilterChart">
-                            <option value="today">Today</option>
+                            <option value="today" selected>Today</option>
                             <option value="this_week">This Week</option>
                             <option value="this_month">This Month</option>
-                            <option value="all_time" selected>All Time</option>
+                            <option value="all_time">All Time</option>
                             <option value="custom_year">Custom Year</option>
                         </select>
                         <button class="btn btn-sm btn-outline-secondary view-all-spots">View All</button>
@@ -527,7 +513,16 @@ $(document).ready(function() {
         }
     });
 
-    var previousIncidentFilter = 'month';
+    // Handle initial load with no data
+    if (incidentStatusLabels.length === 0) {
+        $('#incidentStatusChart').hide();
+        $('#incidentError').text('No data found for today.').show();
+    } else {
+        $('#incidentStatusChart').show();
+        $('#incidentError').hide();
+    }
+
+    var previousIncidentFilter = 'today';
 
     $('#incidentPeriodFilter').change(function() {
         var period = $(this).val();
@@ -541,8 +536,12 @@ $(document).ready(function() {
             $.get('/admin/analytics/incident-status?period=custom_year&year=' + year)
                 .done(function(data) {
                     if (data.labels.length === 0) {
-                        $('#incidentError').text('No data available for the selected period.').show();
+                        statusChart.data.labels = [];
+                        statusChart.data.datasets[0].data = [];
+                        statusChart.data.datasets[0].backgroundColor = [];
+                        statusChart.update();
                         $('#incidentStatusChart').hide();
+                        $('#incidentError').text('No data found for the selected period.').show();
                     } else {
                         $('#incidentError').hide();
                         $('#incidentStatusChart').show();
@@ -553,8 +552,12 @@ $(document).ready(function() {
                     }
                 })
                 .fail(function(xhr) {
-                    $('#incidentError').text('Failed to load data for Year ' + year).show();
+                    statusChart.data.labels = [];
+                    statusChart.data.datasets[0].data = [];
+                    statusChart.data.datasets[0].backgroundColor = [];
+                    statusChart.update();
                     $('#incidentStatusChart').hide();
+                    $('#incidentError').text('Failed to load data for Year ' + year).show();
                 })
                 .always(function() {
                     $('#incidentChartBody').removeClass('loading');
@@ -566,8 +569,12 @@ $(document).ready(function() {
             $.get('/admin/analytics/incident-status?period=' + period)
                 .done(function(data) {
                     if (data.labels.length === 0) {
-                        $('#incidentError').text('No data available for the selected period.').show();
+                        statusChart.data.labels = [];
+                        statusChart.data.datasets[0].data = [];
+                        statusChart.data.datasets[0].backgroundColor = [];
+                        statusChart.update();
                         $('#incidentStatusChart').hide();
+                        $('#incidentError').text('No data found for the selected period.').show();
                     } else {
                         $('#incidentError').hide();
                         $('#incidentStatusChart').show();
@@ -578,12 +585,16 @@ $(document).ready(function() {
                     }
                 })
                 .fail(function(xhr) {
+                    statusChart.data.labels = [];
+                    statusChart.data.datasets[0].data = [];
+                    statusChart.data.datasets[0].backgroundColor = [];
+                    statusChart.update();
+                    $('#incidentStatusChart').hide();
                     if (xhr.status === 404) {
-                        $('#incidentError').text('No data available for the selected period.').show();
+                        $('#incidentError').text('No data found for the selected period.').show();
                     } else {
                         $('#incidentError').text('Failed to load data for the selected period.').show();
                     }
-                    $('#incidentStatusChart').hide();
                 })
                 .always(function() {
                     $('#incidentChartBody').removeClass('loading');
@@ -602,8 +613,12 @@ $(document).ready(function() {
             $.get('/admin/analytics/incident-status?period=custom_year&year=' + year)
                 .done(function(data) {
                     if (data.labels.length === 0) {
-                        $('#incidentError').text('No data available for the selected period.').show();
+                        statusChart.data.labels = [];
+                        statusChart.data.datasets[0].data = [];
+                        statusChart.data.datasets[0].backgroundColor = [];
+                        statusChart.update();
                         $('#incidentStatusChart').hide();
+                        $('#incidentError').text('No data found for the selected period.').show();
                     } else {
                         $('#incidentError').hide();
                         $('#incidentStatusChart').show();
@@ -618,8 +633,12 @@ $(document).ready(function() {
                     }
                 })
                 .fail(function(xhr) {
-                    $('#incidentError').text('Failed to load data for Year ' + year).show();
+                    statusChart.data.labels = [];
+                    statusChart.data.datasets[0].data = [];
+                    statusChart.data.datasets[0].backgroundColor = [];
+                    statusChart.update();
                     $('#incidentStatusChart').hide();
+                    $('#incidentError').text('Failed to load data for Year ' + year).show();
                 })
                 .always(function() {
                     $('#incidentChartBody').removeClass('loading');
@@ -879,7 +898,7 @@ $(document).ready(function() {
 
     function updateUserGrowthChart(period, year = null) {
         $('#userGrowthChartBody').addClass('loading');
-        var url = '/admin/analytics/tourist-growth?period=' + period; // Corrected endpoint
+        var url = '/admin/analytics/tourist-growth?period=' + period;
         if (year) {
             url += '&year=' + year;
         }
@@ -1061,6 +1080,8 @@ $(document).ready(function() {
                 });
         }
     });
+
+    $('#spotsFilterChart').trigger('change');
 
     $('#applyCustomYearSpots').click(function() {
         var $button = $(this);
@@ -1262,59 +1283,55 @@ $(document).ready(function() {
     });
 
     function updateSpotsTable(filter, year = null, page = 1) {
-    var $modalBody = $('#spotsModal .modal-body');
-    $modalBody.addClass('loading');
-    var url = `/admin/analytics/popular-spots?filter=${filter}&all=1&page=${page}&modal=true`;
-    if (filter === 'custom_year' && year) {
-        url += `&year=${year}`;
-    } else if (filter.startsWith('custom_year_')) {
-        var extractedYear = filter.split('_')[2];
-        url = url.replace(`filter=${filter}`, `filter=custom_year&year=${extractedYear}`);
-    }
-    $('#spotsTableBody').hide();
-    $('.loading-state', $modalBody).show();
-    $.get(url)
-        .done(function(response) {
-            $('#spotsTableBody').empty();
-            if (response.error) {
-                $('#spotsTableBody').html(`<tr><td colspan="2" class="text-center text-danger">${response.error}</td></tr>`);
-            } else if (response.data.length === 0) {
-                $('#spotsTableBody').html('<tr><td colspan="2" class="text-center">No data available for the selected period.</td></tr>');
-            } else {
-                response.data.forEach(spot => {
-                    $('#spotsTableBody').append(`<tr><td>${spot.spot}</td><td>${spot.visits}</td></tr>`);
-                });
-                
-                $('#spotsModal .pagination').remove();
-                var totalPages = Math.ceil(response.total / response.per_page);
-                if (totalPages > 1) {
-                    var paginationHtml = `<nav aria-label="Page navigation" class="d-flex justify-content-center">
-                         <ul class="pagination mt-3">`;
-                    // Previous button
-                    paginationHtml += `<li class="page-item ${page === 1 ? 'disabled' : ''}"><a class="page-link" href="#" data-page="${page - 1}">< Previous</a></li>`;
-                    // Page numbers
-                    for (var i = 1; i <= totalPages; i++) {
-                        paginationHtml += `<li class="page-item ${i === page ? 'active' : ''}"><a class="page-link" href="#" data-page="${i}">${i}</a></li>`;
+        var $modalBody = $('#spotsModal .modal-body');
+        $modalBody.addClass('loading');
+        var url = `/admin/analytics/popular-spots?filter=${filter}&all=1&page=${page}&modal=true`;
+        if (filter === 'custom_year' && year) {
+            url += `&year=${year}`;
+        } else if (filter.startsWith('custom_year_')) {
+            var extractedYear = filter.split('_')[2];
+            url = url.replace(`filter=${filter}`, `filter=custom_year&year=${extractedYear}`);
+        }
+        $('#spotsTableBody').hide();
+        $('.loading-state', $modalBody).show();
+        $.get(url)
+            .done(function(response) {
+                $('#spotsTableBody').empty();
+                if (response.error) {
+                    $('#spotsTableBody').html(`<tr><td colspan="2" class="text-center text-danger">${response.error}</td></tr>`);
+                } else if (response.data.length === 0) {
+                    $('#spotsTableBody').html('<tr><td colspan="2" class="text-center">No data available for the selected period.</td></tr>');
+                } else {
+                    response.data.forEach(spot => {
+                        $('#spotsTableBody').append(`<tr><td>${spot.spot}</td><td>${spot.visits}</td></tr>`);
+                    });
+                    
+                    $('#spotsModal .pagination').remove();
+                    var totalPages = Math.ceil(response.total / response.per_page);
+                    if (totalPages > 1) {
+                        var paginationHtml = `<nav aria-label="Page navigation" class="d-flex justify-content-center">
+                            <ul class="pagination mt-3">`;
+                        paginationHtml += `<li class="page-item ${page === 1 ? 'disabled' : ''}"><a class="page-link" href="#" data-page="${page - 1}">< Previous</a></li>`;
+                        for (var i = 1; i <= totalPages; i++) {
+                            paginationHtml += `<li class="page-item ${i === page ? 'active' : ''}"><a class="page-link" href="#" data-page="${i}">${i}</a></li>`;
+                        }
+                        paginationHtml += `<li class="page-item ${page === totalPages ? 'disabled' : ''}"><a class="page-link" href="#" data-page="${page + 1}">Next ></a></li>`;
+                        paginationHtml += `</ul></nav>`;
+                        $('#spotsTableBody').after(paginationHtml);
                     }
-                    // Next button
-                    paginationHtml += `<li class="page-item ${page === totalPages ? 'disabled' : ''}"><a class="page-link" href="#" data-page="${page + 1}">Next ></a></li>`;
-                    paginationHtml += `</ul></nav>`;
-                    $('#spotsTableBody').after(paginationHtml);
                 }
-            }
-            $('#spotsTableBody').show();
-        })
-        .fail(function(xhr, status, error) {
-            $('#spotsTableBody').html(`<tr><td colspan="2" class="text-center text-danger">Failed to load data: ${error}</td></tr>`);
-            $('#spotsTableBody').show();
-        })
-        .always(function() {
-            $modalBody.removeClass('loading');
-            $('.loading-state', $modalBody).hide();
-        });
+                $('#spotsTableBody').show();
+            })
+            .fail(function(xhr, status, error) {
+                $('#spotsTableBody').html(`<tr><td colspan="2" class="text-center text-danger">Failed to load data: ${error}</td></tr>`);
+                $('#spotsTableBody').show();
+            })
+            .always(function() {
+                $modalBody.removeClass('loading');
+                $('.loading-state', $modalBody).hide();
+            });
     }
 
-    // Handle pagination clicks
     $(document).on('click', '.page-link', function(e) {
         e.preventDefault();
         var page = $(this).data('page');
@@ -1443,6 +1460,59 @@ $(document).ready(function() {
         const currentDate = new Date().toISOString().slice(0,10);
         doc.save(`TRAKS_Tourist_Activities_Export_${currentDate}.pdf`);
     });
+
+    // Function to update stats cards
+    function updateStatsCards() {
+        $.get('/admin/analytics/stats', function(data) {
+            $('#touristArrivals .stat-number').text(data.touristArrivals);
+            $('#touristArrivals .stat-change').html(`<i class="fas ${data.touristChangeIcon}"></i> ${data.touristChange}% from yesterday`).attr('class', 'stat-change ' + data.touristChangeClass);
+            $('#incidentReports .stat-number').text(data.incidentReports);
+            $('#incidentReports .stat-change').html(`<i class="fas ${data.incidentChangeIcon}"></i> ${data.incidentChange}% from last week`).attr('class', 'stat-change ' + data.incidentChangeClass);
+            $('#touristAccounts .stat-number').text(data.touristAccounts);
+            $('#touristAccounts .stat-change').html(`<i class="fas ${data.touristAccountsChangeIcon}"></i> ${data.touristAccountsChange}% from last month`).attr('class', 'stat-change ' + data.touristAccountsChangeClass);
+            $('#adminAccounts .stat-number').text(data.adminAccounts);
+        });
+    }
+
+    // Function to update charts
+    function updateCharts() {
+        var incidentPeriod = $('#incidentPeriodFilter').val();
+        $.get('/admin/analytics/incident-status?period=' + incidentPeriod, function(data) {
+            if (data.labels.length > 0) {
+                statusChart.data.labels = data.labels;
+                statusChart.data.datasets[0].data = data.values;
+                statusChart.data.datasets[0].backgroundColor = data.labels.map(label => statusColors[label] || '#6C757D');
+                statusChart.update();
+                $('#incidentStatusChart').show();
+                $('#incidentError').hide();
+            } else {
+                statusChart.data.labels = [];
+                statusChart.data.datasets[0].data = [];
+                statusChart.data.datasets[0].backgroundColor = [];
+                statusChart.update();
+                $('#incidentStatusChart').hide();
+                $('#incidentError').text('No data found for the selected period.').show();
+            }
+        });
+
+        var touristPeriod = $('#touristPeriodFilter').val();
+        $.get('/admin/analytics/tourist-activities?period=' + touristPeriod, function(data) {
+            if (!data.error) {
+                touristActivitiesChart.data.labels = data.labels;
+                touristActivitiesChart.data.datasets[0].data = data.checkins;
+                touristActivitiesChart.data.datasets[1].data = data.incidents;
+                touristActivitiesChart.update();
+                $('#totalActivitiesValue').text(data.totalActivities);
+                $('#totalIncidentsValue').text(data.totalIncidents);
+            }
+        });
+    }
+
+    // Initial call and set interval (every 60 seconds)
+    updateStatsCards();
+    updateCharts();
+    setInterval(updateStatsCards, 60000);
+    setInterval(updateCharts, 60000);
 });
 </script>
 @endsection

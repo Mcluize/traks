@@ -3,7 +3,8 @@
 namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
-use Carbon\Carbon;
+use DateTime;
+use DateTimeZone;
 
 class SupabaseService
 {
@@ -29,7 +30,6 @@ class SupabaseService
             $headers['Prefer'] = 'count=exact';
         }
 
-        // Add status filter for warning_zones
         if ($table === 'warning_zones' && !isset($filters['status']) && !isset($filters['and'])) {
             $filters['status'] = 'eq.active';
         }
@@ -67,7 +67,6 @@ class SupabaseService
         try {
             \Log::info("Connecting to Supabase: {$this->url}/rest/v1/{$table}");
             
-            // Set default status for warning_zones
             if ($table === 'warning_zones') {
                 $data['status'] = 'active';
             }
@@ -126,7 +125,6 @@ class SupabaseService
             'Authorization' => 'Bearer ' . $this->key
         ];
 
-        // Fetch earliest timestamp
         $minQuery = Http::withHeaders($headers)
             ->get("{$this->url}/rest/v1/{$table}", [
                 'select' => $column,
@@ -134,7 +132,6 @@ class SupabaseService
                 'limit' => 1
             ]);
 
-        // Fetch latest timestamp
         $maxQuery = Http::withHeaders($headers)
             ->get("{$this->url}/rest/v1/{$table}", [
                 'select' => $column,
@@ -165,84 +162,71 @@ class SupabaseService
     }
 
     public function getIncidentReports($filter)
-{
-    $now = Carbon::now('Asia/Manila');
-    $filters = [
-        'select' => 'user_id, latitude, longitude, timestamp, status'
-    ];
+    {
+        $now = date('Y-m-d H:i:s');
+        $todayDate = date('Y-m-d');
+        $filters = [
+            'select' => 'user_id, latitude, longitude, timestamp, status'
+        ];
 
-    if (strpos($filter, 'custom_year:') === 0) {
-        $year = substr($filter, strlen('custom_year:'));
-        if (is_numeric($year) && strlen($year) == 4) {
-            $localStart = Carbon::createFromDate($year, 1, 1, 'Asia/Manila');
-            $localEnd = Carbon::createFromDate($year, 12, 31, 'Asia/Manila')->endOfDay();
-            $start = $localStart->format('Y-m-d\TH:i:s');
-            $end = $localEnd->format('Y-m-d\TH:i:s');
-            $filters['and'] = "(timestamp.gte.{$start},timestamp.lte.{$end})";
+        if (strpos($filter, 'custom_year:') === 0) {
+            $year = substr($filter, strlen('custom_year:'));
+            if (is_numeric($year) && strlen($year) == 4) {
+                $start = "$year-01-01T00:00:00";
+                $end = "$year-12-31T23:59:59";
+                $filters['and'] = "(timestamp.gte.{$start},timestamp.lte.{$end})";
+            } else {
+                return response()->json(['error' => 'Invalid year'], 400);
+            }
         } else {
-            return response()->json(['error' => 'Invalid year'], 400);
+            switch ($filter) {
+                case 'today':
+                    $start = "$todayDate 00:00:00"; // Updated to use space instead of T
+                    $end = "$todayDate 23:59:59";   // Updated to use space instead of T
+                    $filters['and'] = "(timestamp.gte.{$start},timestamp.lte.{$end})";
+                    break;
+                case 'this_week':
+                    $startOfWeek = date('Y-m-d', strtotime('monday this week'));
+                    $endOfWeek = date('Y-m-d', strtotime('sunday this week'));
+                    $start = "$startOfWeek 00:00:00"; // Updated to use space instead of T
+                    $end = "$endOfWeek 23:59:59";     // Updated to use space instead of T
+                    $filters['and'] = "(timestamp.gte.{$start},timestamp.lte.{$end})";
+                    break;
+                case 'this_month':
+                    $startOfMonth = date('Y-m-01');
+                    $endOfMonth = date('Y-m-t');
+                    $start = "$startOfMonth 00:00:00"; // Updated to use space instead of T
+                    $end = "$endOfMonth 23:59:59";     // Updated to use space instead of T
+                    $filters['and'] = "(timestamp.gte.{$start},timestamp.lte.{$end})";
+                    break;
+                case 'this_year':
+                    $year = date('Y');
+                    $start = "$year-01-01 00:00:00"; // Updated to use space instead of T
+                    $end = "$year-12-31 23:59:59";   // Updated to use space instead of T
+                    $filters['and'] = "(timestamp.gte.{$start},timestamp.lte.{$end})";
+                    break;
+                case 'all_time':
+                    break;
+                default:
+                    return response()->json(['error' => 'Invalid filter'], 400);
+            }
         }
-    } else {
-        switch ($filter) {
-            case 'today':
-                $localStart = Carbon::today('Asia/Manila')->startOfDay();
-                $localEnd = Carbon::today('Asia/Manila')->endOfDay();
-                $start = $localStart->format('Y-m-d\TH:i:s');
-                $end = $localEnd->format('Y-m-d\TH:i:s');
-                $filters['and'] = "(timestamp.gte.{$start},timestamp.lte.{$end})";
-                break;
 
-            case 'this_week':
-                $localStart = $now->copy()->startOfWeek(Carbon::MONDAY);
-                $localEnd = $now->copy()->endOfWeek(Carbon::SUNDAY)->endOfDay();
-                $start = $localStart->format('Y-m-d\TH:i:s');
-                $end = $localEnd->format('Y-m-d\TH:i:s');
-                $filters['and'] = "(timestamp.gte.{$start},timestamp.lte.{$end})";
-                break;
+        \Log::info("Incident report filters for {$filter}", [
+            'start' => $filters['and'] ?? 'all_time',
+            'filter' => $filter
+        ]);
 
-            case 'this_month':
-                $localStart = $now->copy()->startOfMonth();
-                $localEnd = $now->copy()->endOfMonth()->endOfDay();
-                $start = $localStart->format('Y-m-d\TH:i:s');
-                $end = $localEnd->format('Y-m-d\TH:i:s');
-                $filters['and'] = "(timestamp.gte.{$start},timestamp.lte.{$end})";
-                break;
-
-            case 'this_year':
-                $localStart = $now->copy()->startOfYear();
-                $localEnd = $now->copy()->endOfYear()->endOfDay();
-                $start = $localStart->format('Y-m-d\TH:i:s');
-                $end = $localEnd->format('Y-m-d\TH:i:s');
-                $filters['and'] = "(timestamp.gte.{$start},timestamp.lte.{$end})";
-                break;
-
-            case 'all_time':
-                break;
-
-            default:
-                return response()->json(['error' => 'Invalid filter'], 400);
+        $incidents = $this->fetchTable('emergency_reports', $filters, false);
+        if ($incidents === null) {
+            return response()->json(['error' => 'Failed to fetch data'], 500);
         }
+
+        return response()->json([
+            'count' => count($incidents),
+            'incidents' => $incidents
+        ]);
     }
-
-    \Log::info("Incident report filters for {$filter}", [
-        'start' => $filters['and'] ?? 'all_time',
-        'filter' => $filter
-    ]);
-
-    $incidents = $this->fetchTable('emergency_reports', $filters, false);
-    if ($incidents === null) {
-        return response()->json(['error' => 'Failed to fetch data'], 500);
-    }
-
-    foreach ($incidents as &$incident) {
-        $incident['timestamp'] = Carbon::parse($incident['timestamp'])->format('Y-m-d H:i:s');
-    }
-
-    return response()->json([
-        'count' => count($incidents),
-        'incidents' => $incidents
-    ]);
-}
 
     public function getMinMaxYears()
     {
@@ -253,17 +237,17 @@ class SupabaseService
         $maxYear = null;
 
         if ($checkinsRange['min']) {
-            $minYear = Carbon::parse($checkinsRange['min'], 'Asia/Manila')->year;
+            $minYear = date('Y', strtotime($checkinsRange['min']));
         }
-        if ($incidentsRange['min'] && (!$minYear || Carbon::parse($incidentsRange['min'], 'Asia/Manila')->year < $minYear)) {
-            $minYear = Carbon::parse($incidentsRange['min'], 'Asia/Manila')->year;
+        if ($incidentsRange['min'] && (!$minYear || date('Y', strtotime($incidentsRange['min'])) < $minYear)) {
+            $minYear = date('Y', strtotime($incidentsRange['min']));
         }
 
         if ($checkinsRange['max']) {
-            $maxYear = Carbon::parse($checkinsRange['max'], 'Asia/Manila')->year;
+            $maxYear = date('Y', strtotime($checkinsRange['max']));
         }
-        if ($incidentsRange['max'] && (!$maxYear || Carbon::parse($incidentsRange['max'], 'Asia/Manila')->year > $maxYear)) {
-            $maxYear = Carbon::parse($incidentsRange['max'], 'Asia/Manila')->year;
+        if ($incidentsRange['max'] && (!$maxYear || date('Y', strtotime($incidentsRange['max'])) > $maxYear)) {
+            $maxYear = date('Y', strtotime($incidentsRange['max']));
         }
 
         return [
@@ -280,5 +264,64 @@ class SupabaseService
     public function updateUserZoneStatus($zoneId, $status)
     {
         return $this->updateTable('user_zones', 'zone_id', $zoneId, ['status' => $status]);
+    }
+
+    public function fetchCheckins($touristId, $filter)
+    {
+        $filters = [
+            'select' => 'timestamp, tourist_spots:spot_id (spot_id, name, latitude, longitude)',
+            'tourist_id' => "eq.$touristId",
+            'order' => 'timestamp.asc'
+        ];
+
+        $now = new DateTime('now', new DateTimeZone('UTC'));
+
+        // Log the current server date for debugging
+        \Log::info("Current server date in fetchCheckins: " . $now->format('Y-m-d H:i:s'));
+
+        if ($filter === 'today') {
+            $start = $now->format('Y-m-d 00:00:00'); // Updated to use space instead of T
+            $end = $now->format('Y-m-d 23:59:59');   // Updated to use space instead of T
+            $filters['and'] = "(timestamp.gte.{$start},timestamp.lte.{$end})";
+        } elseif ($filter === 'this_week') {
+            $dayOfWeek = $now->format('w');
+            $daysToMonday = ($dayOfWeek == 0) ? 6 : $dayOfWeek - 1;
+            $startOfWeek = (clone $now)->modify("-{$daysToMonday} days");
+            $endOfWeek = (clone $startOfWeek)->modify('+6 days');
+            $start = $startOfWeek->format('Y-m-d 00:00:00'); // Updated to use space instead of T
+            $end = $endOfWeek->format('Y-m-d 23:59:59');     // Updated to use space instead of T
+            $filters['and'] = "(timestamp.gte.{$start},timestamp.lte.{$end})";
+        } elseif ($filter === 'this_month') {
+            $start = $now->format('Y-m-01 00:00:00'); // Updated to use space instead of T
+            $end = $now->format('Y-m-t 23:59:59');     // Updated to use space instead of T
+            $filters['and'] = "(timestamp.gte.{$start},timestamp.lte.{$end})";
+        } elseif ($filter === 'this_year') {
+            $year = $now->format('Y');
+            $start = "$year-01-01 00:00:00"; // Updated to use space instead of T
+            $end = "$year-12-31 23:59:59";   // Updated to use space instead of T
+            $filters['and'] = "(timestamp.gte.{$start},timestamp.lte.{$end})";
+        } elseif ($filter === 'custom_year' && isset($_GET['year']) && is_numeric($_GET['year'])) {
+            $year = (int)$_GET['year'];
+            $start = "$year-01-01 00:00:00"; // Updated to use space instead of T
+            $end = "$year-12-31 23:59:59";   // Updated to use space instead of T
+            $filters['and'] = "(timestamp.gte.{$start},timestamp.lte.{$end})";
+        }
+
+        // Log the filter range for debugging
+        \Log::info("Check-in filter range for {$filter}", [
+            'start' => $start ?? 'N/A',
+            'end' => $end ?? 'N/A',
+            'tourist_id' => $touristId
+        ]);
+
+        $checkins = $this->fetchTable('checkins', $filters, false);
+        if ($checkins === null) {
+            return response()->json(['error' => 'Failed to fetch check-ins'], 500);
+        }
+
+        return response()->json([
+            'count' => count($checkins),
+            'checkins' => $checkins
+        ]);
     }
 }

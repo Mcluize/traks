@@ -95,4 +95,5 @@ Route::group([
     Route::get('/admin/analytics/map-data/{activityFilter}/{timeFilter}', [AnalyticsController::class, 'getMapData']);
     Route::get('analytics/tourist-activities', [AnalyticsController::class, 'getTouristActivities'])
          ->name('analytics.tourist-activities');
+     Route::get('analytics/stats', [AnalyticsController::class, 'stats'])->name('admin.analytics.stats');
 });

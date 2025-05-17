@@ -14,8 +14,8 @@
             @forelse ($incidents as $incident)
                 <tr class="incident-row">
                     <td>{{ $incident['user_id'] }}</td>
-                    <td>{{ \Carbon\Carbon::parse($incident['timestamp'])->toDateString() }}</td>
-                    <td>{{ \Carbon\Carbon::parse($incident['timestamp'])->format('H:i') }}</td>
+                    <td>{{ $incident['date'] }}</td>
+                    <td>{{ $incident['time'] }}</td>
                     <td>{{ $incident['latitude'] }}</td>
                     <td>{{ $incident['longitude'] }}</td>
                     <td class="status status-{{ strtolower($incident['status']) }}">{{ $incident['status'] }}</td>

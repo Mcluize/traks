@@ -42,10 +42,10 @@
                         <div class="row align-items-center">
                             <div class="col-md-6">
                                 <div class="btn-group filter-buttons" role="group">
-                                    <button type="button" class="btn btn-filter {{ ($filter ?? 'all_time') == 'all_time' ? 'active' : '' }}" data-filter="all_time">All Time</button>
-                                    <button type="button" class="btn btn-filter {{ ($filter ?? '') == 'this_month' ? 'active' : '' }}" data-filter="this_month">This Month</button>
-                                    <button type="button" class="btn btn-filter {{ ($filter ?? '') == 'this_week' ? 'active' : '' }}" data-filter="this_week">This Week</button>
-                                    <button type="button" class="btn btn-filter {{ ($filter ?? '') == 'today' ? 'active' : '' }}" data-filter="today">Today</button>
+                                    <button type="button" class="btn btn-filter {{ ($filter ?? 'today') == 'all_time' ? 'active' : '' }}" data-filter="all_time">All Time</button>
+                                    <button type="button" class="btn btn-filter {{ ($filter ?? 'today') == 'this_month' ? 'active' : '' }}" data-filter="this_month">This Month</button>
+                                    <button type="button" class="btn btn-filter {{ ($filter ?? 'today') == 'this_week' ? 'active' : '' }}" data-filter="this_week">This Week</button>
+                                    <button type="button" class="btn btn-filter {{ ($filter ?? 'today') == 'today' ? 'active' : '' }}" data-filter="today">Today</button>
                                 </div>
                             </div>
                         </div>
@@ -67,7 +67,7 @@
                                        placeholder="Search by Date" value="{{ $search_date ?? '' }}">
                             </div>
                         </div>
-                        <div class="col-md-4" id="year-filter" style="display: {{ $filter == 'all_time' ? 'block' : 'none' }};">
+                        <div class="col-md-4" id="year-filter" style="display: {{ ($filter ?? 'today') == 'all_time' ? 'block' : 'none' }};">
                             <div class="search-container">
                                 <i class="la la-calendar-check search-icon"></i>
                                 <select id="year-select" class="form-control search-input">
@@ -149,12 +149,13 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
 $(document).ready(function() {
-    let currentFilter = "{{ $filter ?? 'all_time' }}";
+    let currentFilter = "{{ $filter ?? 'today' }}";
     let currentSearch = "{{ $search ?? '' }}";
     let searchDate = "{{ $search_date ?? '' }}";
     let currentPage = {{ $currentPage ?? 1 }};
     let isLoading = false;
     let searchTimeout = null;
+    let updateInterval;
 
     function toggleYearFilter() {
         if (currentFilter === 'all_time') {
@@ -205,12 +206,10 @@ $(document).ready(function() {
             },
             success: function(response) {
                 if (response.tableHtml && response.years) {
-                    // Update table container
                     $('#incident-table-container').html(response.tableHtml);
                     $('#incident-table-container').removeClass('loading');
                     attachPaginationHandlers();
 
-                    // Update year dropdown if 'all_time' filter is active
                     if (currentFilter === 'all_time') {
                         let yearSelect = $('#year-select');
                         let selectedYear = yearSelect.val();
@@ -219,11 +218,10 @@ $(document).ready(function() {
                         response.years.reverse().forEach(function(year) {
                             yearSelect.append('<option value="' + year + '">' + year + '</option>');
                         });
-                        // Restore the previously selected year if it still exists
                         if (selectedYear && response.years.includes(parseInt(selectedYear))) {
                             yearSelect.val(selectedYear);
                         } else {
-                            yearSelect.val(''); // Default to "All Years" if the selected year is no longer valid
+                            yearSelect.val('');
                         }
                     }
                 } else {
@@ -256,35 +254,43 @@ $(document).ready(function() {
         });
     }
 
+    function resetUpdateInterval() {
+        clearInterval(updateInterval);
+        updateInterval = setInterval(() => {
+            if (!isLoading) {
+                updateTable(false);
+            }
+        }, 5000); // Every 5 seconds
+    }
+
     $('#incident-search').on('input', function() {
-        // Clear any existing timeout
         if (searchTimeout) {
             clearTimeout(searchTimeout);
         }
-
-        // Set a new timeout to prevent rapid firing of requests
         searchTimeout = setTimeout(() => {
             const newSearch = $(this).val().trim();
-            // Only update if the search value has actually changed
             if (newSearch !== currentSearch) {
                 currentSearch = newSearch;
                 currentPage = 1;
                 updateTable(true);
+                resetUpdateInterval();
             }
             searchTimeout = null;
-        }, 300); // 300ms delay
+        }, 300);
     });
 
     $('#date-search').on('change', function() {
         searchDate = $(this).val();
         currentPage = 1;
         updateTable(true);
+        resetUpdateInterval();
     });
 
     $('#year-select').on('change', function() {
         if (currentFilter === 'all_time') {
             currentPage = 1;
             updateTable(true);
+            resetUpdateInterval();
         }
     });
 
@@ -297,17 +303,18 @@ $(document).ready(function() {
         currentPage = 1;
         toggleYearFilter();
         updateTable(true);
+        resetUpdateInterval();
     });
 
     toggleYearFilter();
     updateTable(true);
 
-    // Background refresh - don't show loading indicators for these
-    setInterval(() => {
+    // Initial interval setup
+    updateInterval = setInterval(() => {
         if (!isLoading) {
             updateTable(false);
         }
-    }, 30000); // Every 30 seconds instead of 5 seconds to reduce server load
+    }, 10000); 
 });
 </script>
 @endpush
