@@ -65,6 +65,12 @@
     .modal-footer .btn-warning:hover, .modal-footer .btn-warning:focus, .modal-footer .btn-warning:active { background-color: #FF7E3F; border-color: #FF7E3F; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4); }
     .custom-cancel-btn { background-color: #6c757d !important; border-color: #6c757d !important; transition: none !important; color: white !important; }
     .custom-cancel-btn:hover, .custom-cancel-btn:focus, .custom-cancel-btn:active { background-color: #6c757d !important; border-color: #6c757d !important; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3) !important; }
+    .voters-table { width: 100%; border-collapse: collapse; font-size: 14px; color: var(--gray-dark); margin-bottom: 15px; }
+    .voters-table th, .voters-table td { padding: 15px; text-align: center; } /* Updated to center text */
+    .voters-table th { font-weight: 700; color: #333; }
+    .voters-table tr:hover { color: var(--primary-orange); }
+    .view-voters-btn { background-color: #0BC8CA !important; color: white !important; border: none !important; border-radius: 3px !important; padding: 3px 8px !important; font-size: 12px !important; cursor: pointer !important; transition: background-color 0.3s ease !important; }
+    .view-voters-btn:hover { background-color: #09a8aa !important; }
 </style>
 <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css" />
 <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.css" />
@@ -400,6 +406,25 @@
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary custom-cancel-btn" data-dismiss="modal">Close</button>
                             <button type="button" class="btn btn-primary" id="applyYearBtn">Apply</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal fade" id="voterModal" tabindex="-1" role="dialog" aria-labelledby="voterModalLabel" aria-hidden="true" data-backdrop="false">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="voterModalLabel">Voters for Zone</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">×</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="table-container"></div>
+                            <div class="pagination-container"></div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary custom-cancel-btn" data-dismiss="modal">Close</button>
                         </div>
                     </div>
                 </div>
@@ -838,7 +863,7 @@ function displayTableWithPagination(checkins, currentPage) {
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = Math.min(startIndex + itemsPerPage, checkins.length);
     const currentCheckins = checkins.slice(startIndex, endIndex);
-    const tableContainer = document.querySelector('.table-container');
+    const tableContainer = document.querySelector('#checkinModal .table-container');
     const tableHtml = `
         <table class="checkins-table">
             <thead>
@@ -858,7 +883,7 @@ function displayTableWithPagination(checkins, currentPage) {
         </table>
     `;
     tableContainer.innerHTML = tableHtml;
-    const paginationContainer = document.querySelector('.pagination-container');
+    const paginationContainer = document.querySelector('#checkinModal .pagination-container');
     let paginationHtml = '';
     if (totalPages > 1) {
         paginationHtml += `<button class="pagination-button" ${currentPage === 1 ? 'disabled' : ''} data-page="${currentPage - 1}">« Previous</button>`;
@@ -889,7 +914,7 @@ function displayTableWithPagination(checkins, currentPage) {
         paginationHtml += `<button class="pagination-button" ${currentPage === totalPages ? 'disabled' : ''} data-page="${currentPage + 1}">Next »</button>`;
     }
     paginationContainer.innerHTML = paginationHtml;
-    document.querySelectorAll('.pagination-button').forEach(button => {
+    document.querySelectorAll('#checkinModal .pagination-button').forEach(button => {
         button.addEventListener('click', function() {
             if (!this.disabled) {
                 const page = parseInt(this.getAttribute('data-page'));
@@ -897,6 +922,118 @@ function displayTableWithPagination(checkins, currentPage) {
             }
         });
     });
+}
+async function displayVotersWithPagination(zoneId, currentPage = 1) {
+    try {
+        // Fetch the reporting user_id from user_zones
+        const { data: zoneData, error: zoneError } = await supabase
+            .from('user_zones')
+            .select('user_id')
+            .eq('zone_id', zoneId)
+            .single();
+        if (zoneError) throw zoneError;
+        const reportingUserId = zoneData.user_id;
+
+        // Fetch all voter data from user_zone_reports
+        const { data: reportData, error: reportError } = await supabase
+            .from('user_zone_reports')
+            .select('user_id, trust_score, created_at')
+            .eq('zone_id', zoneId)
+            .order('created_at', { ascending: true });
+        if (reportError) throw reportError;
+
+        // Check if the reporting user has an entry in user_zone_reports, if not, add it
+        let voters = [...reportData];
+        const reporterExists = voters.some(voter => voter.user_id === reportingUserId);
+        if (!reporterExists) {
+            const { data: userData, error: userError } = await supabase
+                .from('user_zones')
+                .select('created_at')
+                .eq('zone_id', zoneId)
+                .single();
+            if (userError) throw userError;
+            voters.unshift({
+                user_id: reportingUserId,
+                trust_score: 1.0, // Default trust score for reporter if not in reports
+                created_at: userData.created_at
+            });
+        }
+
+        // Sort voters to prioritize the reporting user
+        voters = voters.sort((a, b) => {
+            if (a.user_id === reportingUserId) return -1;
+            if (b.user_id === reportingUserId) return 1;
+            return a.created_at.localeCompare(b.created_at);
+        });
+
+        const itemsPerPage = 5;
+        const totalPages = Math.ceil(voters.length / itemsPerPage);
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const endIndex = Math.min(startIndex + itemsPerPage, voters.length);
+        const currentVoters = voters.slice(startIndex, endIndex);
+
+        const tableHtml = `
+            <table class="voters-table">
+                <thead>
+                    <tr>
+                        <th>Tourist ID</th>
+                        <th>Trust Score</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${currentVoters.map(voter => `
+                        <tr>
+                            <td>${voter.user_id}</td>
+                            <td>${voter.trust_score.toFixed(2)}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        `;
+
+        document.querySelector('#voterModal .table-container').innerHTML = tableHtml;
+
+        let paginationHtml = '';
+        if (totalPages > 1) {
+            paginationHtml += `<button class="pagination-button" ${currentPage === 1 ? 'disabled' : ''} data-page="${currentPage - 1}">« Previous</button>`;
+            if (totalPages <= 7) {
+                for (let i = 1; i <= totalPages; i++) {
+                    paginationHtml += `<button class="pagination-button ${i === currentPage ? 'active' : ''}" data-page="${i}">${i}</button>`;
+                }
+            } else {
+                paginationHtml += `<button class="pagination-button ${currentPage === 1 ? 'active' : ''}" data-page="1">01</button>`;
+                if (currentPage > 3) paginationHtml += `<span class="pagination-number">...</span>`;
+                else paginationHtml += `<button class="pagination-button ${currentPage === 2 ? 'active' : ''}" data-page="2">02</button>`;
+                if (currentPage > 2 && currentPage < totalPages - 1) {
+                    const pageStr = currentPage < 10 ? `0${currentPage}` : currentPage;
+                    paginationHtml += `<button class="pagination-button active" data-page="${currentPage}">${pageStr}</button>`;
+                }
+                if (currentPage < totalPages - 2) paginationHtml += `<span class="pagination-number">...</span>`;
+                else {
+                    const pageStr = (totalPages - 1) < 10 ? `0${totalPages - 1}` : (totalPages - 1);
+                    paginationHtml += `<button class="pagination-button ${currentPage === totalPages - 1 ? 'active' : ''}" data-page="${totalPages - 1}">${pageStr}</button>`;
+                }
+                const lastPageStr = totalPages < 10 ? `0${totalPages}` : totalPages;
+                paginationHtml += `<button class="pagination-button ${currentPage === totalPages ? 'active' : ''}" data-page="${totalPages}">${lastPageStr}</button>`;
+            }
+            paginationHtml += `<button class="pagination-button" ${currentPage === totalPages ? 'disabled' : ''} data-page="${currentPage + 1}">Next »</button>`;
+        }
+        document.querySelector('#voterModal .pagination-container').innerHTML = paginationHtml;
+
+        document.querySelectorAll('#voterModal .pagination-button').forEach(button => {
+            button.addEventListener('click', function() {
+                if (!this.disabled) {
+                    const page = parseInt(this.getAttribute('data-page'));
+                    displayVotersWithPagination(zoneId, page);
+                }
+            });
+        });
+
+        $('#voterModal').modal('show');
+    } catch (error) {
+        console.error('Error fetching voters:', error);
+        showErrorModal('Failed to load voter details: ' + error.message);
+    }
 }
 function showNoData(message = 'No check-ins found for this tourist.') {
     document.querySelector('.tourist-cards').innerHTML = `<p>${message}</p>`;
@@ -985,7 +1122,7 @@ function getPopupContent(zone) {
         <b>Type:</b> ${zone.type}<br>
         <b>Description:</b> ${zone.description || 'N/A'}<br>
         <b>Reported by:</b> ${zone.user_id}<br>
-        <b>Votes:</b> ${zone.total_weight || 0}<br>
+        <b>Votes:</b> ${zone.total_weight || 0} <button class="view-voters-btn" data-zone-id="${zone.zone_id}">View</button><br>
         <b>Status:</b> ${zone.status}<br>
         <b>Reported on:</b> ${formatTime(zone.created_at)}
     `;
@@ -1334,6 +1471,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     $('#changePinModal').on('shown.bs.modal', function () {
         document.getElementById('newPinInput').value = '';
         document.getElementById('pinChangeError').style.display = 'none';
+    });
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('view-voters-btn')) {
+            const zoneId = e.target.getAttribute('data-zone-id');
+            displayVotersWithPagination(zoneId, 1);
+        }
     });
     window.addEventListener('beforeunload', () => {
         if (locationUpdateInterval) clearInterval(locationUpdateInterval);

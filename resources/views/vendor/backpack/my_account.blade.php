@@ -259,11 +259,15 @@
         }
 
         $(document).ready(function() {
+            // Edit Profile Form Submission with Loading State
             $('#profile-form').on('submit', function(e) {
                 e.preventDefault();
                 
                 var form = $(this);
                 var formData = new FormData(form[0]);
+                var submitBtn = form.find('.submit-btn');
+                
+                submitBtn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...');
                 
                 $.ajax({
                     url: form.attr('action'),
@@ -273,7 +277,6 @@
                     contentType: false,
                     success: function(response) {
                         $('#editModal').modal('hide');
-                        
                         Swal.fire({
                             title: 'Success!',
                             text: 'Your profile has been updated successfully.',
@@ -304,15 +307,77 @@
                                 confirmButtonColor: '#FF7E3F'
                             });
                         }
+                    },
+                    complete: function() {
+                        submitBtn.prop('disabled', false).html('Save Changes');
                     }
                 });
             });
 
+            // Edit Super Admin Contact Form Submission with Validation and Loading State
+            $('#super-admin-contact-form').on('submit', function(e) {
+                var contactNumber = $('#super_admin_contact').val();
+                var regex = /^\+639\d{9}$/;
+
+                if (!regex.test(contactNumber)) {
+                    e.preventDefault();
+                    Swal.fire({
+                        title: 'Invalid Contact Number',
+                        text: 'Please enter valid number.',
+                        icon: 'error',
+                        confirmButtonColor: '#FF7E3F'
+                    });
+                    return;
+                }
+                
+                e.preventDefault();
+                
+                var form = $(this);
+                var formData = new FormData(form[0]);
+                var submitBtn = form.find('.submit-btn');
+                
+                submitBtn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...');
+                
+                $.ajax({
+                    url: form.attr('action'),
+                    type: form.attr('method'),
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function(response) {
+                        $('#editSuperAdminContactModal').modal('hide');
+                        Swal.fire({
+                            title: 'Success!',
+                            text: 'Super admin contact has been updated successfully.',
+                            icon: 'success',
+                            confirmButtonColor: '#0BC8CA'
+                        }).then((result) => {
+                            location.reload();
+                        });
+                    },
+                    error: function(xhr) {
+                        Swal.fire({
+                            title: 'Error!',
+                            text: 'Failed to update super admin contact.',
+                            icon: 'error',
+                            confirmButtonColor: '#FF7E3F'
+                        });
+                    },
+                    complete: function() {
+                        submitBtn.prop('disabled', false).html('Save Changes');
+                    }
+                });
+            });
+
+            // Change Password Form Submission with Loading State
             $('#password-form').on('submit', function(e) {
                 e.preventDefault();
                 
                 var form = $(this);
                 var formData = new FormData(form[0]);
+                var submitBtn = form.find('.password-submit-btn');
+                
+                submitBtn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Updating...');
                 
                 $.ajax({
                     url: form.attr('action'),
@@ -322,7 +387,6 @@
                     contentType: false,
                     success: function(response) {
                         $('#passwordModal').modal('hide');
-                        
                         Swal.fire({
                             title: 'Success!',
                             text: 'Your password has been updated successfully.',
@@ -353,41 +417,9 @@
                                 confirmButtonColor: '#FF7E3F'
                             });
                         }
-                    }
-                });
-            });
-
-            $('#super-admin-contact-form').on('submit', function(e) {
-                e.preventDefault();
-                
-                var form = $(this);
-                var formData = new FormData(form[0]);
-                
-                $.ajax({
-                    url: form.attr('action'),
-                    type: form.attr('method'),
-                    data: formData,
-                    processData: false,
-                    contentType: false,
-                    success: function(response) {
-                        $('#editSuperAdminContactModal').modal('hide');
-                        
-                        Swal.fire({
-                            title: 'Success!',
-                            text: 'Super admin contact has been updated successfully.',
-                            icon: 'success',
-                            confirmButtonColor: '#0BC8CA'
-                        }).then((result) => {
-                            location.reload();
-                        });
                     },
-                    error: function(xhr) {
-                        Swal.fire({
-                            title: 'Error!',
-                            text: 'Failed to update super admin contact.',
-                            icon: 'error',
-                            confirmButtonColor: '#FF7E3F'
-                        });
+                    complete: function() {
+                        submitBtn.prop('disabled', false).html('Update Password');
                     }
                 });
             });

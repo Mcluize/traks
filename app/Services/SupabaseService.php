@@ -280,30 +280,30 @@ class SupabaseService
         \Log::info("Current server date in fetchCheckins: " . $now->format('Y-m-d H:i:s'));
 
         if ($filter === 'today') {
-            $start = $now->format('Y-m-d 00:00:00'); // Updated to use space instead of T
-            $end = $now->format('Y-m-d 23:59:59');   // Updated to use space instead of T
+            $start = $now->format('Y-m-d 00:00:00'); 
+            $end = $now->format('Y-m-d 23:59:59');   
             $filters['and'] = "(timestamp.gte.{$start},timestamp.lte.{$end})";
         } elseif ($filter === 'this_week') {
             $dayOfWeek = $now->format('w');
             $daysToMonday = ($dayOfWeek == 0) ? 6 : $dayOfWeek - 1;
             $startOfWeek = (clone $now)->modify("-{$daysToMonday} days");
             $endOfWeek = (clone $startOfWeek)->modify('+6 days');
-            $start = $startOfWeek->format('Y-m-d 00:00:00'); // Updated to use space instead of T
-            $end = $endOfWeek->format('Y-m-d 23:59:59');     // Updated to use space instead of T
+            $start = $startOfWeek->format('Y-m-d 00:00:00'); 
+            $end = $endOfWeek->format('Y-m-d 23:59:59');     
             $filters['and'] = "(timestamp.gte.{$start},timestamp.lte.{$end})";
         } elseif ($filter === 'this_month') {
-            $start = $now->format('Y-m-01 00:00:00'); // Updated to use space instead of T
-            $end = $now->format('Y-m-t 23:59:59');     // Updated to use space instead of T
+            $start = $now->format('Y-m-01 00:00:00'); 
+            $end = $now->format('Y-m-t 23:59:59');     
             $filters['and'] = "(timestamp.gte.{$start},timestamp.lte.{$end})";
         } elseif ($filter === 'this_year') {
             $year = $now->format('Y');
-            $start = "$year-01-01 00:00:00"; // Updated to use space instead of T
-            $end = "$year-12-31 23:59:59";   // Updated to use space instead of T
+            $start = "$year-01-01 00:00:00"; 
+            $end = "$year-12-31 23:59:59";   
             $filters['and'] = "(timestamp.gte.{$start},timestamp.lte.{$end})";
         } elseif ($filter === 'custom_year' && isset($_GET['year']) && is_numeric($_GET['year'])) {
             $year = (int)$_GET['year'];
-            $start = "$year-01-01 00:00:00"; // Updated to use space instead of T
-            $end = "$year-12-31 23:59:59";   // Updated to use space instead of T
+            $start = "$year-01-01 00:00:00"; 
+            $end = "$year-12-31 23:59:59";   
             $filters['and'] = "(timestamp.gte.{$start},timestamp.lte.{$end})";
         }
 
@@ -323,5 +323,19 @@ class SupabaseService
             'count' => count($checkins),
             'checkins' => $checkins
         ]);
+    }
+
+    public function fetchZoneVoters($zoneId)
+    {
+        $filters = [
+            'zone_id' => "eq.$zoneId",
+            'select' => 'user_id, trust_score, created_at',
+            'order' => 'created_at.asc'
+        ];
+        $voters = $this->fetchTable('user_zone_reports', $filters, false);
+        if ($voters === null) {
+            return response()->json(['error' => 'Failed to fetch voters'], 500);
+        }
+        return response()->json(['voters' => $voters]);
     }
 }

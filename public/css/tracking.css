@@ -773,3 +773,16 @@ body {
     border-color: #E56E33 !important;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3) !important;
 }
+.view-voters-btn {
+    background-color: #0BC8CA !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 3px !important;
+    padding: 3px 8px !important;
+    font-size: 12px !important;
+    cursor: pointer !important;
+    transition: background-color 0.3s ease !important;
+}
+.view-voters-btn:hover {
+    background-color: #09a8aa !important; 
+}

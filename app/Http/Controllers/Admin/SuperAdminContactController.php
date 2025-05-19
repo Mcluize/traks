@@ -45,7 +45,14 @@ class SuperAdminContactController extends Controller
     public function updateContactDetails(Request $request)
     {
         $request->validate([
-            'super_admin_contact' => 'required|string|max:255',
+            'super_admin_contact' => [
+                'required',
+                'string',
+                'max:255',
+                'regex:/^\+639\d{9}$/',  
+            ],
+        ], [
+            'super_admin_contact.regex' => 'The contact number must start with +639 followed by exactly 9 digits (e.g., +639123456789).',
         ]);
 
         try {
