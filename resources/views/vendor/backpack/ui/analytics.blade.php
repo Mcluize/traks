@@ -13,8 +13,8 @@
             </div>
             <div>
                 <h2 class="header-container">
-                    <span>Analytics</span> 
-                    <small class="d-block">It's <span class="day-bold">{{ now()->format('l') }}</span>, {{ now()->format('F d Y') }}</small>
+                    <span1>Analytics</span1> 
+                    <small class="d-block">It's <span class="day-bold">{{ now('Asia/Manila')->format('l') }}</span>, {{ now('Asia/Manila')->format('F d Y') }}</small>
                 </h2>
             </div>
         </div>
@@ -1512,7 +1512,7 @@ $(document).ready(function() {
     updateStatsCards();
     updateCharts();
     setInterval(updateStatsCards, 60000);
-    setInterval(updateCharts, 60000);
+    setInterval(updateCharts, 60000);   
 });
 </script>
 @endsection

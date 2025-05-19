@@ -53,24 +53,54 @@ body {
     letter-spacing: 0;
 }
 
-.header-container{
-    font-family: 'Poppins', sans-serif ;
-    font-weight: 800 !important;
-    font-size: 28px;
-    line-height: 150%;
-    letter-spacing: 0;
-    color: #484A58 !important;
-    width: 265px;
-    height: 42px;
-    margin-top: 20px;
-    position: relative;
-    top: 0;
-    left: 0;
-}
+/* Header Styles */
+    .header-container {
+        margin-top: -10px !important;
+        margin-bottom: 40px !important;
+    }
 
-.day-bold {
-    font-weight: 600;
-}
+    .header-container span1 {
+        width: 328px;
+        height: 51px;
+        font-family: 'Poppins', sans-serif;
+        font-weight: 700;
+        font-size: 34px;
+        line-height: 150%;
+        letter-spacing: 0;
+        vertical-align: middle;
+    }
+
+    h2.header-container {
+        font-family: 'Poppins', sans-serif;
+        font-weight: 700;
+        font-size: 34px;
+        line-height: 150%;
+        letter-spacing: 0;
+        vertical-align: middle;
+        margin-top: -10px;
+        margin-bottom: 10px;
+    }
+
+    h2.header-container small {
+        font-family: 'Poppins', sans-serif;
+        font-weight: 400;
+        font-size: 12px;
+        line-height: 150%;
+        letter-spacing: 0;
+        display: block;
+        color: #6c757d;
+        margin-top: 5px;
+    }
+
+    .day-bold {
+        font-family: 'Poppins', sans-serif;
+        font-weight: 700 !important;
+        font-size: 12px;
+        line-height: 150%;
+        letter-spacing: 0;
+        vertical-align: middle;
+    }
+
 
 /* Navigation link styles */
 .nav-link .menu-text {
