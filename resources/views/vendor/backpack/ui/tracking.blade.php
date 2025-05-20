@@ -44,10 +44,9 @@
     .legend-marker.intermediate-checkin { background-image: url('{{ asset('images/marker-icon-2x-blue.png') }}'); }
     .legend-marker.last-checkin { background-image: url('{{ asset('images/marker-icon-2x-red.png') }}'); }
     .legend-marker.current-location { background-image: url('{{ asset('images/marker-icon-2x-yellow.png') }}'); }
-    .legend-marker.danger-zone { background-image: url('{{ asset('images/warning-danger.png') }}'); }
-    .legend-marker.high-risk { background-image: url('{{ asset('images/warning-high-risk.png') }}'); }
     .legend-marker.flood-area { background-image: url('{{ asset('images/warning-flood.png') }}'); }
-    .legend-marker.security-concern { background-image: url('{{ asset('images/warning-security.png') }}'); }
+    .legend-marker.accident-prone { background-image: url('{{ asset('images/accident.png') }}'); }
+    .legend-marker.landslide-prone { background-image: url('{{ asset('images/landslide-web.png') }}'); }
     .legend-marker.other-warning { background-image: url('{{ asset('images/warning-other.png') }}'); }
     .legend-marker.road-blocked { background-image: url('{{ asset('images/road-blocked.png') }}'); }
     .legend-marker.flooded { background-image: url('{{ asset('images/flooded.png') }}'); }
@@ -66,11 +65,16 @@
     .custom-cancel-btn { background-color: #6c757d !important; border-color: #6c757d !important; transition: none !important; color: white !important; }
     .custom-cancel-btn:hover, .custom-cancel-btn:focus, .custom-cancel-btn:active { background-color: #6c757d !important; border-color: #6c757d !important; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3) !important; }
     .voters-table { width: 100%; border-collapse: collapse; font-size: 14px; color: var(--gray-dark); margin-bottom: 15px; }
-    .voters-table th, .voters-table td { padding: 15px; text-align: center; } /* Updated to center text */
+    .voters-table th, .voters-table td { padding: 15px; text-align: center; }
     .voters-table th { font-weight: 700; color: #333; }
     .voters-table tr:hover { color: var(--primary-orange); }
     .view-voters-btn { background-color: #0BC8CA !important; color: white !important; border: none !important; border-radius: 3px !important; padding: 3px 8px !important; font-size: 12px !important; cursor: pointer !important; transition: background-color 0.3s ease !important; }
     .view-voters-btn:hover { background-color: #09a8aa !important; }
+    .warning-type { display: inline-block; padding: 5px 10px; border-radius: 4px; font-size: 12px; color: white; margin-bottom: 15px; }
+    .warning-type.flood { background-color: #0066FF; }
+    .warning-type.accident { background-color: #FF0000; }
+    .warning-type.landslide { background-color: #FF6600; }
+    .warning-type.other { background-color: #CC00CC; }
 </style>
 <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css" />
 <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.css" />
@@ -102,45 +106,37 @@
                     <h4>Warning Zones</h4>
                     <h5>Markers</h5>
                     <div class="legend-item">
-                        <div class="legend-marker danger-zone"></div>
-                        <span>Danger Zone - Red Marker</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-marker high-risk"></div>
-                        <span>High Risk Area - Orange Marker</span>
-                    </div>
-                    <div class="legend-item">
                         <div class="legend-marker flood-area"></div>
-                        <span>Flood Area - Blue Marker</span>
+                        <span>Flood Prone Area - Blue Marker</span>
                     </div>
                     <div class="legend-item">
-                        <div class="legend-marker security-concern"></div>
-                        <span>Security Concern - Dark Red Marker</span>
+                        <div class="legend-marker accident-prone"></div>
+                        <span>Accident Prone Area - Red Marker</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-marker landslide-prone"></div>
+                        <span>Landslide Prone Area - Orange Marker</span>
                     </div>
                     <div class="legend-item">
                         <div class="legend-marker other-warning"></div>
-                        <span>Other Warning - Purple Marker</span>
+                        <span>Others - Purple Marker</span>
                     </div>
                     <h5>Circles</h5>
                     <div class="legend-item">
+                        <div class="legend-circle" style="border: 2px solid #0066FF; background-color: rgba(0, 102, 255, 0.2);"></div>
+                        <span>Flood Prone Area - Blue Circle</span>
+                    </div>
+                    <div class="legend-item">
                         <div class="legend-circle" style="border: 2px solid #FF0000; background-color: rgba(255, 0, 0, 0.2);"></div>
-                        <span>Danger Zone - Red Circle</span>
+                        <span>Accident Prone Area - Red Circle</span>
                     </div>
                     <div class="legend-item">
                         <div class="legend-circle" style="border: 2px solid #FF6600; background-color: rgba(255, 102, 0, 0.2);"></div>
-                        <span>High Risk Area - Orange Circle</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-circle" style="border: 2px solid #0066FF; background-color: rgba(0, 102, 255, 0.2);"></div>
-                        <span>Flood Area - Blue Circle</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-circle" style="border: 2px solid #990000; background-color: rgba(153, 0, 0, 0.2);"></div>
-                        <span>Security Concern - Dark Red Circle</span>
+                        <span>Landslide Prone Area - Orange Circle</span>
                     </div>
                     <div class="legend-item">
                         <div class="legend-circle" style="border: 2px solid #CC00CC; background-color: rgba(204, 0, 204, 0.2);"></div>
-                        <span>Other Warning - Purple Circle</span>
+                        <span>Others - Purple Circle</span>
                     </div>
                     <h5>Polygons</h5>
                     <div class="legend-item">
@@ -221,11 +217,10 @@
                             <div class="form-group">
                                 <label for="warning-type">Warning Type</label>
                                 <select id="warning-type" class="form-control">
-                                    <option value="danger">Danger Zone</option>
-                                    <option value="high-risk">High Risk Area</option>
-                                    <option value="flood">Flood Area</option>
-                                    <option value="security">Security Concern</option>
-                                    <option value="other">Other</option>
+                                    <option value="flood">Flood Prone Area</option>
+                                    <option value="accident">Accident Prone Area</option>
+                                    <option value="landslide">Landslide Prone Area</option>
+                                    <option value="other">Others</option>
                                 </select>
                             </div>
                             <div class="form-group">
@@ -546,22 +541,6 @@ const defaultWarningIcon = L.icon({
     shadowSize: [41, 41]
 });
 const warningIcons = {
-    'danger': L.icon({
-        iconUrl: '{{ asset('images/warning-danger.png') }}',
-        shadowUrl: '{{ asset('images/marker-shadow.png') }}',
-        iconSize: [32, 32],
-        iconAnchor: [16, 32],
-        popupAnchor: [0, -32],
-        shadowSize: [41, 41]
-    }),
-    'high-risk': L.icon({
-        iconUrl: '{{ asset('images/warning-high-risk.png') }}',
-        shadowUrl: '{{ asset('images/marker-shadow.png') }}',
-        iconSize: [32, 32],
-        iconAnchor: [16, 32],
-        popupAnchor: [0, -32],
-        shadowSize: [41, 41]
-    }),
     'flood': L.icon({
         iconUrl: '{{ asset('images/warning-flood.png') }}',
         shadowUrl: '{{ asset('images/marker-shadow.png') }}',
@@ -570,8 +549,16 @@ const warningIcons = {
         popupAnchor: [0, -32],
         shadowSize: [41, 41]
     }),
-    'security': L.icon({
-        iconUrl: '{{ asset('images/warning-security.png') }}',
+    'accident': L.icon({
+        iconUrl: '{{ asset('images/accident.png') }}',
+        shadowUrl: '{{ asset('images/marker-shadow.png') }}',
+        iconSize: [32, 32],
+        iconAnchor: [16, 32],
+        popupAnchor: [0, -32],
+        shadowSize: [41, 41]
+    }),
+    'landslide': L.icon({
+        iconUrl: '{{ asset('images/landslide-web.png') }}',
         shadowUrl: '{{ asset('images/marker-shadow.png') }}',
         iconSize: [32, 32],
         iconAnchor: [16, 32],
@@ -630,11 +617,16 @@ const userZoneIcons = {
     })
 };
 const circleStyles = {
-    'danger': { color: '#FF0000', fillColor: '#FF0000', fillOpacity: 0.2 },
-    'high-risk': { color: '#FF6600', fillColor: '#FF6600', fillOpacity: 0.2 },
     'flood': { color: '#0066FF', fillColor: '#0066FF', fillOpacity: 0.2 },
-    'security': { color: '#990000', fillColor: '#990000', fillOpacity: 0.2 },
+    'accident': { color: '#FF0000', fillColor: '#FF0000', fillOpacity: 0.2 },
+    'landslide': { color: '#FF6600', fillColor: '#FF6600', fillOpacity: 0.2 },
     'other': { color: '#CC00CC', fillColor: '#CC00CC', fillOpacity: 0.2 }
+};
+const typeDisplayNames = {
+    'flood': 'Flood Prone Area',
+    'accident': 'Accident Prone Area',
+    'landslide': 'Landslide Prone Area',
+    'other': 'Others'
 };
 setTimeout(function() { map.invalidateSize(); }, 100);
 let currentTouristId;
@@ -925,7 +917,6 @@ function displayTableWithPagination(checkins, currentPage) {
 }
 async function displayVotersWithPagination(zoneId, currentPage = 1) {
     try {
-        // Fetch the reporting user_id from user_zones
         const { data: zoneData, error: zoneError } = await supabase
             .from('user_zones')
             .select('user_id')
@@ -934,7 +925,6 @@ async function displayVotersWithPagination(zoneId, currentPage = 1) {
         if (zoneError) throw zoneError;
         const reportingUserId = zoneData.user_id;
 
-        // Fetch all voter data from user_zone_reports
         const { data: reportData, error: reportError } = await supabase
             .from('user_zone_reports')
             .select('user_id, trust_score, created_at')
@@ -942,7 +932,6 @@ async function displayVotersWithPagination(zoneId, currentPage = 1) {
             .order('created_at', { ascending: true });
         if (reportError) throw reportError;
 
-        // Check if the reporting user has an entry in user_zone_reports, if not, add it
         let voters = [...reportData];
         const reporterExists = voters.some(voter => voter.user_id === reportingUserId);
         if (!reporterExists) {
@@ -954,12 +943,11 @@ async function displayVotersWithPagination(zoneId, currentPage = 1) {
             if (userError) throw userError;
             voters.unshift({
                 user_id: reportingUserId,
-                trust_score: 1.0, // Default trust score for reporter if not in reports
+                trust_score: 1.0,
                 created_at: userData.created_at
             });
         }
 
-        // Sort voters to prioritize the reporting user
         voters = voters.sort((a, b) => {
             if (a.user_id === reportingUserId) return -1;
             if (b.user_id === reportingUserId) return 1;
@@ -1637,30 +1625,57 @@ async function loadWarningZones() {
 }
 function addWarningToMap(warning) {
     let warningElement;
+
+    // Check if required fields are present and valid
+    if (!warning.shape_type || !warning.zone_id) {
+        console.warn(`Skipping warning zone ${warning.zone_id || 'unknown'}: Missing shape_type or zone_id`);
+        return;
+    }
+
+    if (!warning.type || !circleStyles[warning.type]) {
+        console.warn(`Invalid or unrecognized type '${warning.type}' for warning zone ${warning.zone_id}. Skipping rendering.`);
+        return;
+    }
+
     if (warning.shape_type === 'marker') {
-        if (!warning.latitude || !warning.longitude) return;
-        warningElement = L.marker([warning.latitude, warning.longitude], { icon: warningIcons[warning.type] || defaultWarningIcon });
+        if (!warning.latitude || !warning.longitude) {
+            console.warn(`Invalid marker data for warning zone ${warning.zone_id}: Missing coordinates`);
+            return;
+        }
+        warningElement = L.marker([warning.latitude, warning.longitude], {
+            icon: warningIcons[warning.type] || defaultWarningIcon
+        });
     } else if (warning.shape_type === 'circle') {
-        if (!warning.latitude || !warning.longitude || !warning.radius) return;
+        if (!warning.latitude || !warning.longitude || !warning.radius) {
+            console.warn(`Invalid circle data for warning zone ${warning.zone_id}: Missing coordinates or radius`);
+            return;
+        }
         warningElement = L.circle([warning.latitude, warning.longitude], {
             radius: warning.radius,
             ...circleStyles[warning.type]
         });
     } else if (warning.shape_type === 'polygon') {
-        if (!warning.polygon_coords || !Array.isArray(warning.polygon_coords)) return;
+        if (!warning.polygon_coords || !Array.isArray(warning.polygon_coords) || warning.polygon_coords.length < 3) {
+            console.warn(`Invalid polygon data for warning zone ${warning.zone_id}: Missing or malformed polygon_coords`);
+            return;
+        }
         const latlngs = warning.polygon_coords.map(coord => [coord[0], coord[1]]).filter(coord => coord !== null);
-        if (latlngs.length < 3) return;
         warningElement = L.polygon(latlngs, {
             color: circleStyles[warning.type].color,
             fillColor: circleStyles[warning.type].fillColor,
             fillOpacity: circleStyles[warning.type].fillOpacity
         });
     } else {
+        console.warn(`Unsupported shape_type '${warning.shape_type}' for warning zone ${warning.zone_id}`);
         return;
     }
+
+    // Add popup and attach to map
     warningElement.bindPopup(`<b>${warning.zone_tag}</b><br><button class="view-details-btn" data-id="${warning.zone_id}">View Details</button>`);
     warningElement.addTo(warningLayer);
     warningElement.warningData = warning;
+
+    // Attach popup event listener
     warningElement.on('popupopen', function() {
         setTimeout(() => {
             document.querySelectorAll('.view-details-btn').forEach(btn => {
@@ -1677,7 +1692,7 @@ function showWarningDetails(warning) {
     const content = document.querySelector('.warning-details-content');
     content.innerHTML = `
         <h4>${warning.zone_tag}</h4>
-        <p class="warning-type ${warning.type}"><strong>Type:</strong> ${warning.type.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}</p>
+        <p class="warning-type ${warning.type}"><strong>Type:</strong> ${typeDisplayNames[warning.type] || warning.type}</p>
         <p><strong>Description:</strong> ${warning.description || 'No description provided'}</p>
         <p><strong>Shape Type:</strong> ${warning.shape_type}</p>
         ${warning.shape_type === 'marker' || warning.shape_type === 'circle' ? `<p><strong>Location:</strong> Lat: ${warning.latitude ? warning.latitude.toFixed(6) : 'N/A'}, Lng: ${warning.longitude ? warning.longitude.toFixed(6) : 'N/A'}</p>` : ''}
@@ -1698,7 +1713,7 @@ document.querySelector('.deactivate-warning-btn').addEventListener('click', func
         currentWarningToDeactivate = warningId;
         const confirmModal = document.getElementById('deactivateWarningModal');
         confirmModal.querySelector('.warning-title').textContent = warningToDeactivate.zone_tag;
-        confirmModal.querySelector('.warning-type').textContent = `Type: ${warningToDeactivate.type.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}`;
+        confirmModal.querySelector('.warning-type').textContent = `Type: ${typeDisplayNames[warningToDeactivate.type] || warningToDeactivate.type}`;
         $('#warningDetailsModal').modal('hide');
         $('#deactivateWarningModal').modal('show');
     }
@@ -1706,7 +1721,7 @@ document.querySelector('.deactivate-warning-btn').addEventListener('click', func
 function resetWarningForm() {
     document.getElementById('warning-zone-tag').value = '';
     document.getElementById('warning-description').value = '';
-    document.getElementById('warning-type').value = 'danger';
+    document.getElementById('warning-type').value = 'flood';
     document.querySelector('input[name="drawing-mode"][value="marker"]').checked = true;
     document.getElementById('circle-radius-container').style.display = 'none';
     document.getElementById('circle-radius').value = 200;
