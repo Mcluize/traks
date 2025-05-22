@@ -317,18 +317,19 @@
             // Edit Super Admin Contact Form Submission with Validation and Loading State
             $('#super-admin-contact-form').on('submit', function(e) {
                 var contactNumber = $('#super_admin_contact').val();
-                var regex = /^\+639\d{9}$/;
+                var regex = /^(?:\+639|09)\d{9}$/;
 
                 if (!regex.test(contactNumber)) {
                     e.preventDefault();
                     Swal.fire({
                         title: 'Invalid Contact Number',
-                        text: 'Please enter valid number.',
+                        text: 'Please enter valid number starting with +639 or 09 and followed by exactly 9 digits.',
                         icon: 'error',
                         confirmButtonColor: '#FF7E3F'
                     });
                     return;
                 }
+
                 
                 e.preventDefault();
                 

@@ -5,6 +5,7 @@ namespace App\Services;
 use Illuminate\Support\Facades\Http;
 use DateTime;
 use DateTimeZone;
+use Illuminate\Support\Facades\Log;
 
 class SupabaseService
 {
@@ -19,7 +20,7 @@ class SupabaseService
 
     public function fetchTable($table, $filters = [], $count = false, $select = '*')
     {
-        \Log::info("Supabase fetchTable for {$table}", ['filters' => $filters, 'select' => $select]);
+        Log::info("Supabase fetchTable for {$table}", ['filters' => $filters, 'select' => $select]);
 
         $headers = [
             'apikey' => $this->key,
@@ -49,10 +50,10 @@ class SupabaseService
                 return 0;
             }
             $result = $query->json();
-            \Log::info("Supabase fetchTable result count for {$table}", ['count' => count($result)]);
+            Log::info("Supabase fetchTable result count for {$table}", ['count' => count($result)]);
             return $result;
         } else {
-            \Log::error('Supabase fetchTable failed', [
+            Log::error('Supabase fetchTable failed', [
                 'table' => $table,
                 'status' => $query->status(),
                 'body' => $query->body(),
@@ -65,8 +66,8 @@ class SupabaseService
     public function insertIntoTable($table, $data)
     {
         try {
-            \Log::info("Connecting to Supabase: {$this->url}/rest/v1/{$table}");
-            
+            Log::info("Connecting to Supabase: {$this->url}/rest/v1/{$table}");
+
             if ($table === 'warning_zones') {
                 $data['status'] = 'active';
             }
@@ -77,19 +78,19 @@ class SupabaseService
                 'Content-Type' => 'application/json',
                 'Prefer' => 'return=representation'
             ])->post("{$this->url}/rest/v1/{$table}", $data);
-            
-            \Log::info('Supabase response', [
+
+            Log::info('Supabase response', [
                 'status' => $response->status(),
                 'body' => $response->body()
             ]);
-            
+
             if ($response->successful()) {
                 return $response->json();
             }
-            
+
             throw new \Exception('Supabase error: ' . $response->body());
         } catch (\Exception $e) {
-            \Log::error('Supabase connection error', [
+            Log::error('Supabase connection error', [
                 'message' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
@@ -113,7 +114,7 @@ class SupabaseService
 
             throw new \Exception('Supabase error: ' . $response->status() . ' - ' . $response->body());
         } catch (\Exception $e) {
-            \Log::error('Supabase update error', ['error' => $e->getMessage()]);
+            Log::error('Supabase update error', ['error' => $e->getMessage()]);
             throw $e;
         }
     }
@@ -142,8 +143,8 @@ class SupabaseService
         if ($minQuery->successful() && $maxQuery->successful()) {
             $minResult = $minQuery->json();
             $maxResult = $maxQuery->json();
-            \Log::info('fetchMinMax min result', ['minResult' => $minResult]);
-            \Log::info('fetchMinMax max result', ['maxResult' => $maxResult]);
+            Log::info('fetchMinMax min result', ['minResult' => $minResult]);
+            Log::info('fetchMinMax max result', ['maxResult' => $maxResult]);
             if (!empty($minResult) && !empty($maxResult)) {
                 return [
                     'min' => $minResult[0][$column] ?? null,
@@ -151,7 +152,7 @@ class SupabaseService
                 ];
             }
         } else {
-            \Log::error('Supabase fetchMinMax failed', [
+            Log::error('Supabase fetchMinMax failed', [
                 'minStatus' => $minQuery->status(),
                 'maxStatus' => $maxQuery->status(),
                 'minBody' => $minQuery->body(),
@@ -181,28 +182,28 @@ class SupabaseService
         } else {
             switch ($filter) {
                 case 'today':
-                    $start = "$todayDate 00:00:00"; // Updated to use space instead of T
-                    $end = "$todayDate 23:59:59";   // Updated to use space instead of T
+                    $start = "$todayDate 00:00:00";
+                    $end = "$todayDate 23:59:59";
                     $filters['and'] = "(timestamp.gte.{$start},timestamp.lte.{$end})";
                     break;
                 case 'this_week':
                     $startOfWeek = date('Y-m-d', strtotime('monday this week'));
                     $endOfWeek = date('Y-m-d', strtotime('sunday this week'));
-                    $start = "$startOfWeek 00:00:00"; // Updated to use space instead of T
-                    $end = "$endOfWeek 23:59:59";     // Updated to use space instead of T
+                    $start = "$startOfWeek 00:00:00";
+                    $end = "$endOfWeek 23:59:59";
                     $filters['and'] = "(timestamp.gte.{$start},timestamp.lte.{$end})";
                     break;
                 case 'this_month':
                     $startOfMonth = date('Y-m-01');
                     $endOfMonth = date('Y-m-t');
-                    $start = "$startOfMonth 00:00:00"; // Updated to use space instead of T
-                    $end = "$endOfMonth 23:59:59";     // Updated to use space instead of T
+                    $start = "$startOfMonth 00:00:00";
+                    $end = "$endOfMonth 23:59:59";
                     $filters['and'] = "(timestamp.gte.{$start},timestamp.lte.{$end})";
                     break;
                 case 'this_year':
                     $year = date('Y');
-                    $start = "$year-01-01 00:00:00"; // Updated to use space instead of T
-                    $end = "$year-12-31 23:59:59";   // Updated to use space instead of T
+                    $start = "$year-01-01 00:00:00";
+                    $end = "$year-12-31 23:59:59";
                     $filters['and'] = "(timestamp.gte.{$start},timestamp.lte.{$end})";
                     break;
                 case 'all_time':
@@ -212,7 +213,7 @@ class SupabaseService
             }
         }
 
-        \Log::info("Incident report filters for {$filter}", [
+        Log::info("Incident report filters for {$filter}", [
             'start' => $filters['and'] ?? 'all_time',
             'filter' => $filter
         ]);
@@ -255,11 +256,11 @@ class SupabaseService
             'max' => $maxYear
         ];
     }
-    
+
     public function fetchUserZones()
     {
         return $this->fetchTable('user_zones', [], false, 'zone_id, user_id, type, description, latitude, longitude, total_weight, status, created_at');
-    }   
+    }
 
     public function updateUserZoneStatus($zoneId, $status)
     {
@@ -275,40 +276,37 @@ class SupabaseService
         ];
 
         $now = new DateTime('now', new DateTimeZone('UTC'));
-
-        // Log the current server date for debugging
-        \Log::info("Current server date in fetchCheckins: " . $now->format('Y-m-d H:i:s'));
+        Log::info("Current server date in fetchCheckins: " . $now->format('Y-m-d H:i:s'));
 
         if ($filter === 'today') {
-            $start = $now->format('Y-m-d 00:00:00'); 
-            $end = $now->format('Y-m-d 23:59:59');   
+            $start = $now->format('Y-m-d 00:00:00');
+            $end = $now->format('Y-m-d 23:59:59');
             $filters['and'] = "(timestamp.gte.{$start},timestamp.lte.{$end})";
         } elseif ($filter === 'this_week') {
             $dayOfWeek = $now->format('w');
             $daysToMonday = ($dayOfWeek == 0) ? 6 : $dayOfWeek - 1;
             $startOfWeek = (clone $now)->modify("-{$daysToMonday} days");
             $endOfWeek = (clone $startOfWeek)->modify('+6 days');
-            $start = $startOfWeek->format('Y-m-d 00:00:00'); 
-            $end = $endOfWeek->format('Y-m-d 23:59:59');     
+            $start = $startOfWeek->format('Y-m-d 00:00:00');
+            $end = $endOfWeek->format('Y-m-d 23:59:59');
             $filters['and'] = "(timestamp.gte.{$start},timestamp.lte.{$end})";
         } elseif ($filter === 'this_month') {
-            $start = $now->format('Y-m-01 00:00:00'); 
-            $end = $now->format('Y-m-t 23:59:59');     
+            $start = $now->format('Y-m-01 00:00:00');
+            $end = $now->format('Y-m-t 23:59:59');
             $filters['and'] = "(timestamp.gte.{$start},timestamp.lte.{$end})";
         } elseif ($filter === 'this_year') {
             $year = $now->format('Y');
-            $start = "$year-01-01 00:00:00"; 
-            $end = "$year-12-31 23:59:59";   
+            $start = "$year-01-01 00:00:00";
+            $end = "$year-12-31 23:59:59";
             $filters['and'] = "(timestamp.gte.{$start},timestamp.lte.{$end})";
         } elseif ($filter === 'custom_year' && isset($_GET['year']) && is_numeric($_GET['year'])) {
             $year = (int)$_GET['year'];
-            $start = "$year-01-01 00:00:00"; 
-            $end = "$year-12-31 23:59:59";   
+            $start = "$year-01-01 00:00:00";
+            $end = "$year-12-31 23:59:59";
             $filters['and'] = "(timestamp.gte.{$start},timestamp.lte.{$end})";
         }
 
-        // Log the filter range for debugging
-        \Log::info("Check-in filter range for {$filter}", [
+        Log::info("Check-in filter range for {$filter}", [
             'start' => $start ?? 'N/A',
             'end' => $end ?? 'N/A',
             'tourist_id' => $touristId
@@ -338,4 +336,59 @@ class SupabaseService
         }
         return response()->json(['voters' => $voters]);
     }
+
+    public function getDecryptedUser($userId)
+{
+    $userId = (int) $userId;
+    $rows = $this->fetchTable('users', ['user_id' => "eq.$userId"]);
+
+    if (empty($rows)) {
+        \Log::warning("No user found with ID $userId");
+        return null;
+    }
+
+    $user = $rows[0];
+
+    try {
+        // Laravel decryption attempt
+        $user['full_name'] = \Crypt::decryptString($user['full_name']);
+        $user['contact_details'] = \Crypt::decryptString($user['contact_details']);
+        if (!empty($user['address'])) {
+            $user['address'] = \Crypt::decryptString($user['address']);
+        }
+
+        \Log::info("Laravel decryption succeeded for user ID $userId");
+        return [$user];
+    } catch (\Exception $laravelException) {
+        \Log::warning("Laravel decryption failed for user ID $userId", [
+            'error' => $laravelException->getMessage()
+        ]);
+
+        // Supabase RPC fallback
+        $headers = [
+            'apikey' => $this->key,
+            'Authorization' => 'Bearer ' . $this->key,
+            'Content-Type' => 'application/json',
+        ];
+
+        $response = \Http::withHeaders($headers)
+            ->post("{$this->url}/rest/v1/rpc/get_decrypted_user", [
+                'p_user_id' => $userId
+            ]);
+
+        if ($response->successful()) {
+            $fallback = $response->json();
+            if (!empty($fallback)) {
+                \Log::info("Supabase fallback decryption succeeded for user ID $userId");
+                return $fallback;
+            }
+        }
+
+        \Log::error("All decryption methods failed for user ID $userId", [
+            'status' => $response->status() ?? 'n/a',
+            'body' => $response->body() ?? 'empty',
+        ]);
+        return null;
+    }
+}
 }

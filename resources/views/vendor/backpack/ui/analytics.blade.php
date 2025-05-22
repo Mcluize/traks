@@ -1180,7 +1180,7 @@ $(document).ready(function() {
                 <div class="legend-item"><div class="legend-color" style="background:#FFC107;"></div> Pending Incidents</div>
                 <div class="legend-item"><div class="legend-color" style="background:#DC3545;"></div> Cancelled Incidents</div>
                 <div class="legend-item"><div class="legend-color" style="background:#28A745;"></div> Resolved Incidents</div>
-                <div class="legend-item"><div class="legend-color" style="background:#6C757D;"></div> Ignored Incidents</div>
+                <div class="legend-item"><div class="legend-color" style="background:#6C757D;"></div> Not Specified Incidents</div>
             `;
             return div;
         }

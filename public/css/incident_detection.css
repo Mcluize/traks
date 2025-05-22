@@ -307,7 +307,7 @@ body {
     border-radius: 4px;
 }
 
-.status.status-ignored {
+.status.status-not-specified{
     background-color: #6C757D; 
     color: white;
     padding: 2px 8px;

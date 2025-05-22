@@ -128,15 +128,16 @@ class IncidentController extends Controller
     }
 
     private function formatIncidents(array $incidents): array
-    {
-        return array_map(function($incident) {
-            // Parse timestamp as local Asia/Manila time, no conversion
-            $timestamp = Carbon::parse($incident['timestamp'], 'Asia/Manila');
-            $incident['date'] = $timestamp->toDateString(); // e.g., "2025-05-11"
-            $incident['time'] = $timestamp->format('H:i:s'); // e.g., "17:58:08"
-            return $incident;
-        }, $incidents);
-    }
+{
+    return array_map(function($incident) {
+        // Parse timestamp as local Asia/Manila time, no conversion
+        $timestamp = Carbon::parse($incident['timestamp'], 'Asia/Manila');
+        $incident['date'] = $timestamp->toDateString(); // e.g., "2025-05-11"
+        $incident['time'] = $timestamp->format('H:i:s'); // e.g., "17:58:08"
+        $incident['status_class'] = str_replace(' ', '-', strtolower($incident['status']));
+        return $incident;
+    }, $incidents);
+}
 
     private function buildFilters($filter, $searchId, $searchDate, $selectedYear)
     {
@@ -184,11 +185,12 @@ class IncidentController extends Controller
         }
 
         if ($searchDate) {
-            $dateStart = Carbon::parse($searchDate, 'Asia/Manila')->startOfDay()->format('Y-m-d H:i:s');
-            $dateEnd = Carbon::parse($searchDate, 'Asia/Manila')->endOfDay()->format('Y-m-d H:i:s');
-            $dateFilter = "(timestamp.gte.{$dateStart},timestamp.lte.{$dateEnd})";
-            $filters['and'] = isset($filters['and']) ? $filters['and'] . ',' . $dateFilter : $dateFilter;
-        }
+    $dateStart = Carbon::parse($searchDate, 'Asia/Manila')->startOfDay()->format('Y-m-d H:i:s');
+    $dateEnd = Carbon::parse($searchDate, 'Asia/Manila')->endOfDay()->format('Y-m-d H:i:s');
+    $dateFilter = "(timestamp.gte.{$dateStart},timestamp.lte.{$dateEnd})";
+    $filters['and'] = $dateFilter;
+}
+
 
         return $filters;
     }

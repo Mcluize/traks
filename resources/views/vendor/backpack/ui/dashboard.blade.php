@@ -708,224 +708,230 @@
             }
         });
 
-        function exportToCSV(selectedCards) {
-            const timestamp = new Date().toLocaleString();
-            let csvContent = "data:text/csv;charset=utf-8,";
-            csvContent += "TRAKS - Tourism Dashboard Export\n";
-            csvContent += "Generated on: " + timestamp + "\n\n";
+        function formatTimestamp(timestamp) {
+        const [date, time] = timestamp.split('T');
+        const timeWithoutMs = time.split('.')[0]; // Remove milliseconds and timezone
+        return `${date} ${timeWithoutMs}`;
+    }
 
-            if (selectedCards.touristArrivals) {
-                csvContent += "===== TOURIST ARRIVALS =====\n";
-                csvContent += "Period: " + currentTouristFilter.replace('_', ' ') + "\n";
-                csvContent += "Count: " + dashboardData.touristArrivals.count + "\n";
-                dashboardData.touristArrivals.touristIds.forEach(id => {
-                    csvContent += id + "\n";
-                });
-                csvContent += "\n";
-            }
-            
-            if (selectedCards.incidentReports) {
-                csvContent += "===== INCIDENT REPORTS =====\n";
-                csvContent += "Period: " + currentIncidentFilter.replace('_', ' ') + "\n";
-                csvContent += "Count: " + dashboardData.incidentReports.count + "\n";
-                csvContent += "Incidents\n";
-                csvContent += "Tourist ID,Latitude,Longitude,Timestamp,Status\n"; 
-                dashboardData.incidentReports.incidents.forEach(incident => {
-                    csvContent += `${incident.user_id},${incident.latitude},${incident.longitude},${incident.timestamp},${incident.status}\n`;
-                });
-                csvContent += "\n";
-            }
-            
-            if (selectedCards.accountCounts) {
-                csvContent += "===== ACCOUNT MANAGEMENT =====\n";
-                csvContent += "Account Type,Count\n";
-                csvContent += `Tourist Accounts,${dashboardData.accountCounts.touristCount}\n`;
-                csvContent += `Admin Accounts,${dashboardData.accountCounts.adminCount}\n\n`;
-            }
-            
-            if (selectedCards.mapData) {
-                csvContent += "===== MAP DATA (Check-ins) =====\n";
-                csvContent += "Period: " + currentMapFilter.replace('_', ' ') + "\n";
-                csvContent += "Location Name,Latitude,Longitude,Check-ins\n";
-                dashboardData.mapData.forEach(spot => {
-                    csvContent += `"${spot.name}",${spot.latitude},${spot.longitude},${spot.count}\n`;
-                });
-                csvContent += "\n";
-            }
-            
-            if (selectedCards.popularSpots) {
-                csvContent += "===== POPULAR TOURIST SPOTS =====\n";
-                csvContent += "Period: " + currentSpotsFilter.replace('_', ' ') + "\n";
-                csvContent += "Spot Name,Visits\n";
-                const sortedSpots = [...dashboardData.popularSpots].sort((a, b) => b.visits - a.visits);
-                sortedSpots.forEach(spot => {
-                    csvContent += `"${spot.spot}",${spot.visits}\n`;
-                });
-            }
+    function exportToCSV(selectedCards) {
+        const timestamp = new Date().toLocaleString();
+        let csvContent = "data:text/csv;charset=utf-8,";
+        csvContent += "TRAKS - Tourism Dashboard Export\n";
+        csvContent += "Generated on: " + timestamp + "\n\n";
 
-            const dateStr = new Date().toISOString().slice(0,10);
-            const encodedUri = encodeURI(csvContent);
-            const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", `TRAKS_Dashboard_Export_${dateStr}.csv`);
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+        if (selectedCards.touristArrivals) {
+            csvContent += "===== TOURIST ARRIVALS =====\n";
+            csvContent += "Period: " + currentTouristFilter.replace('_', ' ') + "\n";
+            csvContent += "Count: " + dashboardData.touristArrivals.count + "\n";
+            dashboardData.touristArrivals.touristIds.forEach(id => {
+                csvContent += id + "\n";
+            });
+            csvContent += "\n";
+        }
+        
+        if (selectedCards.incidentReports) {
+            csvContent += "===== INCIDENT REPORTS =====\n";
+            csvContent += "Period: " + currentIncidentFilter.replace('_', ' ') + "\n";
+            csvContent += "Count: " + dashboardData.incidentReports.count + "\n";
+            csvContent += "Incidents\n";
+            csvContent += "Tourist ID,Latitude,Longitude,Timestamp,Status\n"; 
+            dashboardData.incidentReports.incidents.forEach(incident => {
+                csvContent += `${incident.user_id},${incident.latitude},${incident.longitude},${formatTimestamp(incident.timestamp)},${incident.status}\n`;
+            });
+            csvContent += "\n";
+        }
+        
+        if (selectedCards.accountCounts) {
+            csvContent += "===== ACCOUNT MANAGEMENT =====\n";
+            csvContent += "Account Type,Count\n";
+            csvContent += `Tourist Accounts,${dashboardData.accountCounts.touristCount}\n`;
+            csvContent += `Admin Accounts,${dashboardData.accountCounts.adminCount}\n\n`;
+        }
+        
+        if (selectedCards.mapData) {
+            csvContent += "===== MAP DATA (Check-ins) =====\n";
+            csvContent += "Period: " + currentMapFilter.replace('_', ' ') + "\n";
+            csvContent += "Location Name,Latitude,Longitude,Check-ins\n";
+            dashboardData.mapData.forEach(spot => {
+                csvContent += `"${spot.name}",${spot.latitude},${spot.longitude},${spot.count}\n`;
+            });
+            csvContent += "\n";
+        }
+        
+        if (selectedCards.popularSpots) {
+            csvContent += "===== POPULAR TOURIST SPOTS =====\n";
+            csvContent += "Period: " + currentSpotsFilter.replace('_', ' ') + "\n";
+            csvContent += "Spot Name,Visits\n";
+            const sortedSpots = [...dashboardData.popularSpots].sort((a, b) => b.visits - a.visits);
+            sortedSpots.forEach(spot => {
+                csvContent += `"${spot.spot}",${spot.visits}\n`;
+            });
         }
 
-        function exportToPDF(selectedCards) {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-            const pageWidth = doc.internal.pageSize.getWidth();
-            const dateStr = new Date().toLocaleDateString();
-            const timeStr = new Date().toLocaleTimeString();
-            let yOffset = 15;
-            
-            doc.setFontSize(18);
-            doc.setTextColor(55, 73, 87);
-            doc.text("TRAKS - Tourism Dashboard Export", pageWidth / 2, yOffset, { align: "center" });
-            
+        const dateStr = new Date().toISOString().slice(0,10);
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", `TRAKS_Dashboard_Export_${dateStr}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
+    function exportToPDF(selectedCards) {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const dateStr = new Date().toLocaleDateString();
+        const timeStr = new Date().toLocaleTimeString();
+        let yOffset = 15;
+        
+        doc.setFontSize(18);
+        doc.setTextColor(55, 73, 87);
+        doc.text("TRAKS - Tourism Dashboard Export", pageWidth / 2, yOffset, { align: "center" });
+        
+        yOffset += 8;
+        doc.setFontSize(10);
+        doc.setTextColor(100, 100, 100);
+        doc.text(`Generated on: ${dateStr} at ${timeStr}`, pageWidth / 2, yOffset, { align: "center" });
+        
+        yOffset += 15;
+        
+        function addSectionHeader(title) {
+            doc.setFillColor(255, 126, 63);
+            doc.rect(10, yOffset - 5, pageWidth - 20, 8, 'F');
+            doc.setFontSize(12);
+            doc.setTextColor(255, 255, 255);
+            doc.text(title, 12, yOffset);
             yOffset += 8;
+            doc.setTextColor(0, 0, 0);
             doc.setFontSize(10);
-            doc.setTextColor(100, 100, 100);
-            doc.text(`Generated on: ${dateStr} at ${timeStr}`, pageWidth / 2, yOffset, { align: "center" });
+        }
+        
+        function addTable(headers, rows, startY) {
+            const cellPadding = 2;
+            const lineHeight = 8;
+            const fontSize = 9;
+            const tableWidth = pageWidth - 20;
+            const colWidth = tableWidth / headers.length;
             
-            yOffset += 15;
-            
-            function addSectionHeader(title) {
-                doc.setFillColor(255, 126, 63);
-                doc.rect(10, yOffset - 5, pageWidth - 20, 8, 'F');
-                doc.setFontSize(12);
-                doc.setTextColor(255, 255, 255);
-                doc.text(title, 12, yOffset);
-                yOffset += 8;
-                doc.setTextColor(0, 0, 0);
-                doc.setFontSize(10);
+            if (startY + (rows.length + 1) * lineHeight > doc.internal.pageSize.getHeight() - 20) {
+                doc.addPage();
+                startY = 20;
             }
             
-            function addTable(headers, rows, startY) {
-                const cellPadding = 2;
-                const lineHeight = 8;
-                const fontSize = 9;
-                const tableWidth = pageWidth - 20;
-                const colWidth = tableWidth / headers.length;
-                
-                if (startY + (rows.length + 1) * lineHeight > doc.internal.pageSize.getHeight() - 20) {
-                    doc.addPage();
-                    startY = 20;
+            doc.setFillColor(240, 240, 240);
+            doc.rect(10, startY, tableWidth, lineHeight, 'F');
+            doc.setFontSize(fontSize);
+            doc.setTextColor(80, 80, 80);
+            doc.setFont(undefined, 'bold');
+            
+            headers.forEach((header, i) => {
+                doc.text(header, 10 + (i * colWidth) + cellPadding, startY + lineHeight - 2);
+            });
+            
+            doc.setFont(undefined, 'normal');
+            doc.setTextColor(0, 0, 0);
+            
+            rows.forEach((row, r) => {
+                if (r % 2 === 0) {
+                    doc.setFillColor(250, 250, 250);
+                    doc.rect(10, startY + (r + 1) * lineHeight, tableWidth, lineHeight, 'F');
                 }
                 
-                doc.setFillColor(240, 240, 240);
-                doc.rect(10, startY, tableWidth, lineHeight, 'F');
-                doc.setFontSize(fontSize);
-                doc.setTextColor(80, 80, 80);
-                doc.setFont(undefined, 'bold');
-                
-                headers.forEach((header, i) => {
-                    doc.text(header, 10 + (i * colWidth) + cellPadding, startY + lineHeight - 2);
+                row.forEach((cell, c) => {
+                    doc.text(String(cell), 10 + (c * colWidth) + cellPadding, startY + (r + 1) * lineHeight + lineHeight - 2);
                 });
-                
-                doc.setFont(undefined, 'normal');
-                doc.setTextColor(0, 0, 0);
-                
-                rows.forEach((row, r) => {
-                    if (r % 2 === 0) {
-                        doc.setFillColor(250, 250, 250);
-                        doc.rect(10, startY + (r + 1) * lineHeight, tableWidth, lineHeight, 'F');
-                    }
-                    
-                    row.forEach((cell, c) => {
-                        doc.text(String(cell), 10 + (c * colWidth) + cellPadding, startY + (r + 1) * lineHeight + lineHeight - 2);
-                    });
-                });
-                
-                return startY + (rows.length + 1) * lineHeight + 10;
-            }
+            });
             
-            if (selectedCards.touristArrivals) {
-                addSectionHeader("TOURIST ARRIVALS");
-                doc.text(`Period: ${currentTouristFilter.replace('_', ' ')}`, 12, yOffset + 5);
-                doc.text(`Total Count: ${dashboardData.touristArrivals.count}`, 12, yOffset + 10);
-                yOffset += 20;
-            }
-            
-            if (selectedCards.incidentReports) {
-                addSectionHeader("INCIDENT REPORTS");
-                doc.text(`Period: ${currentIncidentFilter.replace('_', ' ')}`, 12, yOffset + 5);
-                doc.text(`Total Count: ${dashboardData.incidentReports.count}`, 12, yOffset + 10);
-                yOffset += 15;
-                const incidentHeaders = ["Tourist ID", "Latitude", "Longitude", "Timestamp", "Status"];
-                const incidentRows = dashboardData.incidentReports.incidents.map(incident => [
-                    incident.user_id,
-                    incident.latitude,
-                    incident.longitude,
-                    incident.timestamp,
-                    incident.status
-                ]); 
-                yOffset = addTable(incidentHeaders, incidentRows, yOffset);
-            }
-            
-            if (selectedCards.accountCounts) {
-                addSectionHeader("ACCOUNT MANAGEMENT");
-                yOffset = addTable(
-                    ["Account Type", "Count"], 
-                    [
-                        ["Tourist Accounts", dashboardData.accountCounts.touristCount],
-                        ["Admin Accounts", dashboardData.accountCounts.adminCount]
-                    ],
-                    yOffset + 5
-                );
-            }
-            
-            if (selectedCards.mapData) {
-                addSectionHeader("MAP DATA (CHECK-INS)");
-                doc.text(`Period: ${currentMapFilter.replace('_', ' ')}`, 12, yOffset + 5);
-                yOffset += 10;
-                const mapHeaders = ["Location Name", "Check-ins", "Coordinates"];
-                const mapRows = dashboardData.mapData.map(spot => [
-                    spot.name, 
-                    spot.count, 
-                    `${spot.latitude.toFixed(4)}, ${spot.longitude.toFixed(4)}`
-                ]);
-                yOffset = addTable(mapHeaders, mapRows, yOffset);
-            }
-            
-            if (selectedCards.popularSpots) {
-                addSectionHeader("POPULAR TOURIST SPOTS");
-                doc.text(`Period: ${currentSpotsFilter.replace('_', ' ')}`, 12, yOffset + 5);
-                yOffset += 10;
-                const spotsHeaders = ["Rank", "Spot Name", "Visits"];
-                const sortedSpots = [...dashboardData.popularSpots]
-                    .sort((a, b) => b.visits - a.visits)
-                    .map((spot, index) => [index + 1, spot.spot, spot.visits]);
-                yOffset = addTable(spotsHeaders, sortedSpots, yOffset);
-            }
-            
-            const pageCount = doc.internal.getNumberOfPages();
-            for (let i = 1; i <= pageCount; i++) {
-                doc.setPage(i);
-                doc.setFontSize(8);
-                doc.setTextColor(150, 150, 150);
-                doc.text(`Page ${i} of ${pageCount}`, pageWidth - 20, doc.internal.pageSize.getHeight() - 10);
-            }
-            
-            const currentDate = new Date().toISOString().slice(0,10);
-            doc.save(`TRAKS_Dashboard_Export_${currentDate}.pdf`);
+            return startY + (rows.length + 1) * lineHeight + 10;
         }
+        
+        if (selectedCards.touristArrivals) {
+            addSectionHeader("TOURIST ARRIVALS");
+            doc.text(`Period: ${currentTouristFilter.replace('_', ' ')}`, 12, yOffset + 5);
+            doc.text(`Total Count: ${dashboardData.touristArrivals.count}`, 12, yOffset + 10);
+            yOffset += 20;
+        }
+        
+        if (selectedCards.incidentReports) {
+            addSectionHeader("INCIDENT REPORTS");
+            doc.text(`Period: ${currentIncidentFilter.replace('_', ' ')}`, 12, yOffset + 5);
+            doc.text(`Total Count: ${dashboardData.incidentReports.count}`, 12, yOffset + 10);
+            yOffset += 15;
+            const incidentHeaders = ["Tourist ID", "Latitude", "Longitude", "Timestamp", "Status"];
+            const incidentRows = dashboardData.incidentReports.incidents.map(incident => [
+                incident.user_id,
+                incident.latitude,
+                incident.longitude,
+                formatTimestamp(incident.timestamp),
+                incident.status
+            ]); 
+            yOffset = addTable(incidentHeaders, incidentRows, yOffset);
+        }
+        
+        if (selectedCards.accountCounts) {
+            addSectionHeader("ACCOUNT MANAGEMENT");
+            yOffset = addTable(
+                ["Account Type", "Count"], 
+                [
+                    ["Tourist Accounts", dashboardData.accountCounts.touristCount],
+                    ["Admin Accounts", dashboardData.accountCounts.adminCount]
+                ],
+                yOffset + 5
+            );
+        }
+        
+        if (selectedCards.mapData) {
+            addSectionHeader("MAP DATA (CHECK-INS)");
+            doc.text(`Period: ${currentMapFilter.replace('_', ' ')}`, 12, yOffset + 5);
+            yOffset += 10;
+            const mapHeaders = ["Location Name", "Check-ins", "Coordinates"];
+            const mapRows = dashboardData.mapData.map(spot => [
+                spot.name, 
+                spot.count, 
+                `${spot.latitude.toFixed(4)}, ${spot.longitude.toFixed(4)}`
+            ]);
+            yOffset = addTable(mapHeaders, mapRows, yOffset);
+        }
+        
+        if (selectedCards.popularSpots) {
+            addSectionHeader("POPULAR TOURIST SPOTS");
+            doc.text(`Period: ${currentSpotsFilter.replace('_', ' ')}`, 12, yOffset + 5);
+            yOffset += 10;
+            const spotsHeaders = ["Rank", "Spot Name", "Visits"];
+            const sortedSpots = [...dashboardData.popularSpots]
+                .sort((a, b) => b.visits - a.visits)
+                .map((spot, index) => [index + 1, spot.spot, spot.visits]);
+            yOffset = addTable(spotsHeaders, sortedSpots, yOffset);
+        }
+        
+        const pageCount = doc.internal.getNumberOfPages();
+        for (let i = 1; i <= pageCount; i++) {
+            doc.setPage(i);
+            doc.setFontSize(8);
+            doc.setTextColor(150, 150, 150);
+            doc.text(`Page ${i} of ${pageCount}`, pageWidth - 20, doc.internal.pageSize.getHeight() - 10);
+        }
+        
+        const currentDate = new Date().toISOString().slice(0,10);
+        doc.save(`TRAKS_Dashboard_Export_${currentDate}.pdf`);
+    }
 
-        $('#mapDropdown').on('show.bs.dropdown', function() {
-            $('.dropdown-menu').css({
-                'width': 'auto',
-                'min-width': '0',
-                'padding': '0',
-                'margin': '0'
-            });
-            $('.dropdown-item').css({
-                'padding': '8px 2px',
-                'margin': '0',
-                'text-align': 'center'
-            });
+    $('#mapDropdown').on('show.bs.dropdown', function() {
+        $('.dropdown-menu').css({
+            'width': 'auto',
+            'min-width': '0',
+            'padding': '0',
+            'margin': '0'
         });
+        $('.dropdown-item').css({
+            'padding': '8px 2px',
+            'margin': '0',
+            'text-align': 'center'
+        });
+    });
                 
         document.querySelectorAll('[data-dismiss="modal"]').forEach(button => {
             button.addEventListener('click', () => {

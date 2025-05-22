@@ -18,7 +18,7 @@
                     <td>{{ $incident['time'] }}</td>
                     <td>{{ $incident['latitude'] }}</td>
                     <td>{{ $incident['longitude'] }}</td>
-                    <td class="status status-{{ strtolower($incident['status']) }}">{{ $incident['status'] }}</td>
+                    <td class="status status-{{ $incident['status_class'] }}">{{ $incident['status'] }}</td>
                 </tr>
             @empty
                 <tr><td colspan="6" class="text-center error-message">{{ $message ?? 'No incidents found' }}</td></tr>

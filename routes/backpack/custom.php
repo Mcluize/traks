@@ -96,4 +96,6 @@ Route::group([
     Route::get('analytics/tourist-activities', [AnalyticsController::class, 'getTouristActivities'])
          ->name('analytics.tourist-activities');
      Route::get('analytics/stats', [AnalyticsController::class, 'stats'])->name('admin.analytics.stats');
+     Route::post('/admin/user/decrypted-details', [AdminAccountController::class, 'getDecryptedUserDetails']);
+     Route::get('api/user-details/{userId}', [AdminAccountController::class, 'getUserDetails'])->name('admin.user.details');
 });

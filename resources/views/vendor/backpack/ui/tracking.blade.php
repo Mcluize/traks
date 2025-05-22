@@ -121,28 +121,6 @@
                         <div class="legend-marker other-warning"></div>
                         <span>Others - Purple Marker</span>
                     </div>
-                    <h5>Circles</h5>
-                    <div class="legend-item">
-                        <div class="legend-circle" style="border: 2px solid #0066FF; background-color: rgba(0, 102, 255, 0.2);"></div>
-                        <span>Flood Prone Area - Blue Circle</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-circle" style="border: 2px solid #FF0000; background-color: rgba(255, 0, 0, 0.2);"></div>
-                        <span>Accident Prone Area - Red Circle</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-circle" style="border: 2px solid #FF6600; background-color: rgba(255, 102, 0, 0.2);"></div>
-                        <span>Landslide Prone Area - Orange Circle</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-circle" style="border: 2px solid #CC00CC; background-color: rgba(204, 0, 204, 0.2);"></div>
-                        <span>Others - Purple Circle</span>
-                    </div>
-                    <h5>Polygons</h5>
-                    <div class="legend-item">
-                        <div class="legend-polygon" style="border: 2px solid #000; background-color: rgba(0, 0, 0, 0.2);"></div>
-                        <span>Warning Zone Polygon</span>
-                    </div>
                 </div>
                 <div class="section-divider"></div>
                 <div class="legend-section user-zones-legend" id="user-zones-tab">
@@ -217,10 +195,10 @@
                             <div class="form-group">
                                 <label for="warning-type">Warning Type</label>
                                 <select id="warning-type" class="form-control">
-                                    <option value="flood">Flood Prone Area</option>
-                                    <option value="accident">Accident Prone Area</option>
-                                    <option value="landslide">Landslide Prone Area</option>
-                                    <option value="other">Others</option>
+                                    <option value="Flood Prone Area">Flood Prone Area</option>
+                                    <option value="Accident Prone Area">Accident Prone Area</option>
+                                    <option value="Landslide Prone Area">Landslide Prone Area</option>
+                                    <option value="Others">Others</option>
                                 </select>
                             </div>
                             <div class="form-group">
@@ -231,31 +209,9 @@
                                 <label for="warning-description">Description</label>
                                 <textarea id="warning-description" class="form-control" rows="3" placeholder="Describe the warning or danger..."></textarea>
                             </div>
-                            <div class="form-group">
-                                <label>Drawing Mode</label>
-                                <div class="drawing-options">
-                                    <label class="radio-container">
-                                        <input type="radio" name="drawing-mode" value="marker" checked>
-                                        <span class="radio-label">Marker</span>
-                                    </label>
-                                    <label class="radio-container">
-                                        <input type="radio" name="drawing-mode" value="circle">
-                                        <span class="radio-label">Circle</span>
-                                    </label>
-                                    <label class="radio-container">
-                                        <input type="radio" name="drawing-mode" value="polygon">
-                                        <span class="radio-label">Polygon</span>
-                                    </label>
-                                </div>
-                            </div>
-                            <div id="circle-radius-container" style="display:none;">
-                                <label for="circle-radius">Radius (meters)</label>
-                                <input type="range" id="circle-radius" min="50" max="2000" value="200" step="50">
-                                <span id="radius-value">200m</span>
-                            </div>
                             <button id="go-to-map-btn" class="btn btn-info">Go to Map</button>
                             <div class="instructions">
-                                <p>After pressing "Go to Map", draw the selected shape on the map. For polygons, click multiple points and double-click to finish.</p>
+                                <p>After pressing "Go to Map", place a marker on the map to indicate the warning location.</p>
                             </div>
                         </div>
                         <div class="modal-footer">
@@ -541,7 +497,7 @@ const defaultWarningIcon = L.icon({
     shadowSize: [41, 41]
 });
 const warningIcons = {
-    'flood': L.icon({
+    'Flood Prone Area': L.icon({
         iconUrl: '{{ asset('images/warning-flood.png') }}',
         shadowUrl: '{{ asset('images/marker-shadow.png') }}',
         iconSize: [32, 32],
@@ -549,7 +505,7 @@ const warningIcons = {
         popupAnchor: [0, -32],
         shadowSize: [41, 41]
     }),
-    'accident': L.icon({
+    'Accident Prone Area': L.icon({
         iconUrl: '{{ asset('images/accident.png') }}',
         shadowUrl: '{{ asset('images/marker-shadow.png') }}',
         iconSize: [32, 32],
@@ -557,7 +513,7 @@ const warningIcons = {
         popupAnchor: [0, -32],
         shadowSize: [41, 41]
     }),
-    'landslide': L.icon({
+    'Landslide Prone Area': L.icon({
         iconUrl: '{{ asset('images/landslide-web.png') }}',
         shadowUrl: '{{ asset('images/marker-shadow.png') }}',
         iconSize: [32, 32],
@@ -565,7 +521,7 @@ const warningIcons = {
         popupAnchor: [0, -32],
         shadowSize: [41, 41]
     }),
-    'other': L.icon({
+    'Others': L.icon({
         iconUrl: '{{ asset('images/warning-other.png') }}',
         shadowUrl: '{{ asset('images/marker-shadow.png') }}',
         iconSize: [32, 32],
@@ -617,16 +573,16 @@ const userZoneIcons = {
     })
 };
 const circleStyles = {
-    'flood': { color: '#0066FF', fillColor: '#0066FF', fillOpacity: 0.2 },
-    'accident': { color: '#FF0000', fillColor: '#FF0000', fillOpacity: 0.2 },
-    'landslide': { color: '#FF6600', fillColor: '#FF6600', fillOpacity: 0.2 },
-    'other': { color: '#CC00CC', fillColor: '#CC00CC', fillOpacity: 0.2 }
+    'Flood Prone Area': { color: '#0066FF', fillColor: '#0066FF', fillOpacity: 0.2 },
+    'Accident Prone Area': { color: '#FF0000', fillColor: '#FF0000', fillOpacity: 0.2 },
+    'Landslide Prone Area': { color: '#FF6600', fillColor: '#FF6600', fillOpacity: 0.2 },
+    'Others': { color: '#CC00CC', fillColor: '#CC00CC', fillOpacity: 0.2 }
 };
-const typeDisplayNames = {
-    'flood': 'Flood Prone Area',
-    'accident': 'Accident Prone Area',
-    'landslide': 'Landslide Prone Area',
-    'other': 'Others'
+const typeShorthands = {
+    'Flood Prone Area': 'flood',
+    'Accident Prone Area': 'accident',
+    'Landslide Prone Area': 'landslide',
+    'Others': 'other'
 };
 setTimeout(function() { map.invalidateSize(); }, 100);
 let currentTouristId;
@@ -638,8 +594,30 @@ let currentFilter = 'all_time';
 let selectedCustomYear = null;
 const markerMap = new Map();
 function formatTime(timestamp) {
-    return timestamp.slice(0, 19).replace('T', ' ');
+    const date = new Date(timestamp);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const seconds = String(date.getSeconds()).padStart(2, '0');
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 }
+function formatTimestampMinus8Hours(timestamp) {
+    if (!timestamp) return 'N/A';
+    const date = new Date(timestamp);
+    const adjustedTime = new Date(date.getTime() - 8 * 60 * 60 * 1000);
+    const year = adjustedTime.getFullYear();
+    const month = String(adjustedTime.getMonth() + 1).padStart(2, '0');
+    const day = String(adjustedTime.getDate()).padStart(2, '0');
+    const hours = String(adjustedTime.getHours()).padStart(2, '0');
+    const minutes = String(adjustedTime.getMinutes()).padStart(2, '0');
+    const seconds = String(adjustedTime.getSeconds()).padStart(2, '0');
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+}
+
+
+
 async function isValidTourist(touristId) {
     try {
         const { data, error } = await supabase
@@ -785,7 +763,7 @@ function plotCheckins(checkins) {
         const count = spotCounts[spot_id];
         const marker = L.marker([latitude, longitude], { icon: markerIcon })
             .addTo(checkinLayer)
-            .bindPopup(`<b>${name}</b><br>Check-in Time: ${formatTime(checkin.timestamp)}<br>Total Check-ins at this spot: ${count}`);
+            .bindPopup(`<b>${name}</b><br>Check-in Time: ${formatTimestampMinus8Hours(checkin.timestamp)}<br>Total Check-ins at this spot: ${count}`);
         pathCoordinates.push([latitude, longitude]);
     });
     if (pathCoordinates.length > 1) {
@@ -803,8 +781,8 @@ function plotCheckins(checkins) {
     }
 }
 async function displaySummary(checkins, touristId) {
-    const firstCheckin = checkins.length > 0 ? formatTime(checkins[0].timestamp) : 'N/A';
-    const lastCheckin = checkins.length > 0 ? formatTime(checkins[checkins.length - 1].timestamp) : 'N/A';
+    const firstCheckin = checkins.length > 0 ? formatTimestampMinus8Hours(checkins[0].timestamp) : 'N/A';
+    const lastCheckin = checkins.length > 0 ? formatTimestampMinus8Hours(checkins[checkins.length - 1].timestamp) : 'N/A';
     const lastLocation = checkins.length > 0 ? checkins[checkins.length - 1].tourist_spots.name : 'N/A';
     let locationButtonHtml = '';
     const locationExists = await fetchLatestLocation(touristId);
@@ -868,7 +846,7 @@ function displayTableWithPagination(checkins, currentPage) {
                 ${currentCheckins.map(checkin => `
                     <tr>
                         <td>${checkin.tourist_spots.name}</td>
-                        <td>${formatTime(checkin.timestamp)}</td>
+                        <td>${formatTimestampMinus8Hours(checkin.timestamp)}</td>
                     </tr>
                 `).join('')}
             </tbody>
@@ -1333,10 +1311,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                     const { latitude, longitude } = location;
                     if (!currentLocationMarker) {
                         currentLocationMarker = L.marker([latitude, longitude], { icon: currentLocationIcon })
-                            .addTo(checkinLayer)
-                            .bindPopup(function() {
-                                return `<b>Current Location</b><br>Last Updated: ${formatTime(currentLocationData.updated_at)}`;
-                            });
+                        .addTo(checkinLayer)
+                        .bindPopup(function() {
+                            const originalDate = new Date(currentLocationData.updated_at);
+                            const displayDate = new Date(originalDate.getTime() + 4 * 60 * 60 * 1000);
+                            return `<b>Current Location</b><br>Last Updated: ${formatTime(displayDate)}`;
+                        });
                     } else {
                         currentLocationMarker.setLatLng([latitude, longitude]);
                     }
@@ -1507,17 +1487,12 @@ function setupLegendTabs() {
 }
 let drawHandler;
 let selectedShape = null;
-let currentDrawingType = 'marker';
 document.getElementById('add-warning-btn').addEventListener('click', function() {
     resetWarningForm();
     $('#warningModal').modal('show');
 });
 document.getElementById('go-to-map-btn').addEventListener('click', function() {
-    const drawingType = document.querySelector('input[name="drawing-mode"]:checked').value;
-    currentDrawingType = drawingType;
-    if (drawingType === 'marker') drawHandler = new L.Draw.Marker(map);
-    else if (drawingType === 'circle') drawHandler = new L.Draw.Circle(map);
-    else if (drawingType === 'polygon') drawHandler = new L.Draw.Polygon(map);
+    drawHandler = new L.Draw.Marker(map);
     drawHandler.enable();
     $('#warningModal').modal('hide');
 });
@@ -1539,7 +1514,7 @@ map.on('draw:canceled', function() {
 });
 document.getElementById('save-warning-btn').addEventListener('click', async function() {
     if (!selectedShape) {
-        showErrorModal('Please draw a shape on the map.');
+        showErrorModal('Please place a marker on the map.');
         return;
     }
     const warningType = document.getElementById('warning-type').value;
@@ -1549,46 +1524,21 @@ document.getElementById('save-warning-btn').addEventListener('click', async func
         showErrorModal('Please enter a zone tag for the warning');
         return;
     }
-    let warningData;
-    if (currentDrawingType === 'marker') {
-        const latlng = selectedShape.getLatLng();
-        warningData = {
-            type: warningType,
-            zone_tag: warningZoneTag,
-            description: warningDescription,
-            latitude: latlng.lat,
-            longitude: latlng.lng,
-            shape_type: 'marker',
-            created_at: new Date().toISOString(),
-            status: 'active'
-        };
-    } else if (currentDrawingType === 'circle') {
-        const center = selectedShape.getLatLng();
-        const radius = selectedShape.getRadius();
-        warningData = {
-            type: warningType,
-            zone_tag: warningZoneTag,
-            description: warningDescription,
-            latitude: center.lat,
-            longitude: center.lng,
-            radius: radius,
-            shape_type: 'circle',
-            created_at: new Date().toISOString(),
-            status: 'active'
-        };
-    } else if (currentDrawingType === 'polygon') {
-        const latlngs = selectedShape.getLatLngs()[0];
-        const polygonCoords = latlngs.map(point => [point.lat, point.lng]);
-        warningData = {
-            type: warningType,
-            zone_tag: warningZoneTag,
-            description: warningDescription,
-            polygon_coords: polygonCoords,
-            shape_type: 'polygon',
-            created_at: new Date().toISOString(),
-            status: 'active'
-        };
-    }
+    const latlng = selectedShape.getLatLng();
+    const now = new Date();
+    const adjustedTime = new Date(now.getTime() + 8 * 60 * 60 * 1000); // Add 8 hours for UTC+8
+    const createdAt = adjustedTime.toISOString();
+    console.log('Adjusted created_at timestamp:', createdAt); // Debug log
+    const warningData = {
+        type: warningType,
+        zone_tag: warningZoneTag,
+        description: warningDescription,
+        latitude: latlng.lat,
+        longitude: latlng.lng,
+        shape_type: 'marker',
+        created_at: createdAt,
+        status: 'active'
+    };
     try {
         const { data, error } = await supabase.from('warning_zones').insert([warningData]).select();
         if (error) throw new Error(`Supabase error: ${error.message}`);
@@ -1626,7 +1576,6 @@ async function loadWarningZones() {
 function addWarningToMap(warning) {
     let warningElement;
 
-    // Check if required fields are present and valid
     if (!warning.shape_type || !warning.zone_id) {
         console.warn(`Skipping warning zone ${warning.zone_id || 'unknown'}: Missing shape_type or zone_id`);
         return;
@@ -1670,12 +1619,10 @@ function addWarningToMap(warning) {
         return;
     }
 
-    // Add popup and attach to map
     warningElement.bindPopup(`<b>${warning.zone_tag}</b><br><button class="view-details-btn" data-id="${warning.zone_id}">View Details</button>`);
     warningElement.addTo(warningLayer);
     warningElement.warningData = warning;
 
-    // Attach popup event listener
     warningElement.on('popupopen', function() {
         setTimeout(() => {
             document.querySelectorAll('.view-details-btn').forEach(btn => {
@@ -1692,7 +1639,7 @@ function showWarningDetails(warning) {
     const content = document.querySelector('.warning-details-content');
     content.innerHTML = `
         <h4>${warning.zone_tag}</h4>
-        <p class="warning-type ${warning.type}"><strong>Type:</strong> ${typeDisplayNames[warning.type] || warning.type}</p>
+        <p class="warning-type ${typeShorthands[warning.type] || 'other'}"><strong>Type:</strong> ${warning.type}</p>
         <p><strong>Description:</strong> ${warning.description || 'No description provided'}</p>
         <p><strong>Shape Type:</strong> ${warning.shape_type}</p>
         ${warning.shape_type === 'marker' || warning.shape_type === 'circle' ? `<p><strong>Location:</strong> Lat: ${warning.latitude ? warning.latitude.toFixed(6) : 'N/A'}, Lng: ${warning.longitude ? warning.longitude.toFixed(6) : 'N/A'}</p>` : ''}
@@ -1713,7 +1660,7 @@ document.querySelector('.deactivate-warning-btn').addEventListener('click', func
         currentWarningToDeactivate = warningId;
         const confirmModal = document.getElementById('deactivateWarningModal');
         confirmModal.querySelector('.warning-title').textContent = warningToDeactivate.zone_tag;
-        confirmModal.querySelector('.warning-type').textContent = `Type: ${typeDisplayNames[warningToDeactivate.type] || warningToDeactivate.type}`;
+        confirmModal.querySelector('.warning-type').textContent = `Type: ${warningToDeactivate.type}`;
         $('#warningDetailsModal').modal('hide');
         $('#deactivateWarningModal').modal('show');
     }
@@ -1721,17 +1668,12 @@ document.querySelector('.deactivate-warning-btn').addEventListener('click', func
 function resetWarningForm() {
     document.getElementById('warning-zone-tag').value = '';
     document.getElementById('warning-description').value = '';
-    document.getElementById('warning-type').value = 'flood';
-    document.querySelector('input[name="drawing-mode"][value="marker"]').checked = true;
-    document.getElementById('circle-radius-container').style.display = 'none';
-    document.getElementById('circle-radius').value = 200;
-    document.getElementById('radius-value').textContent = '200m';
+    document.getElementById('warning-type').value = 'Flood Prone Area';
     if (selectedShape) {
         map.removeLayer(selectedShape);
         selectedShape = null;
     }
     if (drawHandler) drawHandler.disable();
-    currentDrawingType = 'marker';
     document.getElementById('save-warning-btn').disabled = true;
 }
 document.getElementById('confirm-deactivate-btn').addEventListener('click', async function() {

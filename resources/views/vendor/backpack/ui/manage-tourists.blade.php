@@ -273,8 +273,15 @@
                 </div>
                 <div class="mb-3">
                     <label for="contactDetails" class="form-label">Contact Details</label>
-                    <input type="text" class="form-control" id="contactDetails" required>
+                    <div class="input-group">
+                        <span class="input-group-text">+63</span>
+                        <input type="text" class="form-control" id="contactDetails" required pattern="9\d{9}" maxlength="10" placeholder="9XXXXXXXXX">
+                    </div>
+                    <div class="invalid-feedback" id="contactDetailsError">
+                        Please enter a valid 10-digit mobile number starting with 9.
+                    </div>
                 </div>
+                <div id="createAccountError" class="text-danger" style="display:none;"></div>
             </div>
             <div class="modal-footer justify-content-between">
                 <div class="d-flex w-100 gap-2">
@@ -302,45 +309,60 @@ document.addEventListener('DOMContentLoaded', function () {
     const createAccountModalInstance = new bootstrap.Modal(createAccountModalEl);
     const mainContent = document.getElementById('mainContent');
 
-    // Pagination Configuration
     const ITEMS_PER_PAGE = 5;
     
-    // Tourist Pagination
     let touristCurrentPage = 1;
     const touristRows = document.querySelectorAll('.tourist-row');
     const touristTotalItems = touristRows.length;
     const touristTotalPages = Math.ceil(touristTotalItems / ITEMS_PER_PAGE);
     
-    // Admin Pagination
     let adminCurrentPage = 1;
     const adminRows = document.querySelectorAll('.admin-row');
     const adminTotalItems = adminRows.length;
     const adminTotalPages = Math.ceil(adminTotalItems / ITEMS_PER_PAGE);
     
-    // Initialize both paginations
     initPagination('tourist', touristRows, touristTotalPages);
     initPagination('admin', adminRows, adminTotalPages);
 
-    // Reset userModal on show
     userModalEl.addEventListener('show.bs.modal', function () {
         resetPinModal();
     });
 
-    // Reset changePinModal on show
     changePinModalEl.addEventListener('show.bs.modal', function () {
         document.getElementById('newPinInput').value = '';
         document.getElementById('pinChangeError').style.display = 'none';
     });
 
-    // Reset createAccountModal on show
     createAccountModalEl.addEventListener('show.bs.modal', function () {
         const fullName = document.getElementById('fullName');
         const contactDetails = document.getElementById('contactDetails');
+        const createAccountError = document.getElementById('createAccountError');
         if (fullName) fullName.value = '';
         if (contactDetails) contactDetails.value = '';
+        if (createAccountError) {
+            createAccountError.textContent = '';
+            createAccountError.style.display = 'none';
+        }
+        fullName.classList.remove('is-invalid');
+        contactDetails.classList.remove('is-invalid');
     });
+    
+    const contactDetails = document.getElementById('contactDetails');
+    if (contactDetails) {
+        contactDetails.addEventListener('input', function(e) {
+            this.value = this.value.replace(/\D/g, '');
+            if (/^9\d{9}$/.test(this.value)) {
+                this.classList.remove('is-invalid');
+                this.classList.add('is-valid');
+            } else {
+                this.classList.remove('is-valid');
+                if (this.value.length > 0) {
+                    this.classList.add('is-invalid');
+                }
+            }
+        });
+    }
 
-    // Event delegation for View Details buttons
     document.addEventListener('click', function (event) {
         if (event.target.classList.contains('view-details-btn')) {
             selectedUser = JSON.parse(event.target.dataset.user);
@@ -350,7 +372,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    // Verify PIN before allowing Change PIN
     document.getElementById('changePinBtn').addEventListener('click', function () {
         const pinInput = document.getElementById('pinInput').value;
         if (!pinInput) {
@@ -384,7 +405,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // Handle Save New PIN button click
     document.getElementById('saveNewPinBtn').addEventListener('click', function () {
         const currentPin = document.getElementById('pinInput').value;
         const newPin = document.getElementById('newPinInput').value;
@@ -425,20 +445,17 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // Cancel PIN change and return to userModal
     document.getElementById('cancelPinChange').addEventListener('click', function () {
         changePinModalInstance.hide();
         userModalInstance.show();
         resetPinModal();
     });
 
-    // Function to reset the PIN modal to its original state
     function resetPinModal() {
         document.getElementById('pinInput').value = '';
         document.getElementById('pinError').style.display = 'none';
     }
 
-    // Lock account handling
     $(document).on('click', '.lock-btn', function () {
         const userId = $(this).data('user-id');
         $('#lockConfirmModal').modal('show');
@@ -479,7 +496,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // Search by Tourist ID with pagination integration
     const searchTouristInput = document.getElementById('searchTouristInput');
     if (searchTouristInput) {
         searchTouristInput.addEventListener('keyup', function () {
@@ -514,7 +530,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Search by Admin ID with pagination integration
     const searchAdminInput = document.getElementById('searchAdminInput');
     if (searchAdminInput) {
         searchAdminInput.addEventListener('keyup', function () {
@@ -549,7 +564,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Function to sort admin table in descending order
     function sortAdminTable() {
         const tableBody = document.getElementById('adminTableBody');
         const rows = Array.from(tableBody.querySelectorAll('tr'));
@@ -561,25 +575,52 @@ document.addEventListener('DOMContentLoaded', function () {
         rows.forEach(row => tableBody.appendChild(row));
     }
 
-    // Create account functionality
     const saveAccountBtn = document.getElementById('saveAccountBtn');
     if (saveAccountBtn) {
         saveAccountBtn.addEventListener('click', function () {
             const fullName = document.getElementById('fullName');
             const contactDetails = document.getElementById('contactDetails');
+            const contactDetailsError = document.getElementById('contactDetailsError');
+            const createAccountError = document.getElementById('createAccountError');
 
             if (!fullName || !contactDetails) {
-                alert('Required input fields are missing in the DOM');
+                if (createAccountError) {
+                    createAccountError.textContent = 'Required input fields are missing in the DOM';
+                    createAccountError.style.display = 'block';
+                }
                 return;
             }
 
-            const fullNameValue = fullName.value;
-            const contactDetailsValue = contactDetails.value;
+            const fullNameValue = fullName.value.trim();
+            const contactValue = contactDetails.value.trim();
 
-            if (!fullNameValue || !contactDetailsValue) {
-                alert('Please fill in all required fields');
+            let isValid = true;
+            fullName.classList.remove('is-invalid');
+            contactDetails.classList.remove('is-invalid');
+            if (createAccountError) {
+                createAccountError.textContent = '';
+                createAccountError.style.display = 'none';
+            }
+            
+            if (!fullNameValue) {
+                fullName.classList.add('is-invalid');
+                isValid = false;
+            }
+            
+            const phoneRegex = /^9\d{9}$/;
+            if (!phoneRegex.test(contactValue)) {
+                contactDetails.classList.add('is-invalid');
+                if (contactDetailsError) {
+                    contactDetailsError.textContent = 'Please enter a valid 10-digit mobile number starting with 9.';
+                }
+                isValid = false;
+            }
+
+            if (!isValid) {
                 return;
             }
+
+            const formattedContact = `+63${contactValue}`;
 
             this.disabled = true;
             this.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Creating...';
@@ -592,14 +633,16 @@ document.addEventListener('DOMContentLoaded', function () {
                 },
                 body: JSON.stringify({
                     full_name: fullNameValue,
-                    contact_details: contactDetailsValue
+                    contact_details: formattedContact
                 })
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
             .then(data => {
-                this.disabled = false;
-                this.innerHTML = 'Save Account';
-
                 if (data.success) {
                     const newUser = data.user;
                     const tableBody = document.getElementById('adminTableBody');
@@ -638,20 +681,34 @@ document.addEventListener('DOMContentLoaded', function () {
                     
                     createAccountModalInstance.hide();
                     toastr.success('Admin account created successfully with default PIN: 1234');
+                    fullName.value = '';
+                    contactDetails.value = '';
                 } else {
-                    alert('Failed to create account: ' + data.message);
+                    if (data.errors && data.errors.contact_details) {
+                        contactDetails.classList.add('is-invalid');
+                        if (contactDetailsError) {
+                            contactDetailsError.textContent = data.errors.contact_details[0];
+                        }
+                    } else if (createAccountError) {
+                        createAccountError.textContent = data.message || 'Failed to create account';
+                        createAccountError.style.display = 'block';
+                    }
                 }
             })
             .catch(error => {
+                console.error('Error:', error);
+                if (createAccountError) {
+                    createAccountError.textContent = 'Error: ' + (error.message || 'Something went wrong. Please try again.');
+                    createAccountError.style.display = 'block';
+                }
+            })
+            .finally(() => {
                 this.disabled = false;
                 this.innerHTML = 'Save Account';
-                console.error('Error:', error);
-                alert('Error: ' + (error.message || 'Something went wrong. Please try again.'));
             });
         });
     }
 
-    // Close modals and remove blur effect
     const closeUserInfoModal = document.getElementById('closeUserInfoModal');
     if (closeUserInfoModal) {
         closeUserInfoModal.addEventListener('click', () => {
@@ -673,64 +730,93 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    // Verify PIN for Viewing Details
-    const unlockBtn = document.getElementById('unlockBtn');
-    if (unlockBtn) {
-        unlockBtn.addEventListener('click', function () {
-            const pinInput = document.getElementById('pinInput');
-            if (!pinInput) return;
-            const pin = pinInput.value;
+    
+const unlockBtn = document.getElementById('unlockBtn');
+if (unlockBtn) {
+    unlockBtn.addEventListener('click', function () {
+        const pinInput = document.getElementById('pinInput');
+        if (!pinInput) return;
+        const pin = pinInput.value;
 
-            fetch(`/admin/pin/verify`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                },
-                body: JSON.stringify({ pin })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.message) {
-                    userModalInstance.hide();
-                    const modalUserTypeLabel = document.getElementById('modalUserTypeLabel');
-                    const userInfoModalTitle = document.getElementById('userInfoModalTitle');
-                    const modalUserId = document.getElementById('modalUserId');
-                    const modalFullName = document.getElementById('modalFullName');
-                    const modalContact = document.getElementById('modalContact');
-                    const modalAddress = document.getElementById('modalAddress');
-                    const modalCreatedAt = document.getElementById('modalCreatedAt');
+        this.disabled = true;
+        this.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Unlocking...';
 
-                    if (modalUserTypeLabel) modalUserTypeLabel.textContent = selectedUserType.charAt(0).toUpperCase() + selectedUserType.slice(1);
-                    if (userInfoModalTitle) userInfoModalTitle.textContent = selectedUserType === 'tourist' ? 'Tourist Information' : 'Admin Information';
-                    if (modalUserId) modalUserId.textContent = selectedUser.user_id;
-                    if (modalFullName) modalFullName.textContent = selectedUser.full_name;
-                    if (modalContact) modalContact.textContent = selectedUser.contact_details;
-                    if (modalAddress) modalAddress.textContent = selectedUser.address || 'N/A';
-                    if (modalCreatedAt) modalCreatedAt.textContent = new Date(selectedUser.created_at).toLocaleString();
-                    userInfoModalInstance.show();
-                } else {
-                    const pinError = document.getElementById('pinError');
-                    if (pinError) {
-                        pinError.textContent = 'Incorrect PIN.';
-                        pinError.style.display = 'block';
+        fetch(`/admin/pin/verify`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            },
+            body: JSON.stringify({ pin })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.message) {
+                // PIN correct, now fetch user details BEFORE hiding PIN modal or removing blur
+                fetch(`/admin/api/user-details/${selectedUser.user_id}`, {
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
                     }
-                }
-            })
-            .catch(() => {
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(err => { throw new Error(err.error || 'Failed to fetch user details'); });
+                    }
+                    return response.json();
+                })
+                .then(userData => {
+                    if (userData.error) {
+                        throw new Error(userData.error);
+                    }
+
+                    // Populate user info modal fields
+                    document.getElementById('modalUserTypeLabel').textContent = selectedUserType.charAt(0).toUpperCase() + selectedUserType.slice(1);
+                    document.getElementById('userInfoModalTitle').textContent = selectedUserType === 'tourist' ? 'Tourist Information' : 'Admin Information';
+                    document.getElementById('modalUserId').textContent = userData.user_id || 'N/A';
+                    document.getElementById('modalFullName').textContent = userData.full_name || 'N/A';
+                    document.getElementById('modalContact').textContent = userData.contact_details || 'N/A';
+                    document.getElementById('modalAddress').textContent = userData.address || 'N/A';
+                    const createdAt = userData.created_at ? new Date(userData.created_at) : null;
+                    document.getElementById('modalCreatedAt').textContent = createdAt && !isNaN(createdAt.getTime()) ? createdAt.toLocaleString() : 'N/A';
+
+                    // Now hide PIN modal and show user info modal
+                    userModalInstance.hide();
+                    userInfoModalInstance.show();
+
+                    unlockBtn.disabled = false;
+                    unlockBtn.innerHTML = 'Unlock';
+                })
+                .catch(error => {
+                    console.error('Error fetching user details:', error);
+                    toastr.error(error.message || 'Failed to fetch user details');
+                    unlockBtn.disabled = false;
+                    unlockBtn.innerHTML = 'Unlock';
+                });
+            } else {
                 const pinError = document.getElementById('pinError');
                 if (pinError) {
-                    pinError.textContent = 'Error validating PIN.';
+                    pinError.textContent = 'Incorrect PIN.';
                     pinError.style.display = 'block';
                 }
-            });
+                unlockBtn.disabled = false;
+                unlockBtn.innerHTML = 'Unlock';
+            }
+        })
+        .catch(() => {
+            const pinError = document.getElementById('pinError');
+            if (pinError) {
+                pinError.textContent = 'Error validating PIN.';
+                pinError.style.display = 'block';
+            }
+            unlockBtn.disabled = false;
+            unlockBtn.innerHTML = 'Unlock';
         });
-    }
+    });
+}
 
-    // Initial sort on page load
+
     sortAdminTable();
     
-    // Pagination Functions
     function initPagination(tableType, rows, totalPages) {
         createPaginationButtons(tableType, totalPages);
         updatePageDisplay(tableType, rows, totalPages, 1);
@@ -874,7 +960,6 @@ document.addEventListener('DOMContentLoaded', function () {
         createComplexPagination(tableType, totalPages, currentPage);
     }
 
-    // Real-time account counts update
     function updateAccountCounts() {
         $.ajax({
             url: '/admin/api/account-counts',
@@ -890,7 +975,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Update counts every 5 seconds
     setInterval(updateAccountCounts, 5000);
 });
 </script>
