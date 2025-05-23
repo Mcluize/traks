@@ -37,7 +37,8 @@
     .legend-section { margin-bottom: 15px; }
     .legend-section:last-child { margin-bottom: 0px; }
     .section-divider { height: 1px; background-color: #eee; margin: 15px 0; }
-    .legend-marker { width: 24px; height: 24px; margin-right: 10px; background-size: contain; background-repeat: no-repeat; background-position: center; flex-shrink: 0; }
+    .legend-marker-container { width: 24px; height: 24px; background-image: url('{{ asset('images/location-pin.png') }}'); background-size: contain; background-repeat: no-repeat; position: relative; margin-right: 10px; flex-shrink: 0; }
+    .legend-marker { width: 12px; height: 12px; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background-size: contain; background-repeat: no-repeat; }
     .legend-circle { width: 20px; height: 20px; border-radius: 50%; margin-right: 10px; flex-shrink: 0; }
     .legend-polygon { width: 20px; height: 20px; margin-right: 10px; flex-shrink: 0; }
     .legend-marker.first-checkin { background-image: url('{{ asset('images/marker-icon-2x-green.png') }}'); }
@@ -75,6 +76,56 @@
     .warning-type.accident { background-color: #FF0000; }
     .warning-type.landslide { background-color: #FF6600; }
     .warning-type.other { background-color: #CC00CC; }
+    .marker-container { width: 32px; height: 32px; background-image: url('{{ asset('images/location-pin.png') }}'); background-size: contain; position: relative; }
+    .marker-icon { width: 16px; height: 16px; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background-size: contain; background-repeat: no-repeat; }
+    .custom-div-icon { background: none; border: none; }
+    .marker-container {
+    background-image: url('{{ asset('images/location-pin.png') }}'); 
+    background-size: contain; 
+    background-repeat: no-repeat; 
+    position: relative; 
+    display: flex; 
+    align-items: center;
+    justify-content: center;
+    width: 40px; 
+    height: 50px; 
+}
+
+.marker-icon {
+    width: 12px; 
+    height: 12px; 
+    background-size: contain; 
+    background-repeat: no-repeat;
+    position: absolute;
+    top: 25%; /* Move up to position in the circular top part */
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+/* Alternative approach - if you need more precise positioning */
+.marker-icon-precise {
+    width: 12px; 
+    height: 12px; 
+    background-size: contain; 
+    background-repeat: no-repeat;
+    position: absolute;
+    top: 20%; /* Adjust this value based on your pin design */
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+/* If your pin has a different aspect ratio, you might need this approach */
+.marker-icon-ratio-adjusted {
+    width: 12px; 
+    height: 12px; 
+    background-size: contain; 
+    background-repeat: no-repeat;
+    position: absolute;
+    top: 30%; /* Fine-tune based on your specific pin image */
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
 </style>
 <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css" />
 <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.css" />
@@ -104,22 +155,26 @@
                 </div>
                 <div class="legend-section warning-zones-legend" id="warning-tab">
                     <h4>Warning Zones</h4>
+                    <div class="legend-item">
+                        <div class="legend-marker-container"></div>
+                        <span>Location Pin</span>
+                    </div>
                     <h5>Markers</h5>
                     <div class="legend-item">
-                        <div class="legend-marker flood-area"></div>
-                        <span>Flood Prone Area - Blue Marker</span>
+                        <div class="legend-icon" style="background-image: url('{{ asset('images/warning-flood.png') }}')"></div>
+                        <span>Flood Prone Area</span>
                     </div>
                     <div class="legend-item">
-                        <div class="legend-marker accident-prone"></div>
-                        <span>Accident Prone Area - Red Marker</span>
+                        <div class="legend-icon" style="background-image: url('{{ asset('images/accident.png') }}')"></div>
+                        <span>Accident Prone Area</span>
                     </div>
                     <div class="legend-item">
-                        <div class="legend-marker landslide-prone"></div>
-                        <span>Landslide Prone Area - Orange Marker</span>
+                        <div class="legend-icon" style="background-image: url('{{ asset('images/landslide-web.png') }}')"></div>
+                        <span>Landslide Prone Area</span>
                     </div>
                     <div class="legend-item">
-                        <div class="legend-marker other-warning"></div>
-                        <span>Others - Purple Marker</span>
+                        <div class="legend-icon" style="background-image: url('{{ asset('images/warning-other.png') }}')"></div>
+                        <span>Others</span>
                     </div>
                 </div>
                 <div class="section-divider"></div>
@@ -127,23 +182,23 @@
                     <h4>User Zones</h4>
                     <h5>Markers</h5>
                     <div class="legend-item">
-                        <div class="legend-marker road-blocked"></div>
+                        <div class="legend-icon" style="background-image: url('{{ asset('images/road-blocked.png') }}')"></div>
                         <span>Road Blocked</span>
                     </div>
                     <div class="legend-item">
-                        <div class="legend-marker flooded"></div>
+                        <div class="legend-icon" style="background-image: url('{{ asset('images/flooded.png') }}')"></div>
                         <span>Flooded</span>
                     </div>
                     <div class="legend-item">
-                        <div class="legend-marker landslide"></div>
+                        <div class="legend-icon" style="background-image: url('{{ asset('images/landslide.png') }}')"></div>
                         <span>Landslide</span>
                     </div>
                     <div class="legend-item">
-                        <div class="legend-marker fire"></div>
+                        <div class="legend-icon" style="background-image: url('{{ asset('images/fire.png') }}')"></div>
                         <span>Fire</span>
                     </div>
                     <div class="legend-item">
-                        <div class="legend-marker others"></div>
+                        <div class="legend-icon" style="background-image: url('{{ asset('images/others.png') }}')"></div>
                         <span>Others</span>
                     </div>
                     <h5>Clusters</h5>
@@ -157,20 +212,20 @@
                     <h4>Check-in Legend</h4>
                     <h5>Markers</h5>
                     <div class="legend-item">
-                        <div class="legend-marker first-checkin"></div>
-                        <span>First Check-in - Green Marker</span>
+                        <div class="legend-icon" style="background-image: url('{{ asset('images/marker-icon-2x-green.png') }}')"></div>
+                        <span>First Check-in</span>
                     </div>
                     <div class="legend-item">
-                        <div class="legend-marker intermediate-checkin"></div>
-                        <span>Intermediate Check-in - Blue Marker</span>
+                        <div class="legend-icon" style="background-image: url('{{ asset('images/marker-icon-2x-blue.png') }}')"></div>
+                        <span>Intermediate Check-in</span>
                     </div>
                     <div class="legend-item">
-                        <div class="legend-marker last-checkin"></div>
-                        <span>Last Check-in - Red Marker</span>
+                        <div class="legend-icon" style="background-image: url('{{ asset('images/marker-icon-2x-red.png') }}')"></div>
+                        <span>Last Check-in</span>
                     </div>
                     <div class="legend-item">
-                        <div class="legend-marker current-location"></div>
-                        <span>Current Location - Yellow Marker</span>
+                        <div class="legend-icon" style="background-image: url('{{ asset('images/marker-icon-2x-yellow.png') }}')"></div>
+                        <span>Current Location</span>
                     </div>
                     <h5>Paths</h5>
                     <div class="legend-item">
@@ -497,79 +552,70 @@ const defaultWarningIcon = L.icon({
     shadowSize: [41, 41]
 });
 const warningIcons = {
-    'Flood Prone Area': L.icon({
-        iconUrl: '{{ asset('images/warning-flood.png') }}',
-        shadowUrl: '{{ asset('images/marker-shadow.png') }}',
+    'Flood Prone Area': L.divIcon({
+        html: `<div class="marker-container"><div class="marker-icon" style="background-image: url('{{ asset('images/warning-flood.png') }}')"></div></div>`,
+        className: 'custom-div-icon',
         iconSize: [32, 32],
         iconAnchor: [16, 32],
-        popupAnchor: [0, -32],
-        shadowSize: [41, 41]
+        popupAnchor: [0, -32]
     }),
-    'Accident Prone Area': L.icon({
-        iconUrl: '{{ asset('images/accident.png') }}',
-        shadowUrl: '{{ asset('images/marker-shadow.png') }}',
+    'Accident Prone Area': L.divIcon({
+        html: `<div class="marker-container"><div class="marker-icon" style="background-image: url('{{ asset('images/accident.png') }}')"></div></div>`,
+        className: 'custom-div-icon',
         iconSize: [32, 32],
         iconAnchor: [16, 32],
-        popupAnchor: [0, -32],
-        shadowSize: [41, 41]
+        popupAnchor: [0, -32]
     }),
-    'Landslide Prone Area': L.icon({
-        iconUrl: '{{ asset('images/landslide-web.png') }}',
-        shadowUrl: '{{ asset('images/marker-shadow.png') }}',
+    'Landslide Prone Area': L.divIcon({
+        html: `<div class="marker-container"><div class="marker-icon" style="background-image: url('{{ asset('images/landslide-web.png') }}')"></div></div>`,
+        className: 'custom-div-icon',
         iconSize: [32, 32],
         iconAnchor: [16, 32],
-        popupAnchor: [0, -32],
-        shadowSize: [41, 41]
+        popupAnchor: [0, -32]
     }),
-    'Others': L.icon({
-        iconUrl: '{{ asset('images/warning-other.png') }}',
-        shadowUrl: '{{ asset('images/marker-shadow.png') }}',
+    'Others': L.divIcon({
+        html: `<div class="marker-container"><div class="marker-icon" style="background-image: url('{{ asset('images/warning-other.png') }}')"></div></div>`,
+        className: 'custom-div-icon',
         iconSize: [32, 32],
         iconAnchor: [16, 32],
-        popupAnchor: [0, -32],
-        shadowSize: [41, 41]
+        popupAnchor: [0, -32]
     })
 };
 const userZoneIcons = {
-    'Road Blocked': L.icon({
-        iconUrl: '{{ asset('images/road-blocked.png') }}',
-        shadowUrl: '{{ asset('images/marker-shadow.png') }}',
+    'Road Blocked': L.divIcon({
+        html: `<div class="marker-container"><div class="marker-icon" style="background-image: url('{{ asset('images/road-blocked.png') }}')"></div></div>`,
+        className: 'custom-div-icon',
         iconSize: [32, 32],
         iconAnchor: [16, 32],
-        popupAnchor: [0, -32],
-        shadowSize: [41, 41]
+        popupAnchor: [0, -32]
     }),
-    'Flooded': L.icon({
-        iconUrl: '{{ asset('images/flooded.png') }}',
-        shadowUrl: '{{ asset('images/marker-shadow.png') }}',
+    'Flooded': L.divIcon({
+        html: `<div class="marker-container"><div class="marker-icon" style="background-image: url('{{ asset('images/flooded.png') }}')"></div></div>`,
+        className: 'custom-div-icon',
         iconSize: [32, 32],
         iconAnchor: [16, 32],
-        popupAnchor: [0, -32],
-        shadowSize: [41, 41]
+        popupAnchor: [0, -32]
     }),
-    'Landslide': L.icon({
-        iconUrl: '{{ asset('images/landslide.png') }}',
-        shadowUrl: '{{ asset('images/marker-shadow.png') }}',
+    'Landslide': L.divIcon({
+        html: `<div class="marker-container"><div class="marker-icon" style="background-image: url('{{ asset('images/landslide.png') }}')"></div></div>`,
+        className: 'custom-div-icon',
         iconSize: [32, 32],
         iconAnchor: [16, 32],
-        popupAnchor: [0, -32],
-        shadowSize: [41, 41]
+        popupAnchor: [0, -32]
     }),
-    'Fire': L.icon({
-        iconUrl: '{{ asset('images/fire.png') }}',
-        shadowUrl: '{{ asset('images/marker-shadow.png') }}',
+    'Fire': L.divIcon({
+        html: `<div class="marker-container"><div class="marker-icon" style="background-image: url('{{ asset('images/fire.png') }}')"></div></div>`,
+        className: 'custom-div-icon',
         iconSize: [32, 32],
         iconAnchor: [16, 32],
-        popupAnchor: [0, -32],
-        shadowSize: [41, 41]
+        popupAnchor: [0, -32]
     }),
-    'Others': L.icon({
-        iconUrl: '{{ asset('images/others.png') }}',
-        shadowUrl: '{{ asset('images/marker-shadow.png') }}',
+    'Others': L.divIcon({
+        html: `<div class="marker-container"><div class="marker-icon" style="background-image: url('{{ asset('images/others.png') }}')"></div></div>`,
+        className: 'custom-div-icon',
         iconSize: [32, 32],
         iconAnchor: [16, 32],
-        popupAnchor: [0, -32],
-        shadowSize: [41, 41]
+        popupAnchor: [0, -32]
     })
 };
 const circleStyles = {
@@ -615,9 +661,6 @@ function formatTimestampMinus8Hours(timestamp) {
     const seconds = String(adjustedTime.getSeconds()).padStart(2, '0');
     return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 }
-
-
-
 async function isValidTourist(touristId) {
     try {
         const { data, error } = await supabase
@@ -1017,7 +1060,7 @@ function showErrorModal(message) {
 }
 async function refreshUserZones() {
     try {
-        const { data, error } = await supabase.from('user_zones').select('*').neq('status', 'inactive');
+        const { data, error } = await supabase.from('user_zones').select('*').neq('status', 'inactive').neq('status', 'removed');
         if (error) throw error;
         const newZoneIds = new Set(data.map(zone => zone.zone_id));
         markerMap.forEach((marker, zoneId) => {
@@ -1038,13 +1081,12 @@ async function refreshUserZones() {
                         }
                     }
                 } else {
-                    const markerIcon = userZoneIcons[zone.type] || L.icon({
-                        iconUrl: '{{ asset('images/others.png') }}',
-                        shadowUrl: '{{ asset('images/marker-shadow.png') }}',
+                    const markerIcon = userZoneIcons[zone.type] || L.divIcon({
+                        html: `<div class="marker-container"><div class="marker-icon" style="background-image: url('{{ asset('images/others.png') }}')"></div></div>`,
+                        className: 'custom-div-icon',
                         iconSize: [32, 32],
                         iconAnchor: [16, 32],
-                        popupAnchor: [0, -32],
-                        shadowSize: [41, 41]
+                        popupAnchor: [0, -32]
                     });
                     const marker = L.marker([zone.latitude, zone.longitude], { icon: markerIcon });
                     marker.zoneData = zone;
@@ -1114,6 +1156,7 @@ async function verifyZone(zoneId) {
         const { error } = await supabase.from('user_zones').update({ status: 'verified' }).eq('zone_id', zoneId);
         if (error) throw error;
         showSuccessModal('Zone verified successfully');
+        refreshUserZones();
     } catch (error) {
         console.error('Error verifying zone:', error);
         showErrorModal('Failed to verify zone: ' + error.message);
@@ -1124,6 +1167,7 @@ async function removeZone(zoneId) {
         const { error } = await supabase.from('user_zones').update({ status: 'removed' }).eq('zone_id', zoneId);
         if (error) throw error;
         showSuccessModal('Zone removed successfully');
+        refreshUserZones();
     } catch (error) {
         console.error('Error removing zone:', error);
         showErrorModal('Failed to remove zone: ' + error.message);
@@ -1136,18 +1180,8 @@ async function deactivateZone(zoneId) {
     try {
         const { error } = await supabase.from('user_zones').update({ status: 'inactive' }).eq('zone_id', zoneId);
         if (error) throw error;
-        const marker = markerMap.get(zoneId);
-        if (marker) {
-            marker.setIcon(L.divIcon({
-                html: '<div class="deactivated-zone">X</div>',
-                className: 'deactivated-zone-icon',
-                iconSize: [32, 32],
-                iconAnchor: [16, 16]
-            }));
-            marker.zoneData.status = 'inactive';
-            marker.bindPopup(getPopupContent(marker.zoneData));
-        }
         showSuccessModal('Zone deactivated successfully');
+        refreshUserZones();
     } catch (error) {
         console.error('Error deactivating zone:', error);
         showErrorModal('Failed to deactivate zone: ' + error.message);
