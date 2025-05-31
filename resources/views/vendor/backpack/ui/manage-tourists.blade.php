@@ -637,13 +637,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 })
             })
             .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return response.json();
+                return response.json().then(data => ({ status: response.status, data }));
             })
-            .then(data => {
-                if (data.success) {
+            .then(({ status, data }) => {
+                if (status >= 200 && status < 300) {
                     const newUser = data.user;
                     const tableBody = document.getElementById('adminTableBody');
                     const newRow = document.createElement('tr');
@@ -684,23 +681,15 @@ document.addEventListener('DOMContentLoaded', function () {
                     fullName.value = '';
                     contactDetails.value = '';
                 } else {
-                    if (data.errors && data.errors.contact_details) {
-                        contactDetails.classList.add('is-invalid');
-                        if (contactDetailsError) {
-                            contactDetailsError.textContent = data.errors.contact_details[0];
-                        }
-                    } else if (createAccountError) {
-                        createAccountError.textContent = data.message || 'Failed to create account';
-                        createAccountError.style.display = 'block';
-                    }
+                    console.error('Server error:', data);
+                    createAccountError.textContent = data.message || 'Failed to create account';
+                    createAccountError.style.display = 'block';
                 }
             })
             .catch(error => {
-                console.error('Error:', error);
-                if (createAccountError) {
-                    createAccountError.textContent = 'Error: ' + (error.message || 'Something went wrong. Please try again.');
-                    createAccountError.style.display = 'block';
-                }
+                console.error('Network error:', error);
+                createAccountError.textContent = 'A network error occurred. Please try again.';
+                createAccountError.style.display = 'block';
             })
             .finally(() => {
                 this.disabled = false;
@@ -813,8 +802,6 @@ if (unlockBtn) {
         });
     });
 }
-
-
     sortAdminTable();
     
     function initPagination(tableType, rows, totalPages) {

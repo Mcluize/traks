@@ -391,4 +391,55 @@ class SupabaseService
         return null;
     }
 }
+
+public function encryptData($plainText)
+{
+    $response = Http::withHeaders([
+        'apikey' => $this->key,
+        'Authorization' => 'Bearer ' . $this->key,
+        'Content-Type' => 'application/json',
+    ])->post("{$this->url}/rest/v1/rpc/encrypt_data", [
+        'plain_text' => $plainText
+    ]);
+
+    if ($response->successful()) {
+        return $response->json(); // Returns the base64-encoded encrypted text
+    } else {
+        throw new \Exception('Failed to encrypt data: ' . $response->body());
+    }
+}
+
+public function decryptData($encryptedText)
+{
+    $response = Http::withHeaders([
+        'apikey' => $this->key,
+        'Authorization' => 'Bearer ' . $this->key,
+        'Content-Type' => 'application/json',
+    ])->post("{$this->url}/rest/v1/rpc/decrypt_data", [
+        'encrypted_text' => $encryptedText
+    ]);
+
+    if ($response->successful()) {
+        return $response->json(); // Returns the decrypted plain text
+    } else {
+        throw new \Exception('Failed to decrypt data: ' . $response->body());
+    }
+}
+
+public function hashName($fullName)
+{
+    $response = Http::withHeaders([
+        'apikey' => $this->key,
+        'Authorization' => 'Bearer ' . $this->key,
+        'Content-Type' => 'application/json',
+    ])->post("{$this->url}/rest/v1/rpc/hash_name", [
+        'full_name' => $fullName
+    ]);
+
+    if ($response->successful()) {
+        return $response->json(); // Returns the SHA-256 hash as a hex string
+    } else {
+        throw new \Exception('Failed to hash name: ' . $response->body());
+    }
+}
 }

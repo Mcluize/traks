@@ -1348,7 +1348,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         .addTo(checkinLayer)
                         .bindPopup(function() {
                             const originalDate = new Date(currentLocationData.updated_at);
-                            const displayDate = new Date(originalDate.getTime() + 4 * 60 * 60 * 1000);
+                            const displayDate = new Date(originalDate.getTime() - 8  * 60 * 60 * 1000);
                             return `<b>Current Location</b><br>Last Updated: ${formatTime(displayDate)}`;
                         });
                     } else {
