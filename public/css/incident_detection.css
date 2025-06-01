@@ -321,6 +321,13 @@ body {
     background-color: #6C757D; 
     color: white;
 }
+/* Allow wrapping for location column */
+.incident-table td.location-cell {
+    white-space: normal !important;
+    word-wrap: break-word;
+    max-width: 300px; /* or set to your desired max width */
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
     .text-right {

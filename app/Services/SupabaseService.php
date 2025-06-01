@@ -119,6 +119,26 @@ class SupabaseService
         }
     }
 
+    public function deleteFromTable($table, $column, $value)
+    {
+        try {
+            $response = Http::withHeaders([
+                'apikey' => $this->key,
+                'Authorization' => 'Bearer ' . $this->key,
+                'Content-Type' => 'application/json',
+            ])->delete("{$this->url}/rest/v1/{$table}?{$column}=eq.{$value}");
+
+            if ($response->successful()) {
+                return true;
+            }
+
+            throw new \Exception('Supabase error: ' . $response->status() . ' - ' . $response->body());
+        } catch (\Exception $e) {
+            Log::error('Supabase delete error', ['error' => $e->getMessage()]);
+            throw $e;
+        }
+    }
+
     public function fetchMinMax($table, $column)
     {
         $headers = [
@@ -338,108 +358,106 @@ class SupabaseService
     }
 
     public function getDecryptedUser($userId)
-{
-    $userId = (int) $userId;
-    $rows = $this->fetchTable('users', ['user_id' => "eq.$userId"]);
+    {
+        $userId = (int) $userId;
+        $rows = $this->fetchTable('users', ['user_id' => "eq.$userId"]);
 
-    if (empty($rows)) {
-        \Log::warning("No user found with ID $userId");
-        return null;
-    }
-
-    $user = $rows[0];
-
-    try {
-        // Laravel decryption attempt
-        $user['full_name'] = \Crypt::decryptString($user['full_name']);
-        $user['contact_details'] = \Crypt::decryptString($user['contact_details']);
-        if (!empty($user['address'])) {
-            $user['address'] = \Crypt::decryptString($user['address']);
+        if (empty($rows)) {
+            \Log::warning("No user found with ID $userId");
+            return null;
         }
 
-        \Log::info("Laravel decryption succeeded for user ID $userId");
-        return [$user];
-    } catch (\Exception $laravelException) {
-        \Log::warning("Laravel decryption failed for user ID $userId", [
-            'error' => $laravelException->getMessage()
-        ]);
+        $user = $rows[0];
 
-        // Supabase RPC fallback
-        $headers = [
+        try {
+            $user['full_name'] = \Crypt::decryptString($user['full_name']);
+            $user['contact_details'] = \Crypt::decryptString($user['contact_details']);
+            if (!empty($user['address'])) {
+                $user['address'] = \Crypt::decryptString($user['address']);
+            }
+
+            \Log::info("Laravel decryption succeeded for user ID $userId");
+            return [$user];
+        } catch (\Exception $laravelException) {
+            \Log::warning("Laravel decryption failed for user ID $userId", [
+                'error' => $laravelException->getMessage()
+            ]);
+
+            $headers = [
+                'apikey' => $this->key,
+                'Authorization' => 'Bearer ' . $this->key,
+                'Content-Type' => 'application/json',
+            ];
+
+            $response = \Http::withHeaders($headers)
+                ->post("{$this->url}/rest/v1/rpc/get_decrypted_user", [
+                    'p_user_id' => $userId
+                ]);
+
+            if ($response->successful()) {
+                $fallback = $response->json();
+                if (!empty($fallback)) {
+                    \Log::info("Supabase fallback decryption succeeded for user ID $userId");
+                    return $fallback;
+                }
+            }
+
+            \Log::error("All decryption methods failed for user ID $userId", [
+                'status' => $response->status() ?? 'n/a',
+                'body' => $response->body() ?? 'empty',
+            ]);
+            return null;
+        }
+    }
+
+    public function encryptData($plainText)
+    {
+        $response = Http::withHeaders([
             'apikey' => $this->key,
             'Authorization' => 'Bearer ' . $this->key,
             'Content-Type' => 'application/json',
-        ];
-
-        $response = \Http::withHeaders($headers)
-            ->post("{$this->url}/rest/v1/rpc/get_decrypted_user", [
-                'p_user_id' => $userId
-            ]);
+        ])->post("{$this->url}/rest/v1/rpc/encrypt_data", [
+            'plain_text' => $plainText
+        ]);
 
         if ($response->successful()) {
-            $fallback = $response->json();
-            if (!empty($fallback)) {
-                \Log::info("Supabase fallback decryption succeeded for user ID $userId");
-                return $fallback;
-            }
+            return $response->json();
+        } else {
+            throw new \Exception('Failed to encrypt data: ' . $response->body());
         }
+    }
 
-        \Log::error("All decryption methods failed for user ID $userId", [
-            'status' => $response->status() ?? 'n/a',
-            'body' => $response->body() ?? 'empty',
+    public function decryptData($encryptedText)
+    {
+        $response = Http::withHeaders([
+            'apikey' => $this->key,
+            'Authorization' => 'Bearer ' . $this->key,
+            'Content-Type' => 'application/json',
+        ])->post("{$this->url}/rest/v1/rpc/decrypt_data", [
+            'encrypted_text' => $encryptedText
         ]);
-        return null;
+
+        if ($response->successful()) {
+            return $response->json();
+        } else {
+            throw new \Exception('Failed to decrypt data: ' . $response->body());
+        }
     }
-}
 
-public function encryptData($plainText)
-{
-    $response = Http::withHeaders([
-        'apikey' => $this->key,
-        'Authorization' => 'Bearer ' . $this->key,
-        'Content-Type' => 'application/json',
-    ])->post("{$this->url}/rest/v1/rpc/encrypt_data", [
-        'plain_text' => $plainText
-    ]);
+    public function hashName($fullName)
+    {
+        $response = Http::withHeaders([
+            'apikey' => $this->key,
+            'Authorization' => 'Bearer ' . $this->key,
+            'Content-Type' => 'application/json',
+        ])->post("{$this->url}/rest/v1/rpc/hash_name", [
+            'full_name' => $fullName
+        ]);
 
-    if ($response->successful()) {
-        return $response->json(); // Returns the base64-encoded encrypted text
-    } else {
-        throw new \Exception('Failed to encrypt data: ' . $response->body());
+        if ($response->successful()) {
+            return $response->json();
+        } else {
+            throw new \Exception('Failed to hash name: ' . $response->body());
+        }
     }
-}
-
-public function decryptData($encryptedText)
-{
-    $response = Http::withHeaders([
-        'apikey' => $this->key,
-        'Authorization' => 'Bearer ' . $this->key,
-        'Content-Type' => 'application/json',
-    ])->post("{$this->url}/rest/v1/rpc/decrypt_data", [
-        'encrypted_text' => $encryptedText
-    ]);
-
-    if ($response->successful()) {
-        return $response->json(); // Returns the decrypted plain text
-    } else {
-        throw new \Exception('Failed to decrypt data: ' . $response->body());
-    }
-}
-
-public function hashName($fullName)
-{
-    $response = Http::withHeaders([
-        'apikey' => $this->key,
-        'Authorization' => 'Bearer ' . $this->key,
-        'Content-Type' => 'application/json',
-    ])->post("{$this->url}/rest/v1/rpc/hash_name", [
-        'full_name' => $fullName
-    ]);
-
-    if ($response->successful()) {
-        return $response->json(); // Returns the SHA-256 hash as a hex string
-    } else {
-        throw new \Exception('Failed to hash name: ' . $response->body());
-    }
-}
 }

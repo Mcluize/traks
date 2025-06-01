@@ -138,8 +138,9 @@ body {
     display: flex;
     justify-content: space-between;
     margin-bottom: 15px;
-    flex-wrap: wrap; /* Add this for better mobile responsiveness */
-    gap: 10px; /* Add this for spacing when items wrap */
+      align-items: center;
+    flex-wrap: wrap; 
+    gap: 10px; 
 }
 
 .table-filters {
@@ -806,35 +807,54 @@ body {
 .pagination {
     display: flex;
     align-items: center;
-    gap: 130px;
+    gap: 10px; /* reduced gap */
 }
 
 .pagination-btn,
 .page-number {
-    padding: 8px 12px;
+    padding: 8px 14px;
     font-size: 14px;
     font-weight: 600;
     font-family: 'Poppins', sans-serif;
-    border: none;
+    border: 1px solid transparent;
     background: none;
     cursor: pointer;
-    transition: color 0.3s ease;
+    transition: all 0.3s ease;
     color: #949494;
+    border-radius: 5px;
+    min-width: 36px;
+    text-align: center;
 }
 
-.pagination-btn:hover,
-.page-number:hover {
+.pagination-btn:hover:not(.disabled),
+.page-number:hover:not(.active) {
     color: #FF7E3F;
+    border-color: #FF7E3F;
+    background-color: #fff0e6;
 }
 
 .page-number.active {
-    color: #FF7E3F;
+    color: #fff;
+    background-color: #FF7E3F;
+    border-color: #FF7E3F;
+    cursor: default;
+}
+
+.pagination-btn.disabled {
+    cursor: default;
+    opacity: 0.5;
+    color: #ccc;
+    border-color: transparent;
+    background: none;
 }
 
 .ellipsis {
     color: #949494;
-    margin: 0 4px;
+    margin: 0 6px;
+    user-select: none;
+    pointer-events: none;
 }
+
 
 .pagination-btn.disabled {
     cursor: default;
@@ -863,3 +883,175 @@ body {
     background-color: #FF7E3F;
     border-color: #FF7E3F;
 }
+.table-filters {
+    flex-grow: 1;
+    max-width: 65%;  
+}
+
+.create-account-btn {
+    white-space: nowrap;
+}
+
+/* Buttons consistent width, font, padding */
+.activate-btn,
+.deactivate-btn,
+.delete-btn {
+    display: inline-block;
+    width: 120px; /* Same width as .view-details-btn */
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    font-size: 12px; /* Same font size */
+    padding: 6px 15px; /* Same padding */
+    border-radius: 5px;
+    cursor: pointer;
+    text-align: center;
+    margin: 0 4px;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+    color: #fff;
+    border: 1px solid transparent;
+}
+
+/* Activate button styling matching .view-details-btn */
+.activate-btn {
+    background-color: #0BC8CA;
+    border-color: #0BC8CA;
+}
+
+.activate-btn:hover {
+    background-color: #09b0b2;
+    border-color: #09b0b2;
+}
+
+/* Deactivate button styling */
+.deactivate-btn {
+    background-color: #ff5656;
+    border-color: #ff5656;
+}
+
+.deactivate-btn:hover {
+    background-color: #e24444;
+    border-color: #e24444;
+}
+
+/* Remove button matches deactivate button */
+.delete-btn {
+    background-color: #ff5656;
+    border-color: #ff5656;
+}
+
+.delete-btn:hover {
+    background-color: #e24444;
+    border-color: #e24444;
+}
+
+/* Tab container styling */
+#adminTab {
+    display: flex;
+    justify-content: center;
+    border-bottom: 1px solid #ddd;
+    margin-bottom: 20px;
+    gap: 0;
+    max-width: 400px; /* Adjust max width as needed */
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Each tab button style with equal width */
+#adminTab .nav-item {
+    flex: 1;
+    text-align: center;
+    border: none;
+}
+
+/* Remove default tab borders */
+#adminTab .nav-link {
+    border: none !important;
+    border-radius: 0 !important;
+    font-weight: 600;
+    font-family: 'Poppins', sans-serif;
+    font-size: 14px;
+    color: #333;
+    padding: 10px 0;
+    transition: background-color 0.3s ease;
+}
+
+/* Border between the two tabs only */
+#adminTab .nav-item:not(:last-child) .nav-link {
+    border-right: 1px solid #ddd;
+}
+
+/* Active tab styling */
+#adminTab .nav-link.active {
+    background-color: #fff !important;
+    color: #FF7E3F !important;
+    border-bottom: 3px solid #FF7E3F !important;
+    font-weight: 700;
+}
+
+/* Hover effect for tabs */
+#adminTab .nav-link:hover:not(.active) {
+    background-color: #fff5eb;
+    color: #FF7E3F;
+}
+
+/* Adjust tab content area */
+#adminTabContent {
+    border-top: none;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 0 0 10px 10px;
+}
+
+/* Search and Create Account inline container */
+.admin-active-search-create-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.admin-active-search-create-container input[type="search"] {
+    width: 60%;
+    padding: 8px 15px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 14px;
+}
+
+.admin-active-create-account-btn {
+    background-color: #0BC8CA; /* Same as view details */
+    color: white;
+    border: none;
+    padding: 8px 20px;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    white-space: nowrap;
+}
+
+.admin-active-create-account-btn:hover {
+    background-color: #09b0b2;
+}
+#adminTab .nav-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 40px;
+    line-height: normal; 
+}
+.create-account-btn {
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+.accounts-table-section.admin-accounts .accounts-table .table {
+    border: none !important;
+    box-shadow: none !important;
+}
+#touristPagination{
+    margin-top:110px !important;
+}
+
+

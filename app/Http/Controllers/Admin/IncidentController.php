@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Services\SupabaseService;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
+use GuzzleHttp\Client;
 
 class IncidentController extends Controller
 {
@@ -126,18 +127,50 @@ class IncidentController extends Controller
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }
+    private function getLocationName($latitude, $longitude): ?string
+{
+    try {
+        $client = new Client();
+        $response = $client->request('GET', 'https://nominatim.openstreetmap.org/reverse', [
+            'query' => [
+                'format' => 'json',
+                'lat' => $latitude,
+                'lon' => $longitude,
+                'zoom' => 14,
+                'addressdetails' => 1,
+            ],
+            'headers' => [
+                'User-Agent' => 'YourAppName/1.0' // Required by Nominatim usage policy
+            ]
+        ]);
+        $data = json_decode($response->getBody()->getContents(), true);
+        return $data['display_name'] ?? null;
+    } catch (\Exception $e) {
+        \Log::error('Reverse geocoding failed: ' . $e->getMessage());
+        return null;
+    }
+}
 
-    private function formatIncidents(array $incidents): array
+ private function formatIncidents(array $incidents): array
 {
     return array_map(function($incident) {
-        // Parse timestamp as local Asia/Manila time, no conversion
         $timestamp = Carbon::parse($incident['timestamp'], 'Asia/Manila');
-        $incident['date'] = $timestamp->toDateString(); // e.g., "2025-05-11"
-        $incident['time'] = $timestamp->format('H:i:s'); // e.g., "17:58:08"
+        $incident['date'] = $timestamp->toDateString();
+        $incident['time'] = $timestamp->format('H:i:s');
         $incident['status_class'] = str_replace(' ', '-', strtolower($incident['status']));
+
+        if (isset($incident['latitude']) && isset($incident['longitude'])) {
+            $locationName = $this->getLocationName($incident['latitude'], $incident['longitude']);
+            $incident['location_name'] = $locationName ?? 'Unknown location';
+        } else {
+            // Always set this key even if no lat/lon
+            $incident['location_name'] = 'No location data';
+        }
+
         return $incident;
     }, $incidents);
 }
+
 
     private function buildFilters($filter, $searchId, $searchDate, $selectedYear)
     {

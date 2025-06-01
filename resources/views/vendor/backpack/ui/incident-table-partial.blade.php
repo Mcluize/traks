@@ -5,8 +5,7 @@
                 <th>TOURIST ID</th>
                 <th>DATE</th>
                 <th>TIME</th>
-                <th>LATITUDE</th>
-                <th>LONGITUDE</th>
+                <th>LOCATION</th> <!-- changed -->
                 <th>STATUS</th>
             </tr>
         </thead>
@@ -16,12 +15,13 @@
                     <td>{{ $incident['user_id'] }}</td>
                     <td>{{ $incident['date'] }}</td>
                     <td>{{ $incident['time'] }}</td>
-                    <td>{{ $incident['latitude'] }}</td>
-                    <td>{{ $incident['longitude'] }}</td>
+                    <td class="location-cell" title="{{ $incident['location_name'] ?? 'No location data' }}">
+                        {{ $incident['location_name'] ?? 'No location data' }}
+                    </td>
                     <td class="status status-{{ $incident['status_class'] }}">{{ $incident['status'] }}</td>
                 </tr>
             @empty
-                <tr><td colspan="6" class="text-center error-message">{{ $message ?? 'No incidents found' }}</td></tr>
+                <tr><td colspan="5" class="text-center error-message">{{ $message ?? 'No incidents found' }}</td></tr>
             @endforelse
         </tbody>
     </table>

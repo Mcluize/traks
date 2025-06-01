@@ -101,71 +101,141 @@
             </div>
         </div>
 
-        <!-- Admin Accounts Column -->
+        <!-- Admin Accounts Column with Tabs -->
         <div class="accounts-table-section admin-accounts">
             <h3 class="section-title">Admin Accounts</h3>
-            <div class="table-actions">
-                <div class="table-filters">
-                    <input type="text" class="search-input" id="searchAdminInput" placeholder="Search by Admin ID">
-                </div>
-                <div>
-                    <button type="button" class="create-account-btn" data-bs-toggle="modal" data-bs-target="#createAccountModal">
-                        Create Account
-                    </button>
-                </div>
-            </div>
-
-            <!-- Admin Accounts Table -->
-            <div class="accounts-table">
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th>Admin ID</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody id="adminTableBody">
-                        @forelse($users as $user)
-                            @if($user['user_type'] == 'admin' && $user['status'] !== 'locked')
-                            <tr class="userRow admin-row" data-user-id="{{ $user['user_id'] }}">
-                                <td>{{ $user['user_id'] }}</td>
-                                <td>
-                                    <button 
-                                        type="button"
-                                        class="btn btn-sm btn-primary view-details-btn"
-                                        data-user='@json($user)' 
-                                        data-user-type="admin" 
-                                        data-bs-toggle="modal" 
-                                        data-bs-target="#userModal">
-                                        View Details
-                                    </button>
-                                    <button 
-                                        type="button"
-                                        class="btn btn-sm btn-danger lock-btn"
-                                        data-user-id="{{ $user['user_id'] }}"
-                                        data-bs-toggle="modal"
-                                        data-bs-target="#lockConfirmModal">
-                                        Lock
-                                    </button>
-                                </td>
-                            </tr>
-                            @endif
-                        @empty
-                            <tr>
-                                <td colspan="2" class="text-center">No admin accounts found.</td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-                <div class="pagination-container" id="adminPagination">
-                    <div class="pagination">
-                        <button class="pagination-btn prev-btn" id="adminPrevBtn" disabled>< Previous</button>
-                        <div class="page-numbers" id="adminPageNumbers">
+            <ul class="nav nav-tabs" id="adminTab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="active-tab" data-bs-toggle="tab" data-bs-target="#active" type="button" role="tab" aria-controls="active" aria-selected="true">Active</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="deactivated-tab" data-bs-toggle="tab" data-bs-target="#deactivated" type="button" role="tab" aria-controls="deactivated" aria-selected="false">Deactivated</button>
+                </li>
+            </ul>
+            <div class="tab-content" id="adminTabContent">
+                <!-- Active Admin Accounts Tab -->
+                <div class="tab-pane fade show active" id="active" role="tabpanel" aria-labelledby="active-tab">
+                    <div class="table-actions">
+                        <div class="table-filters">
+                            <input type="text" class="search-input" id="searchAdminInput" placeholder="Search by Admin ID">
                         </div>
-                        <button class="pagination-btn next-btn" id="adminNextBtn">Next ></button>
+                        <div>
+                            <button type="button" class="create-account-btn" data-bs-toggle="modal" data-bs-target="#createAccountModal">
+                                Create Account
+                            </button>
+                        </div>
+                    </div>
+                    <div class="accounts-table">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Admin ID</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="adminTableBody">
+                                @forelse($users as $user)
+                                    @if($user['user_type'] == 'admin' && $user['status'] === 'active')
+                                    <tr class="userRow admin-row" data-user-id="{{ $user['user_id'] }}">
+                                        <td>{{ $user['user_id'] }}</td>
+                                        <td>
+                                            <button 
+                                                type="button"
+                                                class="btn btn-sm btn-primary view-details-btn"
+                                                data-user='@json($user)' 
+                                                data-user-type="admin" 
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#userModal">
+                                                View Details
+                                            </button>
+                                            <button 
+                                                type="button"
+                                                class="btn btn-sm btn-danger deactivate-btn"
+                                                data-user-id="{{ $user['user_id'] }}"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#deactivateConfirmModal">
+                                                Deactivate
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    @endif
+                                @empty
+                                    <tr>
+                                        <td colspan="2" class="text-center">No active admin accounts found.</td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                        <div class="pagination-container" id="adminPagination">
+                            <div class="pagination">
+                                <button class="pagination-btn prev-btn" id="adminPrevBtn" disabled>< Previous</button>
+                                <div class="page-numbers" id="adminPageNumbers">
+                                </div>
+                                <button class="pagination-btn next-btn" id="adminNextBtn">Next ></button>
+                            </div>
+                        </div>
+                        <p id="noAdminResultMessage" style="display: none;" class="no-result-message">No admin found with that ID.</p>
                     </div>
                 </div>
-                <p id="noAdminResultMessage" style="display: none;" class="no-result-message">No admin found with that ID.</p>
+
+                <!-- Deactivated Admin Accounts Tab -->
+                <div class="tab-pane fade" id="deactivated" role="tabpanel" aria-labelledby="deactivated-tab">
+                    <div class="table-actions">
+                        <div class="table-filters">
+                            <input type="text" class="search-input" id="searchDeactivatedInput" placeholder="Search by Admin ID">
+                        </div>
+                    </div>
+                    <div class="accounts-table">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Admin ID</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="deactivatedTableBody">
+                                @forelse($users as $user)
+                                    @if($user['user_type'] == 'admin' && $user['status'] === 'deactivated')
+                                    <tr class="userRow deactivated-row" data-user-id="{{ $user['user_id'] }}">
+                                        <td>{{ $user['user_id'] }}</td>
+                                        <td>
+                                            <button 
+                                                type="button"
+                                                class="btn btn-sm btn-success activate-btn"
+                                                data-user-id="{{ $user['user_id'] }}"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#activateConfirmModal">
+                                                Activate
+                                            </button>
+                                            <button 
+                                                type="button"
+                                                class="btn btn-sm btn-danger delete-btn"
+                                                data-user-id="{{ $user['user_id'] }}"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#deleteConfirmModal">
+                                                Delete
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    @endif
+                                @empty
+                                    <tr>
+                                        <td colspan="2" class="text-center">No deactivated admin accounts found.</td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                        <div class="pagination-container" id="deactivatedPagination">
+                            <div class="pagination">
+                                <button class="pagination-btn prev-btn" id="deactivatedPrevBtn" disabled>< Previous</button>
+                                <div class="page-numbers" id="deactivatedPageNumbers">
+                                </div>
+                                <button class="pagination-btn next-btn" id="deactivatedNextBtn">Next ></button>
+                            </div>
+                        </div>
+                        <p id="noDeactivatedResultMessage" style="display: none;" class="no-result-message">No deactivated admin found with that ID.</p>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -239,20 +309,58 @@
     </div>
 </div>
 
-<!-- Lock Confirmation Modal -->
-<div class="modal fade" id="lockConfirmModal" tabindex="-1" aria-labelledby="lockConfirmModalLabel" aria-hidden="true">
+<!-- Deactivate Confirmation Modal -->
+<div class="modal fade" id="deactivateConfirmModal" tabindex="-1" aria-labelledby="deactivateConfirmModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="lockConfirmModalLabel">Confirm Lock Account</h5>
+                <h5 class="modal-title" id="deactivateConfirmModalLabel">Confirm Deactivate Account</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <p>Are you sure you want to lock this account? This will prevent the user from accessing the system.</p>
+                <p>Are you sure you want to deactivate this account? This will prevent the user from accessing the system.</p>
             </div>
             <div class="modal-footer modal-footer-side-by-side">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-danger">Lock</button>
+                <button type="button" class="btn btn-danger" id="confirmDeactivateBtn">Deactivate</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Activate Confirmation Modal -->
+<div class="modal fade" id="activateConfirmModal" tabindex="-1" aria-labelledby="activateConfirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="activateConfirmModalLabel">Confirm Activate Account</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to activate this account?</p>
+            </div>
+            <div class="modal-footer modal-footer-side-by-side">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success" id="confirmActivateBtn">Activate</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteConfirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteConfirmModalLabel">Confirm Delete Account</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to permanently delete this account? This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer modal-footer-side-by-side">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Delete</button>
             </div>
         </div>
     </div>
@@ -321,8 +429,14 @@ document.addEventListener('DOMContentLoaded', function () {
     const adminTotalItems = adminRows.length;
     const adminTotalPages = Math.ceil(adminTotalItems / ITEMS_PER_PAGE);
     
+    let deactivatedCurrentPage = 1;
+    const deactivatedRows = document.querySelectorAll('.deactivated-row');
+    const deactivatedTotalItems = deactivatedRows.length;
+    const deactivatedTotalPages = Math.ceil(deactivatedTotalItems / ITEMS_PER_PAGE);
+    
     initPagination('tourist', touristRows, touristTotalPages);
     initPagination('admin', adminRows, adminTotalPages);
+    initPagination('deactivated', deactivatedRows, deactivatedTotalPages);
 
     userModalEl.addEventListener('show.bs.modal', function () {
         resetPinModal();
@@ -456,42 +570,116 @@ document.addEventListener('DOMContentLoaded', function () {
         document.getElementById('pinError').style.display = 'none';
     }
 
-    $(document).on('click', '.lock-btn', function () {
+    $(document).on('click', '.deactivate-btn', function () {
         const userId = $(this).data('user-id');
-        $('#lockConfirmModal').modal('show');
-        $('.modal-footer button:contains("Lock")').data('user-id', userId);
+        $('#deactivateConfirmModal').modal('show');
+        $('#confirmDeactivateBtn').data('user-id', userId);
     });
 
-    $('.modal-footer button:contains("Lock")').click(function () {
+    $('#confirmDeactivateBtn').click(function () {
         const userId = $(this).data('user-id');
-        const lockButton = $(this);
-        console.log('Attempting to lock admin account ID:', userId);
-        lockButton.prop('disabled', true).text('Locking...');
+        const deactivateButton = $(this);
+        deactivateButton.prop('disabled', true).text('Deactivating...');
 
         $.ajax({
-            url: `/admin/admin/lock/${userId}`,
+            url: `/admin/admin/deactivate/${userId}`,
             method: 'PATCH',
             headers: {
                 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
             },
             success: function (response) {
                 if (response.success) {
-                    toastr.success('Account locked successfully');
-                    $(`tr[data-user-id="${userId}"]`).find('.lock-btn').remove();
-                    $('#lockConfirmModal').modal('hide');
+                    toastr.success('Account deactivated successfully');
                     setTimeout(() => {
                         window.location.reload();
                     }, 1500);
                 } else {
-                    toastr.error('Failed to lock account');
+                    toastr.error('Failed to deactivate account');
                 }
             },
             error: function (xhr) {
                 console.error('Error details:', xhr.responseText);
-                toastr.error('An error occurred while locking the account');
+                toastr.error('An error occurred while deactivating the account');
             },
             complete: function () {
-                lockButton.prop('disabled', false).text('Lock');
+                deactivateButton.prop('disabled', false).text('Deactivate');
+                $('#deactivateConfirmModal').modal('hide');
+            }
+        });
+    });
+
+    $(document).on('click', '.activate-btn', function () {
+        const userId = $(this).data('user-id');
+        $('#activateConfirmModal').modal('show');
+        $('#confirmActivateBtn').data('user-id', userId);
+    });
+
+    $('#confirmActivateBtn').click(function () {
+        const userId = $(this).data('user-id');
+        const activateButton = $(this);
+        activateButton.prop('disabled', true).text('Activating...');
+
+        $.ajax({
+            url: `/admin/admin/activate/${userId}`,
+            method: 'PATCH',
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            },
+            success: function (response) {
+                if (response.success) {
+                    toastr.success('Account activated successfully');
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1500);
+                } else {
+                    toastr.error('Failed to activate account');
+                }
+            },
+            error: function (xhr) {
+                console.error('Error details:', xhr.responseText);
+                toastr.error('An error occurred while activating the account');
+            },
+            complete: function () {
+                activateButton.prop('disabled', false).text('Activate');
+                $('#activateConfirmModal').modal('hide');
+            }
+        });
+    });
+
+    $(document).on('click', '.delete-btn', function () {
+        const userId = $(this).data('user-id');
+        $('#deleteConfirmModal').modal('show');
+        $('#confirmDeleteBtn').data('user-id', userId);
+    });
+
+    $('#confirmDeleteBtn').click(function () {
+        const userId = $(this).data('user-id');
+        const deleteButton = $(this);
+        deleteButton.prop('disabled', true).text('Deleting...');
+
+        $.ajax({
+            url: `/admin/admin/delete/${userId}`,
+            method: 'DELETE',
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            },
+            success: function (response) {
+                if (response.success) {
+                    toastr.success('Account deleted successfully');
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1500);
+                } else {
+                    toastr.error('Failed to delete account');
+                }
+            },
+            error: function (xhr) {
+                console.error('Error details:', xhr.responseText);
+                toastr.error('An error occurred while deleting the account');
+            },
+            complete: function () {
+                deleteButton.prop('disabled', false).text('Delete');
+                $('#deleteConfirmModal').modal('hide');
             }
         });
     });
@@ -556,6 +744,40 @@ document.addEventListener('DOMContentLoaded', function () {
                 document.getElementById('adminPagination').style.display = 'flex';
                 adminCurrentPage = 1;
                 updatePageDisplay('admin', adminRows, adminTotalPages, adminCurrentPage);
+            }
+
+            if (noResultMessage) {
+                noResultMessage.style.display = found ? 'none' : 'block';
+            }
+        });
+    }
+
+    const searchDeactivatedInput = document.getElementById('searchDeactivatedInput');
+    if (searchDeactivatedInput) {
+        searchDeactivatedInput.addEventListener('keyup', function () {
+            const searchQuery = this.value.toLowerCase();
+            const rows = document.querySelectorAll('.deactivated-row');
+            const noResultMessage = document.getElementById('noDeactivatedResultMessage');
+            let found = false;
+
+            rows.forEach(row => {
+                const adminId = row.querySelector('td:first-child').textContent.toLowerCase();
+                if (adminId.includes(searchQuery)) {
+                    row.classList.add('searchable');
+                    row.style.display = '';
+                    found = true;
+                } else {
+                    row.classList.remove('searchable');
+                    row.style.display = 'none';
+                }
+            });
+
+            if (searchQuery) {
+                document.getElementById('deactivatedPagination').style.display = 'none';
+            } else {
+                document.getElementById('deactivatedPagination').style.display = 'flex';
+                deactivatedCurrentPage = 1;
+                updatePageDisplay('deactivated', deactivatedRows, deactivatedTotalPages, deactivatedCurrentPage);
             }
 
             if (noResultMessage) {
@@ -660,11 +882,11 @@ document.addEventListener('DOMContentLoaded', function () {
                             </button>
                             <button 
                                 type="button"
-                                class="btn btn-sm btn-danger lock-btn"
+                                class="btn btn-sm btn-danger deactivate-btn"
                                 data-user-id="${newUser.user_id}"
                                 data-bs-toggle="modal"
-                                data-bs-target="#lockConfirmModal">
-                                Lock
+                                data-bs-target="#deactivateConfirmModal">
+                                Deactivate
                             </button>
                         </td>
                     `;
@@ -719,89 +941,85 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    
-const unlockBtn = document.getElementById('unlockBtn');
-if (unlockBtn) {
-    unlockBtn.addEventListener('click', function () {
-        const pinInput = document.getElementById('pinInput');
-        if (!pinInput) return;
-        const pin = pinInput.value;
+    const unlockBtn = document.getElementById('unlockBtn');
+    if (unlockBtn) {
+        unlockBtn.addEventListener('click', function () {
+            const pinInput = document.getElementById('pinInput');
+            if (!pinInput) return;
+            const pin = pinInput.value;
 
-        this.disabled = true;
-        this.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Unlocking...';
+            this.disabled = true;
+            this.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Unlocking...';
 
-        fetch(`/admin/pin/verify`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-            },
-            body: JSON.stringify({ pin })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.message) {
-                // PIN correct, now fetch user details BEFORE hiding PIN modal or removing blur
-                fetch(`/admin/api/user-details/${selectedUser.user_id}`, {
-                    headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            fetch(`/admin/pin/verify`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
+                body: JSON.stringify({ pin })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message) {
+                    fetch(`/admin/api/user-details/${selectedUser.user_id}`, {
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        }
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            return response.json().then(err => { throw new Error(err.error || 'Failed to fetch user details'); });
+                        }
+                        return response.json();
+                    })
+                    .then(userData => {
+                        if (userData.error) {
+                            throw new Error(userData.error);
+                        }
+
+                        document.getElementById('modalUserTypeLabel').textContent = selectedUserType.charAt(0).toUpperCase() + selectedUserType.slice(1);
+                        document.getElementById('userInfoModalTitle').textContent = selectedUserType === 'tourist' ? 'Tourist Information' : 'Admin Information';
+                        document.getElementById('modalUserId').textContent = userData.user_id || 'N/A';
+                        document.getElementById('modalFullName').textContent = userData.full_name || 'N/A';
+                        document.getElementById('modalContact').textContent = userData.contact_details || 'N/A';
+                        document.getElementById('modalAddress').textContent = userData.address || 'N/A';
+                        const createdAt = userData.created_at ? new Date(userData.created_at) : null;
+                        document.getElementById('modalCreatedAt').textContent = createdAt && !isNaN(createdAt.getTime()) ? createdAt.toLocaleString() : 'N/A';
+
+                        userModalInstance.hide();
+                        userInfoModalInstance.show();
+
+                        unlockBtn.disabled = false;
+                        unlockBtn.innerHTML = 'Unlock';
+                    })
+                    .catch(error => {
+                        console.error('Error fetching user details:', error);
+                        toastr.error(error.message || 'Failed to fetch user details');
+                        unlockBtn.disabled = false;
+                        unlockBtn.innerHTML = 'Unlock';
+                    });
+                } else {
+                    const pinError = document.getElementById('pinError');
+                    if (pinError) {
+                        pinError.textContent = 'Incorrect PIN.';
+                        pinError.style.display = 'block';
                     }
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        return response.json().then(err => { throw new Error(err.error || 'Failed to fetch user details'); });
-                    }
-                    return response.json();
-                })
-                .then(userData => {
-                    if (userData.error) {
-                        throw new Error(userData.error);
-                    }
-
-                    // Populate user info modal fields
-                    document.getElementById('modalUserTypeLabel').textContent = selectedUserType.charAt(0).toUpperCase() + selectedUserType.slice(1);
-                    document.getElementById('userInfoModalTitle').textContent = selectedUserType === 'tourist' ? 'Tourist Information' : 'Admin Information';
-                    document.getElementById('modalUserId').textContent = userData.user_id || 'N/A';
-                    document.getElementById('modalFullName').textContent = userData.full_name || 'N/A';
-                    document.getElementById('modalContact').textContent = userData.contact_details || 'N/A';
-                    document.getElementById('modalAddress').textContent = userData.address || 'N/A';
-                    const createdAt = userData.created_at ? new Date(userData.created_at) : null;
-                    document.getElementById('modalCreatedAt').textContent = createdAt && !isNaN(createdAt.getTime()) ? createdAt.toLocaleString() : 'N/A';
-
-                    // Now hide PIN modal and show user info modal
-                    userModalInstance.hide();
-                    userInfoModalInstance.show();
-
                     unlockBtn.disabled = false;
                     unlockBtn.innerHTML = 'Unlock';
-                })
-                .catch(error => {
-                    console.error('Error fetching user details:', error);
-                    toastr.error(error.message || 'Failed to fetch user details');
-                    unlockBtn.disabled = false;
-                    unlockBtn.innerHTML = 'Unlock';
-                });
-            } else {
+                }
+            })
+            .catch(() => {
                 const pinError = document.getElementById('pinError');
                 if (pinError) {
-                    pinError.textContent = 'Incorrect PIN.';
+                    pinError.textContent = 'Error validating PIN.';
                     pinError.style.display = 'block';
                 }
                 unlockBtn.disabled = false;
                 unlockBtn.innerHTML = 'Unlock';
-            }
-        })
-        .catch(() => {
-            const pinError = document.getElementById('pinError');
-            if (pinError) {
-                pinError.textContent = 'Error validating PIN.';
-                pinError.style.display = 'block';
-            }
-            unlockBtn.disabled = false;
-            unlockBtn.innerHTML = 'Unlock';
+            });
         });
-    });
-}
+    }
     sortAdminTable();
     
     function initPagination(tableType, rows, totalPages) {
@@ -814,10 +1032,15 @@ if (unlockBtn) {
                     touristCurrentPage--;
                     updatePageDisplay(tableType, rows, totalPages, touristCurrentPage);
                 }
-            } else {
+            } else if (tableType === 'admin') {
                 if (adminCurrentPage > 1) {
                     adminCurrentPage--;
                     updatePageDisplay(tableType, rows, totalPages, adminCurrentPage);
+                }
+            } else if (tableType === 'deactivated') {
+                if (deactivatedCurrentPage > 1) {
+                    deactivatedCurrentPage--;
+                    updatePageDisplay(tableType, rows, totalPages, deactivatedCurrentPage);
                 }
             }
         });
@@ -828,10 +1051,15 @@ if (unlockBtn) {
                     touristCurrentPage++;
                     updatePageDisplay(tableType, rows, totalPages, touristCurrentPage);
                 }
-            } else {
+            } else if (tableType === 'admin') {
                 if (adminCurrentPage < totalPages) {
                     adminCurrentPage++;
                     updatePageDisplay(tableType, rows, totalPages, adminCurrentPage);
+                }
+            } else if (tableType === 'deactivated') {
+                if (deactivatedCurrentPage < totalPages) {
+                    deactivatedCurrentPage++;
+                    updatePageDisplay(tableType, rows, totalPages, deactivatedCurrentPage);
                 }
             }
         });
@@ -855,9 +1083,12 @@ if (unlockBtn) {
                     if (tableType === 'tourist') {
                         touristCurrentPage = page;
                         updatePageDisplay(tableType, touristRows, totalPages, page);
-                    } else {
+                    } else if (tableType === 'admin') {
                         adminCurrentPage = page;
                         updatePageDisplay(tableType, adminRows, totalPages, page);
+                    } else if (tableType === 'deactivated') {
+                        deactivatedCurrentPage = page;
+                        updatePageDisplay(tableType, deactivatedRows, totalPages, page);
                     }
                 });
                 
@@ -869,60 +1100,58 @@ if (unlockBtn) {
     }
     
     function createComplexPagination(tableType, totalPages, currentPage) {
-        const pageNumbersContainer = document.getElementById(`${tableType}PageNumbers`);
-        if (!pageNumbersContainer) return;
-        
-        pageNumbersContainer.innerHTML = '';
-        
-        const createPageButton = (number) => {
-            const button = document.createElement('button');
-            button.className = 'page-number';
-            button.textContent = number;
-            button.dataset.page = number;
-            
-            if (number === currentPage) {
-                button.classList.add('active');
+    const pageNumbersContainer = document.getElementById(`${tableType}PageNumbers`);
+    if (!pageNumbersContainer) return;
+    
+    pageNumbersContainer.innerHTML = '';
+
+    const createPageButton = (number) => {
+        const button = document.createElement('button');
+        button.className = 'page-number';
+        button.textContent = number;
+        button.dataset.page = number;
+
+        if (number === currentPage) {
+            button.classList.add('active');
+        }
+
+        button.addEventListener('click', function() {
+            const page = parseInt(this.dataset.page);
+            if (tableType === 'tourist') {
+                touristCurrentPage = page;
+                updatePageDisplay(tableType, touristRows, totalPages, page);
+            } else if (tableType === 'admin') {
+                adminCurrentPage = page;
+                updatePageDisplay(tableType, adminRows, totalPages, page);
+            } else if (tableType === 'deactivated') {
+                deactivatedCurrentPage = page;
+                updatePageDisplay(tableType, deactivatedRows, totalPages, page);
             }
-            
-            button.addEventListener('click', function() {
-                const page = parseInt(this.dataset.page);
-                if (tableType === 'tourist') {
-                    touristCurrentPage = page;
-                    updatePageDisplay(tableType, touristRows, totalPages, page);
-                } else {
-                    adminCurrentPage = page;
-                    updatePageDisplay(tableType, adminRows, totalPages, page);
-                }
-            });
-            
-            return button;
-        };
-        
-        const addEllipsis = () => {
-            const span = document.createElement('span');
-            span.className = 'ellipsis';
-            span.textContent = '...';
-            pageNumbersContainer.appendChild(span);
-        };
-        
-        pageNumbersContainer.appendChild(createPageButton(1));
-        
-        if (currentPage > 3) {
-            addEllipsis();
-        }
-        
-        for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) {
-            pageNumbersContainer.appendChild(createPageButton(i));
-        }
-        
-        if (currentPage < totalPages - 2) {
-            addEllipsis();
-        }
-        
-        if (totalPages > 1) {
-            pageNumbersContainer.appendChild(createPageButton(totalPages));
+        });
+
+        return button;
+    };
+
+    // Calculate start and end for sliding window of 5 pages max
+    let startPage = 1;
+    let endPage = Math.min(5, totalPages);
+
+    if (currentPage > 3 && totalPages > 5) {
+        startPage = currentPage - 2;
+        endPage = currentPage + 2;
+
+        if (endPage > totalPages) {
+            endPage = totalPages;
+            startPage = totalPages - 4;
+            if (startPage < 1) startPage = 1;
         }
     }
+
+    for (let i = startPage; i <= endPage; i++) {
+        pageNumbersContainer.appendChild(createPageButton(i));
+    }
+}
+
     
     function updatePageDisplay(tableType, rows, totalPages, currentPage) {
         const prevBtn = document.getElementById(`${tableType}PrevBtn`);

@@ -77,8 +77,9 @@ Route::group([
     // Admin account creation & locking
     Route::post('create-admin-account', [AdminAccountController::class, 'create'])
          ->name('backpack.create-admin-account');
-    Route::patch('admin/lock/{userId}', [AdminAccountController::class, 'lockAccount'])
-         ->name('admin.lock');
+    Route::patch('admin/activate/{userId}', [AdminAccountController::class, 'activateAccount']);
+    Route::patch('admin/deactivate/{userId}', [AdminAccountController::class, 'deactivateAccount']);
+    Route::delete('admin/delete/{userId}', [AdminAccountController::class, 'deleteAccount']);
 
     // Incident table data (for AJAX datatables, etc.)
     Route::get('admin/incidents/table-data', [IncidentController::class, 'tableData'])
@@ -93,7 +94,7 @@ Route::group([
     Route::get('api/accounts/count',             [DashboardController::class, 'getAccountCounts']);
     Route::get('api/account-counts',             [AdminAccountController::class, 'getAccountCounts']);
     Route::get('/admin/analytics/map-data/{activityFilter}/{timeFilter}', [AnalyticsController::class, 'getMapData']);
-    Route::get('analytics/tourist-activities', [AnalyticsController::class, 'getTouristActivities'])
+    Route::get('analytics/tourist-activities', [AnalyticsController::class, 'getTouristinActivities'])
          ->name('analytics.tourist-activities');
      Route::get('analytics/stats', [AnalyticsController::class, 'stats'])->name('admin.analytics.stats');
      Route::post('/admin/user/decrypted-details', [AdminAccountController::class, 'getDecryptedUserDetails']);
