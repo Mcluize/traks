@@ -663,6 +663,7 @@ let isLoadingIncidents = false;
 let checkinsVisible = true;
 let userZonesVisible = true;
 const markerMap = new Map();
+
 function formatTime(timestamp) {
     const date = new Date(timestamp);
     const year = date.getFullYear();
@@ -673,6 +674,7 @@ function formatTime(timestamp) {
     const seconds = String(date.getSeconds()).padStart(2, '0');
     return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 }
+
 function formatTimestampMinus8Hours(timestamp) {
     if (!timestamp) return 'N/A';
     const date = new Date(timestamp);
@@ -685,6 +687,7 @@ function formatTimestampMinus8Hours(timestamp) {
     const seconds = String(adjustedTime.getSeconds()).padStart(2, '0');
     return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 }
+
 async function isValidTourist(touristId) {
     try {
         const { data, error } = await supabase
@@ -715,6 +718,7 @@ async function fetchLatestLocation(touristId) {
         throw error;
     }
 }
+
 async function fetchCheckins(touristId, filter) {
     try {
         let query = supabase
@@ -786,6 +790,7 @@ async function fetchCheckins(touristId, filter) {
         throw error;
     }
 }
+
 function createCurvedPath(coords) {
     const curvedCoords = [];
     const curveHeightFactor = 0.8;
@@ -808,6 +813,7 @@ function createCurvedPath(coords) {
     }
     return curvedCoords;
 }
+
 function plotCheckins(checkins) {
     checkinLayer.clearLayers();
     const spotCounts = {};
@@ -847,14 +853,13 @@ function plotCheckins(checkins) {
         map.fitBounds(bounds);
     }
 }
+
 async function displaySummary(checkins, touristId) {
     const firstCheckin = checkins.length > 0 ? formatTimestampMinus8Hours(checkins[0].timestamp) : 'N/A';
     const lastCheckin = checkins.length > 0 ? formatTimestampMinus8Hours(checkins[checkins.length - 1].timestamp) : 'N/A';
     const lastLocation = checkins.length > 0 ? checkins[checkins.length - 1].tourist_spots.name : 'N/A';
     const checkinsToggleBtnHtml = `<button class="view-table-button" id="toggle-checkins-btn">Hide Check-ins</button>`;
     const userZonesToggleBtnHtml = `<button class="view-table-button" id="toggle-userzones-btn">Hide User Zones</button>`;
-
-
     let locationButtonHtml = '';
     const locationExists = await fetchLatestLocation(touristId);
     if (locationExists) {
@@ -862,25 +867,22 @@ async function displaySummary(checkins, touristId) {
             ? `<button class="view-table-button" id="hide-current-location-btn">Hide Current Location</button>`
             : `<button class="view-table-button" id="view-current-location-btn">View Current Location</button>`;
     }
-
-    // Add Show Incidents button
     const showIncidentsButtonId = 'show-incidents-btn';
     const incidentsButtonHtml = `<button class="view-table-button" id="${showIncidentsButtonId}">Show Incidents</button>`;
 
     const summaryHtml = `
-    <p><strong>Tourist ID:</strong> ${touristId} ${locationButtonHtml}</p>
-    <p><strong>Number of Check-ins:</strong> ${checkins.length} ${checkins.length > 0 ? '<button class="view-table-button" data-toggle="modal" data-target="#checkinModal">View Table</button>' : ''}</p>
-    ${checkins.length === 0 ? '<p>No check-ins found for this tourist.</p>' : ''}
-    <p><strong>First Check-in:</strong> ${firstCheckin}</p>
-    <p><strong>Last Check-in:</strong> ${lastCheckin}</p>
-    <p><strong>Last Location:</strong> ${lastLocation}</p>
-    ${incidentsButtonHtml}
-    ${checkinsToggleBtnHtml}
-    ${userZonesToggleBtnHtml}
-`;
+        <p><strong>Tourist ID:</strong> ${touristId} ${locationButtonHtml}</p>
+        <p><strong>Number of Check-ins:</strong> ${checkins.length} ${checkins.length > 0 ? '<button class="view-table-button" data-toggle="modal" data-target="#checkinModal">View Table</button>' : ''}</p>
+        ${checkins.length === 0 ? '<p>No check-ins found for this tourist.</p>' : ''}
+        <p><strong>First Check-in:</strong> ${firstCheckin}</p>
+        <p><strong>Last Check-in:</strong> ${lastCheckin}</p>
+        <p><strong>Last Location:</strong> ${lastLocation}</p>
+        ${incidentsButtonHtml}
+        ${checkinsToggleBtnHtml}
+        ${userZonesToggleBtnHtml}
+    `;
 
     document.querySelector('.tourist-cards').innerHTML = summaryHtml;
-
     window.checkinsData = checkins;
 
     if (checkins.length > 0) {
@@ -889,30 +891,28 @@ async function displaySummary(checkins, touristId) {
         });
     }
 
-    // Attach event listeners for existing buttons
     const locationBtn = document.getElementById('view-current-location-btn') || document.getElementById('hide-current-location-btn');
     if (locationBtn) {
-    locationBtn.addEventListener('click', async () => {
-        if (isLocationVisible) {
-            if (locationUpdateInterval) {
-                clearInterval(locationUpdateInterval);
-                locationUpdateInterval = null;
+        locationBtn.addEventListener('click', async () => {
+            if (isLocationVisible) {
+                if (locationUpdateInterval) {
+                    clearInterval(locationUpdateInterval);
+                    locationUpdateInterval = null;
+                }
+                if (currentLocationMarker) {
+                    map.removeLayer(currentLocationMarker);
+                    currentLocationMarker = null;
+                }
+                isLocationVisible = false;
+                displaySummary(window.checkinsData || [], currentTouristId);
+            } else {
+                currentTouristId = touristId; // save tourist ID
+                $('#locationPinModal').modal('show'); // show PIN modal
             }
-            if (currentLocationMarker) {
-                map.removeLayer(currentLocationMarker);
-                currentLocationMarker = null;
-            }
-            isLocationVisible = false;
-            displaySummary(window.checkinsData || [], currentTouristId);
-        } else {
-            currentTouristId = touristId; // save tourist ID
-            $('#locationPinModal').modal('show'); // show PIN modal
-        }
-    });
-}
+        });
+    }
 
-
-    // Attach event listener for Show Incidents button
+    // Attach event listener for Show Incidents button (moved outside locationBtn logic)
     const showIncidentsBtn = document.getElementById(showIncidentsButtonId);
     if (showIncidentsBtn) {
         showIncidentsBtn.addEventListener('click', () => toggleIncidentsLayer(touristId));
@@ -985,6 +985,7 @@ function displayTableWithPagination(checkins, currentPage) {
         });
     });
 }
+
 async function displayVotersWithPagination(zoneId, currentPage = 1) {
     try {
         const { data: zoneData, error: zoneError } = await supabase
@@ -1093,20 +1094,26 @@ async function displayVotersWithPagination(zoneId, currentPage = 1) {
         showErrorModal('Failed to load voter details: ' + error.message);
     }
 }
+
+
 function showNoData(message = 'No check-ins found for this tourist.') {
     document.querySelector('.tourist-cards').innerHTML = `<p>${message}</p>`;
 }
+
 function showLoading() {
     document.querySelector('.tourist-cards').innerHTML = '<p class="loading-message">Loading check-ins...</p>';
 }
+
 function showSuccessModal(message) {
     document.getElementById('successMessage').textContent = message;
     $('#successModal').modal('show');
 }
+
 function showErrorModal(message) {
     document.getElementById('errorMessage').textContent = message;
     $('#errorModal').modal('show');
 }
+
 async function refreshUserZones() {
     try {
         const { data, error } = await supabase.from('user_zones').select('*').neq('status', 'inactive').neq('status', 'removed');
@@ -1150,6 +1157,7 @@ async function refreshUserZones() {
         showErrorModal('Failed to refresh user zones: ' + error.message);
     }
 }
+
 function debounce(func, wait) {
     let timeout;
     return function(...args) {
@@ -1157,7 +1165,9 @@ function debounce(func, wait) {
         timeout = setTimeout(() => func.apply(this, args), wait);
     };
 }
+
 const debouncedRefreshUserZones = debounce(refreshUserZones, 1000);
+
 async function loadUserZones() {
     try {
         await refreshUserZones();
@@ -1174,6 +1184,7 @@ async function loadUserZones() {
         showErrorModal('Failed to load user zones: ' + error.message);
     }
 }
+
 function getPopupContent(zone) {
     let content = `
         <b>Type:</b> ${zone.type}<br>
@@ -1200,6 +1211,7 @@ function getPopupContent(zone) {
     }
     return content;
 }
+
 async function verifyZone(zoneId) {
     try {
         const { error } = await supabase.from('user_zones').update({ status: 'verified' }).eq('zone_id', zoneId);
@@ -1211,6 +1223,7 @@ async function verifyZone(zoneId) {
         showErrorModal('Failed to verify zone: ' + error.message);
     }
 }
+
 async function removeZone(zoneId) {
     try {
         const { error } = await supabase.from('user_zones').update({ status: 'removed' }).eq('zone_id', zoneId);
@@ -1222,9 +1235,11 @@ async function removeZone(zoneId) {
         showErrorModal('Failed to remove zone: ' + error.message);
     }
 }
+
 function cancelAction() {
     map.closePopup();
 }
+
 async function deactivateZone(zoneId) {
     try {
         const { error } = await supabase.from('user_zones').update({ status: 'inactive' }).eq('zone_id', zoneId);
@@ -1236,7 +1251,6 @@ async function deactivateZone(zoneId) {
         showErrorModal('Failed to deactivate zone: ' + error.message);
     }
 }
-// ... (Previous code remains unchanged until the DOMContentLoaded event listener)
 
 document.addEventListener('DOMContentLoaded', async () => {
     const searchInput = document.querySelector('.search-input');
@@ -1278,7 +1292,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
 
-        // Only clear location marker if tourist ID changes
         if (touristId !== currentTouristId) {
             hideCurrentLocationMarker();
             currentTouristId = touristId;
@@ -1397,97 +1410,95 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     document.getElementById('unlockLocationBtn').addEventListener('click', async () => {
-    const pin = document.getElementById('pinInput').value;
-    if (!pin) {
-        document.getElementById('pinError').textContent = 'Please enter your PIN';
-        document.getElementById('pinError').style.display = 'block';
-        return;
-    }
-    try {
-        const response = await fetch('/admin/pin/verify', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-            },
-            body: JSON.stringify({ pin })
-        });
-        const data = await response.json();
-        if (data.message) {
-            $('#locationPinModal').modal('hide');
-            const location = await fetchLatestLocation(currentTouristId);
-            if (location) {
-                currentLocationData = location;
-                const { latitude, longitude } = location;
-                // Perform reverse geocoding
-                const locationName = await reverseGeocode(latitude, longitude);
-                if (currentLocationMarker) {
-                    currentLocationMarker.setLatLng([latitude, longitude]);
-                } else {
-                    currentLocationMarker = L.marker([latitude, longitude], { icon: currentLocationIcon })
-                        .bindPopup(function() {
-                            const originalDate = new Date(currentLocationData.updated_at);
-                            const displayDate = new Date(originalDate.getTime() - 8 * 60 * 60 * 1000);
-                            const formattedTime = isNaN(displayDate.getTime()) ? 'N/A' : formatTime(displayDate);
-                            return `<b>Current Location</b><br>Location: ${locationName}<br>Last Updated: ${formattedTime}`;
-                        })
-                        .addTo(map);
-                }
-                isLocationVisible = true;
-                map.setView([latitude, longitude], 13);
-                displaySummary(window.checkinsData || [], currentTouristId);
-
-                // Start periodic location updates
-                if (locationUpdateInterval) {
-                    clearInterval(locationUpdateInterval);
-                }
-                locationUpdateInterval = setInterval(async () => {
-                    try {
-                        const updatedLocation = await fetchLatestLocation(currentTouristId);
-                        if (updatedLocation && isLocationVisible) {
-                            currentLocationData = updatedLocation;
-                            const { latitude, longitude } = updatedLocation;
-                            // Perform reverse geocoding for the updated location
-                            const updatedLocationName = await reverseGeocode(latitude, longitude);
-                            if (currentLocationMarker) {
-                                currentLocationMarker.setLatLng([latitude, longitude]);
-                                const originalDate = new Date(updatedLocation.updated_at);
-                                // Adjust from UTC to PST (UTC-7)
+        const pin = document.getElementById('pinInput').value;
+        if (!pin) {
+            document.getElementById('pinError').textContent = 'Please enter your PIN';
+            document.getElementById('pinError').style.display = 'block';
+            return;
+        }
+        try {
+            const response = await fetch('/admin/pin/verify', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
+                body: JSON.stringify({ pin })
+            });
+            const data = await response.json();
+            if (data.message) {
+                $('#locationPinModal').modal('hide');
+                const location = await fetchLatestLocation(currentTouristId);
+                if (location) {
+                    currentLocationData = location;
+                    const { latitude, longitude } = location;
+                    const locationName = await reverseGeocode(latitude, longitude);
+                    if (currentLocationMarker) {
+                        currentLocationMarker.setLatLng([latitude, longitude]);
+                    } else {
+                        currentLocationMarker = L.marker([latitude, longitude], { icon: currentLocationIcon })
+                            .bindPopup(function() {
+                                const originalDate = new Date(currentLocationData.updated_at);
                                 const displayDate = new Date(originalDate.getTime() - 8 * 60 * 60 * 1000);
                                 const formattedTime = isNaN(displayDate.getTime()) ? 'N/A' : formatTime(displayDate);
-                                currentLocationMarker.getPopup().setContent(
-                                    `<b>Current Location</b><br>Location: ${updatedLocationName}<br>Last Updated: ${formattedTime}`
-                                );
-                            } else {
-                                currentLocationMarker = L.marker([latitude, longitude], { icon: currentLocationIcon })
-                                    .bindPopup(
-                                        `<b>Current Location</b><br>Location: ${updatedLocationName}<br>Last Updated: ${formatTime(new Date(updatedLocation.updated_at - 7 * 60 * 60 * 1000))}`
-                                    )
-                                    .addTo(map);
-                            }
-                        } else if (!updatedLocation && isLocationVisible) {
-                            hideCurrentLocationMarker();
-                            displaySummary(window.checkinsData || [], currentTouristId);
-                            showErrorModal('Tourist has disabled their current location.');
-                        }
-                    } catch (error) {
-                        console.error('Error fetching live location:', error);
-                        showErrorModal(`Error updating location: ${error.message}`);
+                                return `<b>Current Location</b><br>Location: ${locationName}<br>Last Updated: ${formattedTime}`;
+                            })
+                            .addTo(map);
                     }
-                }, 5000);
+                    isLocationVisible = true;
+                    map.setView([latitude, longitude], 13);
+                    const userType = await getUserType(currentTouristId);
+                    displaySummary(window.checkinsData || [], currentTouristId, userType);
+
+                    if (locationUpdateInterval) {
+                        clearInterval(locationUpdateInterval);
+                    }
+                    locationUpdateInterval = setInterval(async () => {
+                        try {
+                            const updatedLocation = await fetchLatestLocation(currentTouristId);
+                            if (updatedLocation && isLocationVisible) {
+                                currentLocationData = updatedLocation;
+                                const { latitude, longitude } = updatedLocation;
+                                const updatedLocationName = await reverseGeocode(latitude, longitude);
+                                if (currentLocationMarker) {
+                                    currentLocationMarker.setLatLng([latitude, longitude]);
+                                    const originalDate = new Date(updatedLocation.updated_at);
+                                    const displayDate = new Date(originalDate.getTime() - 8 * 60 * 60 * 1000);
+                                    const formattedTime = isNaN(displayDate.getTime()) ? 'N/A' : formatTime(displayDate);
+                                    currentLocationMarker.getPopup().setContent(
+                                        `<b>Current Location</b><br>Location: ${updatedLocationName}<br>Last Updated: ${formattedTime}`
+                                    );
+                                } else {
+                                    currentLocationMarker = L.marker([latitude, longitude], { icon: currentLocationIcon })
+                                        .bindPopup(
+                                            `<b>Current Location</b><br>Location: ${updatedLocationName}<br>Last Updated: ${formatTime(new Date(updatedLocation.updated_at - 7 * 60 * 60 * 1000))}`
+                                        )
+                                        .addTo(map);
+                                }
+                            } else if (!updatedLocation && isLocationVisible) {
+                                hideCurrentLocationMarker();
+                                const userType = await getUserType(currentTouristId);
+                                displaySummary(window.checkinsData || [], currentTouristId, userType);
+                                showErrorModal('User has disabled their current location.');
+                            }
+                        } catch (error) {
+                            console.error('Error fetching live location:', error);
+                            showErrorModal(`Error updating location: ${error.message}`);
+                        }
+                    }, 5000);
+                } else {
+                    showErrorModal('User did not enable current location.');
+                }
             } else {
-                showErrorModal('Tourist did not enable current location.');
+                document.getElementById('pinError').textContent = 'Incorrect PIN.';
+                document.getElementById('pinError').style.display = 'block';
             }
-        } else {
-            document.getElementById('pinError').textContent = 'Incorrect PIN.';
+        } catch (error) {
+            console.error('Error verifying PIN:', error);
+            document.getElementById('pinError').textContent = 'Error verifying PIN.';
             document.getElementById('pinError').style.display = 'block';
         }
-    } catch (error) {
-        console.error('Error verifying PIN:', error);
-        document.getElementById('pinError').textContent = 'Error verifying PIN.';
-        document.getElementById('pinError').style.display = 'block';
-    }
-});
+    });
 
     document.getElementById('cancelPinModal').addEventListener('click', () => {
         $('#locationPinModal').modal('hide');
@@ -1588,6 +1599,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (locationUpdateInterval) clearInterval(locationUpdateInterval);
     });
 });
+
 function setupLegendTabs() {
     const tabButtons = document.querySelectorAll('.tab-btn');
     const warningTab = document.getElementById('warning-tab');
@@ -1623,17 +1635,21 @@ function setupLegendTabs() {
         });
     });
 }
+
 let drawHandler;
 let selectedShape = null;
+
 document.getElementById('add-warning-btn').addEventListener('click', function() {
     resetWarningForm();
     $('#warningModal').modal('show');
 });
+
 document.getElementById('go-to-map-btn').addEventListener('click', function() {
     drawHandler = new L.Draw.Marker(map);
     drawHandler.enable();
     $('#warningModal').modal('hide');
 });
+
 map.on('draw:created', function(e) {
     if (selectedShape) map.removeLayer(selectedShape);
     selectedShape = e.layer;
@@ -1642,6 +1658,7 @@ map.on('draw:created', function(e) {
     document.getElementById('save-warning-btn').disabled = false;
     $('#warningModal').modal('show');
 });
+
 map.on('draw:canceled', function() {
     if (selectedShape) {
         map.removeLayer(selectedShape);
@@ -1650,6 +1667,7 @@ map.on('draw:canceled', function() {
     drawHandler.disable();
     $('#warningModal').modal('show');
 });
+
 document.getElementById('save-warning-btn').addEventListener('click', async function() {
     if (!selectedShape) {
         showErrorModal('Please place a marker on the map.');
@@ -1664,9 +1682,9 @@ document.getElementById('save-warning-btn').addEventListener('click', async func
     }
     const latlng = selectedShape.getLatLng();
     const now = new Date();
-    const adjustedTime = new Date(now.getTime() + 8 * 60 * 60 * 1000); // Add 8 hours for UTC+8
+    const adjustedTime = new Date(now.getTime() + 8 * 60 * 60 * 1000);
     const createdAt = adjustedTime.toISOString();
-    console.log('Adjusted created_at timestamp:', createdAt); // Debug log
+    console.log('Adjusted created_at timestamp:', createdAt);
     const warningData = {
         type: warningType,
         zone_tag: warningZoneTag,
@@ -1690,6 +1708,7 @@ document.getElementById('save-warning-btn').addEventListener('click', async func
         showErrorModal(`Failed to save warning zone: ${error.message}`);
     }
 });
+
 async function loadWarningZones() {
     try {
         const { data, error } = await supabase.from('warning_zones').select('*').eq('status', 'active');
@@ -1711,6 +1730,7 @@ async function loadWarningZones() {
         throw error;
     }
 }
+
 function addWarningToMap(warning) {
     let warningElement;
 
@@ -1773,16 +1793,14 @@ function addWarningToMap(warning) {
         }, 10);
     });
 }
+
 async function showWarningDetails(warning) {
     const content = document.querySelector('.warning-details-content');
-
     let locationName = "N/A";
-
     if ((warning.shape_type === 'marker' || warning.shape_type === 'circle') && warning.latitude && warning.longitude) {
         locationName = await reverseGeocode(warning.latitude, warning.longitude);
     }
-
-        content.innerHTML = `
+    content.innerHTML = `
         <h4>${warning.zone_tag}</h4>
         <p class="warning-type ${typeShorthands[warning.type] || 'other'}">${warning.type.toUpperCase()}</p>
         <p><strong>Description:</strong> ${warning.description || 'No description provided'}</p>
@@ -1790,7 +1808,6 @@ async function showWarningDetails(warning) {
         <p><strong>Location:</strong> ${locationName}</p>
         ${warning.shape_type === 'circle' ? `<p><strong>Radius:</strong> ${warning.radius}m</p>` : ''}
     `;
-
     document.querySelector('.deactivate-warning-btn').setAttribute('data-id', warning.zone_id);
     $('#warningDetailsModal').modal('show');
 }
@@ -1812,6 +1829,7 @@ document.querySelector('.deactivate-warning-btn').addEventListener('click', func
         $('#deactivateWarningModal').modal('show');
     }
 });
+
 function resetWarningForm() {
     document.getElementById('warning-zone-tag').value = '';
     document.getElementById('warning-description').value = '';
@@ -1823,6 +1841,7 @@ function resetWarningForm() {
     if (drawHandler) drawHandler.disable();
     document.getElementById('save-warning-btn').disabled = true;
 }
+
 document.getElementById('confirm-deactivate-btn').addEventListener('click', async function() {
     const warningId = currentWarningToDeactivate;
     try {
@@ -1844,12 +1863,13 @@ document.getElementById('confirm-deactivate-btn').addEventListener('click', asyn
         showErrorModal(`Failed to deactivate warning zone: ${error.message}`);
     }
 });
+
 async function reverseGeocode(lat, lng) {
     const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`;
     try {
         const response = await fetch(url, {
             headers: {
-                'User-Agent': 'traks/1.0',  // Replace with your app name if you want
+                'User-Agent': 'traks/1.0',
                 'Accept-Language': 'en'
             }
         });
@@ -1863,17 +1883,15 @@ async function reverseGeocode(lat, lng) {
         return "Unknown location";
     }
 }
-async function fetchIncidentsByTourist(touristId) {
+
+async function fetchIncidentsByTourist(userId) {
     try {
-        // Fetch incidents data from supabase (adjust table/column names as needed)
         const { data, error } = await supabase
-            .from('emergency_reports') // Your incidents table
+            .from('emergency_reports')
             .select('latitude, longitude, status, timestamp')
-            .eq('user_id', touristId)
+            .eq('user_id', userId)
             .order('timestamp', { ascending: false });
-
         if (error) throw error;
-
         return data || [];
     } catch (error) {
         console.error('Error fetching incidents:', error);
@@ -1882,12 +1900,10 @@ async function fetchIncidentsByTourist(touristId) {
     }
 }
 
-async function toggleIncidentsLayer(touristId) {
-    if (isLoadingIncidents) return; // Prevent re-entrance while loading
-
+async function toggleIncidentsLayer(userId) {
+    if (isLoadingIncidents) return;
     const btn = document.getElementById('show-incidents-btn');
     if (!btn) return;
-
     if (incidentsVisible) {
         map.removeLayer(incidentsLayer);
         incidentsVisible = false;
@@ -1896,16 +1912,12 @@ async function toggleIncidentsLayer(touristId) {
         isLoadingIncidents = true;
         btn.disabled = true;
         btn.textContent = 'Loading Incidents...';
-
         try {
-            const incidents = await fetchIncidentsByTourist(touristId);
-
+            const incidents = await fetchIncidentsByTourist(userId);
             incidentsLayer.clearLayers();
-
             for (const incident of incidents) {
                 if (incident.latitude && incident.longitude) {
                     const locationName = await reverseGeocode(incident.latitude, incident.longitude);
-
                     const marker = L.marker([incident.latitude, incident.longitude], {
                         icon: L.divIcon({
                             html: `<div class="marker-container"><div class="marker-icon" style="background-image: url('{{ asset('images/incident-icon.png') }}')"></div></div>`,
@@ -1915,24 +1927,20 @@ async function toggleIncidentsLayer(touristId) {
                             popupAnchor: [0, -32]
                         })
                     });
-
                     const originalDate = new Date(incident.timestamp);
-                    const adjustedDate = new Date(originalDate.getTime() - 8 * 60 * 60 * 1000); 
+                    const adjustedDate = new Date(originalDate.getTime() - 8 * 60 * 60 * 1000);
                     marker.bindPopup(`
                         <b>Incident</b><br>
                         Status: ${incident.status || 'N/A'}<br>
                         Location: ${locationName}<br>
                         Date: ${adjustedDate.toLocaleString()}
                     `);
-
                     incidentsLayer.addLayer(marker);
                 }
             }
-
             map.addLayer(incidentsLayer);
             incidentsVisible = true;
             btn.textContent = 'Hide Incidents';
-
             if (incidents.length > 0) {
                 const bounds = L.latLngBounds(incidents.map(i => [i.latitude, i.longitude]));
                 map.fitBounds(bounds);
@@ -1947,6 +1955,7 @@ async function toggleIncidentsLayer(touristId) {
         }
     }
 }
+
 document.addEventListener('click', function(e) {
     if (e.target.id === 'toggle-checkins-btn') {
         if (checkinsVisible) {

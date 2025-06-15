@@ -79,6 +79,14 @@
                                         data-bs-target="#userModal">
                                         View Details
                                     </button>
+                                    <button 
+                                        type="button"
+                                        class="btn btn-sm view-members-btn"
+                                        data-user-id="{{ $user['user_id'] }}"
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#membersModal">
+                                        View Members
+                                    </button>
                                 </td>
                             </tr>
                             @endif
@@ -309,6 +317,54 @@
     </div>
 </div>
 
+<!-- Members Modal -->
+<div class="modal fade" id="membersModal" tabindex="-1" aria-labelledby="membersModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header" style="background-color: #FF7E3F; color: #fff;">
+                <h5 class="modal-title" id="membersModalLabel">Members for Tourist ID: <span id="modalTouristId"></span></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="membersList">
+                    <!-- Members table will be inserted here -->
+                </div>
+                <div class="pagination-container" id="membersPagination">
+                    <div class="pagination">
+                        <button class="pagination-btn prev-btn" id="membersPrevBtn" disabled>< Previous</button>
+                        <div class="page-numbers" id="membersPageNumbers"></div>
+                        <button class="pagination-btn next-btn" id="membersNextBtn">Next ></button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Member Info Modal -->
+<div class="modal fade" id="memberInfoModal" tabindex="-1" aria-labelledby="memberInfoModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header" style="background-color: #0BC8CA; color: #fff;">
+                <h5 class="modal-title" id="memberInfoModalTitle">Member ID: <span id="modalMemberId"></span></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="user-info-container">
+                    <p><strong>Full Name:</strong> <span id="modalMemberFullName"></span></p>
+                    <p><strong>Created At:</strong> <span id="modalMemberCreatedAt"></span></p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Deactivate Confirmation Modal -->
 <div class="modal fade" id="deactivateConfirmModal" tabindex="-1" aria-labelledby="deactivateConfirmModalLabel" aria-hidden="true">
     <div class="modal-dialog">
@@ -407,14 +463,21 @@
 document.addEventListener('DOMContentLoaded', function () {
     let selectedUser = null;
     let selectedUserType = 'tourist';
+    let selectedMemberId = null;
+    let selectedUserId = null;
+    let isMemberDetails = false;
     const userModalEl = document.getElementById('userModal');
     const changePinModalEl = document.getElementById('changePinModal');
     const userInfoModalEl = document.getElementById('userInfoModal');
     const createAccountModalEl = document.getElementById('createAccountModal');
+    const membersModalEl = document.getElementById('membersModal');
+    const memberInfoModalEl = document.getElementById('memberInfoModal');
     const userModalInstance = new bootstrap.Modal(userModalEl);
     const changePinModalInstance = new bootstrap.Modal(changePinModalEl);
     const userInfoModalInstance = new bootstrap.Modal(userInfoModalEl);
     const createAccountModalInstance = new bootstrap.Modal(createAccountModalEl);
+    const membersModalInstance = new bootstrap.Modal(membersModalEl);
+    const memberInfoModalInstance = new bootstrap.Modal(memberInfoModalEl);
     const mainContent = document.getElementById('mainContent');
 
     const ITEMS_PER_PAGE = 5;
@@ -479,12 +542,33 @@ document.addEventListener('DOMContentLoaded', function () {
 
     document.addEventListener('click', function (event) {
         if (event.target.classList.contains('view-details-btn')) {
-            selectedUser = JSON.parse(event.target.dataset.user);
-            selectedUserType = event.target.dataset.userType;
+            if (event.target.classList.contains('view-member-details-btn')) {
+                selectedMemberId = event.target.dataset.memberId;
+                selectedUserId = event.target.dataset.userId;
+                isMemberDetails = true;
+            } else {
+                selectedUser = JSON.parse(event.target.dataset.user);
+                selectedUserType = event.target.dataset.userType;
+                isMemberDetails = false;
+            }
             userModalInstance.show();
             mainContent.classList.add('blurred');
         }
+        if (event.target.classList.contains('view-members-btn')) {
+            const userId = event.target.dataset.userId;
+            fetchMembers(userId);
+            membersModalInstance.show();
+            // Do not add 'blurred' class here to keep background visible
+        }
     });
+    $('#userModal').on('show.bs.modal', function () {
+    $(this).css('z-index', '1051'); // Ensures it's above the members modal
+});
+
+$('#membersModal').on('show.bs.modal', function () {
+    $(this).css('z-index', '1049'); // Ensures it's below the PIN verification modal
+});
+
 
     document.getElementById('changePinBtn').addEventListener('click', function () {
         const pinInput = document.getElementById('pinInput').value;
@@ -928,7 +1012,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     userModalEl.addEventListener('hidden.bs.modal', () => {
-        if (!userInfoModalEl.classList.contains('show') && !changePinModalEl.classList.contains('show')) {
+        if (!userInfoModalEl.classList.contains('show') && !changePinModalEl.classList.contains('show') && !memberInfoModalEl.classList.contains('show')) {
             mainContent.classList.remove('blurred');
         }
     });
@@ -939,6 +1023,12 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!userModalEl.classList.contains('show')) {
             mainContent.classList.remove('blurred');
         }
+    });
+    membersModalEl.addEventListener('hidden.bs.modal', () => {
+        mainContent.classList.remove('blurred');
+    });
+    memberInfoModalEl.addEventListener('hidden.bs.modal', () => {
+        mainContent.classList.remove('blurred');
     });
 
     const unlockBtn = document.getElementById('unlockBtn');
@@ -962,43 +1052,79 @@ document.addEventListener('DOMContentLoaded', function () {
             .then(response => response.json())
             .then(data => {
                 if (data.message) {
-                    fetch(`/admin/api/user-details/${selectedUser.user_id}`, {
-                        headers: {
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                        }
-                    })
-                    .then(response => {
-                        if (!response.ok) {
-                            return response.json().then(err => { throw new Error(err.error || 'Failed to fetch user details'); });
-                        }
-                        return response.json();
-                    })
-                    .then(userData => {
-                        if (userData.error) {
-                            throw new Error(userData.error);
-                        }
+                    if (isMemberDetails) {
+                        fetch(`/admin/api/member-details/${selectedMemberId}`, {
+                            headers: {
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                            }
+                        })
+                        .then(response => {
+                            if (!response.ok) {
+                                return response.json().then(err => { throw new Error(err.error || 'Failed to fetch member details'); });
+                            }
+                            return response.json();
+                        })
+                        .then(memberData => {
+                            if (memberData.error) {
+                                throw new Error(memberData.error);
+                            }
 
-                        document.getElementById('modalUserTypeLabel').textContent = selectedUserType.charAt(0).toUpperCase() + selectedUserType.slice(1);
-                        document.getElementById('userInfoModalTitle').textContent = selectedUserType === 'tourist' ? 'Tourist Information' : 'Admin Information';
-                        document.getElementById('modalUserId').textContent = userData.user_id || 'N/A';
-                        document.getElementById('modalFullName').textContent = userData.full_name || 'N/A';
-                        document.getElementById('modalContact').textContent = userData.contact_details || 'N/A';
-                        document.getElementById('modalAddress').textContent = userData.address || 'N/A';
-                        const createdAt = userData.created_at ? new Date(userData.created_at) : null;
-                        document.getElementById('modalCreatedAt').textContent = createdAt && !isNaN(createdAt.getTime()) ? createdAt.toLocaleString() : 'N/A';
+                            document.getElementById('modalMemberId').textContent = memberData.member_id || 'N/A';
+                            document.getElementById('modalMemberFullName').textContent = memberData.full_name || 'N/A';
+                            const createdAt = memberData.created_at ? new Date(memberData.created_at) : null;
+                            document.getElementById('modalMemberCreatedAt').textContent = createdAt && !isNaN(createdAt.getTime()) ? createdAt.toLocaleString() : 'N/A';
 
-                        userModalInstance.hide();
-                        userInfoModalInstance.show();
+                            userModalInstance.hide();
+                            memberInfoModalInstance.show();
 
-                        unlockBtn.disabled = false;
-                        unlockBtn.innerHTML = 'Unlock';
-                    })
-                    .catch(error => {
-                        console.error('Error fetching user details:', error);
-                        toastr.error(error.message || 'Failed to fetch user details');
-                        unlockBtn.disabled = false;
-                        unlockBtn.innerHTML = 'Unlock';
-                    });
+                            unlockBtn.disabled = false;
+                            unlockBtn.innerHTML = 'Unlock';
+                        })
+                        .catch(error => {
+                            console.error('Error fetching member details:', error);
+                            toastr.error(error.message || 'Failed to fetch member details');
+                            unlockBtn.disabled = false;
+                            unlockBtn.innerHTML = 'Unlock';
+                        });
+                    } else {
+                        fetch(`/admin/api/user-details/${selectedUser.user_id}`, {
+                            headers: {
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                            }
+                        })
+                        .then(response => {
+                            if (!response.ok) {
+                                return response.json().then(err => { throw new Error(err.error || 'Failed to fetch user details'); });
+                            }
+                            return response.json();
+                        })
+                        .then(userData => {
+                            if (userData.error) {
+                                throw new Error(userData.error);
+                            }
+
+                            document.getElementById('modalUserTypeLabel').textContent = selectedUserType.charAt(0).toUpperCase() + selectedUserType.slice(1);
+                            document.getElementById('userInfoModalTitle').textContent = selectedUserType === 'tourist' ? 'Tourist Information' : 'Admin Information';
+                            document.getElementById('modalUserId').textContent = userData.user_id || 'N/A';
+                            document.getElementById('modalFullName').textContent = userData.full_name || 'N/A';
+                            document.getElementById('modalContact').textContent = userData.contact_details || 'N/A';
+                            document.getElementById('modalAddress').textContent = userData.address || 'N/A';
+                            const createdAt = userData.created_at ? new Date(userData.created_at) : null;
+                            document.getElementById('modalCreatedAt').textContent = createdAt && !isNaN(createdAt.getTime()) ? createdAt.toLocaleString() : 'N/A';
+
+                            userModalInstance.hide();
+                            userInfoModalInstance.show();
+
+                            unlockBtn.disabled = false;
+                            unlockBtn.innerHTML = 'Unlock';
+                        })
+                        .catch(error => {
+                            console.error('Error fetching user details:', error);
+                            toastr.error(error.message || 'Failed to fetch user details');
+                            unlockBtn.disabled = false;
+                            unlockBtn.innerHTML = 'Unlock';
+                        });
+                    }
                 } else {
                     const pinError = document.getElementById('pinError');
                     if (pinError) {
@@ -1020,6 +1146,102 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         });
     }
+
+    function fetchMembers(userId) {
+        document.getElementById('modalTouristId').textContent = userId;
+        const membersList = document.getElementById('membersList');
+        membersList.innerHTML = '<p>Loading members...</p>'; // Show loading state
+        document.getElementById('membersPagination').style.display = 'none';
+
+        fetch(`/admin/api/members/${userId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) throw new Error(data.error);
+                displayMembers(data, userId);
+            })
+            .catch(error => {
+                console.error('Error fetching members:', error);
+                membersList.innerHTML = '<p>Failed to load members. Please try again.</p>';
+                toastr.error('Failed to fetch members');
+            });
+    }
+
+    function displayMembers(members, userId) {
+        const membersList = document.getElementById('membersList');
+        membersList.innerHTML = '';
+        if (members.length === 0) {
+            membersList.innerHTML = '<p>No members found for this tourist.</p>';
+            document.getElementById('membersPagination').style.display = 'none';
+            return;
+        }
+        const table = document.createElement('table');
+        table.className = 'table table-striped';
+        table.innerHTML = `
+            <thead><tr><th>Member ID</th><th>Action</th></tr></thead>
+            <tbody id="membersTableBody"></tbody>
+        `;
+        membersList.appendChild(table);
+        const totalItems = members.length;
+        const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
+        let currentPage = 1;
+
+        function updateMembersDisplay(page) {
+            const startIndex = (page - 1) * ITEMS_PER_PAGE;
+            const endIndex = Math.min(startIndex + ITEMS_PER_PAGE, totalItems);
+            const tbody = document.getElementById('membersTableBody');
+            tbody.innerHTML = '';
+            for (let i = startIndex; i < endIndex; i++) {
+                const member = members[i];
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${member.member_id}</td>
+                    <td>
+                        <button type="button" class="btn btn-sm btn-primary view-details-btn view-member-details-btn"
+                            data-member-id="${member.member_id}" data-user-id="${userId}">
+                            View Details
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            }
+            createMembersPagination(totalPages, page);
+        }
+        updateMembersDisplay(currentPage);
+
+        document.getElementById('membersPrevBtn').addEventListener('click', () => {
+            if (currentPage > 1) {
+                currentPage--;
+                updateMembersDisplay(currentPage);
+            }
+        });
+        document.getElementById('membersNextBtn').addEventListener('click', () => {
+            if (currentPage < totalPages) {
+                currentPage++;
+                updateMembersDisplay(currentPage);
+            }
+        });
+    }
+
+    function createMembersPagination(totalPages, currentPage) {
+        const pageNumbersContainer = document.getElementById('membersPageNumbers');
+        pageNumbersContainer.innerHTML = '';
+        for (let i = 1; i <= totalPages; i++) {
+            const pageButton = document.createElement('button');
+            pageButton.className = 'page-number';
+            pageButton.textContent = i;
+            pageButton.dataset.page = i;
+            if (i === currentPage) pageButton.classList.add('active');
+            pageButton.addEventListener('click', () => {
+                currentPage = parseInt(pageButton.dataset.page);
+                updateMembersDisplay(currentPage);
+            });
+            pageNumbersContainer.appendChild(pageButton);
+        }
+        document.getElementById('membersPrevBtn').disabled = currentPage === 1;
+        document.getElementById('membersNextBtn').disabled = currentPage === totalPages;
+        document.getElementById('membersPagination').style.display = 'flex';
+    }
+
     sortAdminTable();
     
     function initPagination(tableType, rows, totalPages) {
@@ -1100,58 +1322,56 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     
     function createComplexPagination(tableType, totalPages, currentPage) {
-    const pageNumbersContainer = document.getElementById(`${tableType}PageNumbers`);
-    if (!pageNumbersContainer) return;
-    
-    pageNumbersContainer.innerHTML = '';
+        const pageNumbersContainer = document.getElementById(`${tableType}PageNumbers`);
+        if (!pageNumbersContainer) return;
+        
+        pageNumbersContainer.innerHTML = '';
 
-    const createPageButton = (number) => {
-        const button = document.createElement('button');
-        button.className = 'page-number';
-        button.textContent = number;
-        button.dataset.page = number;
+        const createPageButton = (number) => {
+            const button = document.createElement('button');
+            button.className = 'page-number';
+            button.textContent = number;
+            button.dataset.page = number;
 
-        if (number === currentPage) {
-            button.classList.add('active');
-        }
-
-        button.addEventListener('click', function() {
-            const page = parseInt(this.dataset.page);
-            if (tableType === 'tourist') {
-                touristCurrentPage = page;
-                updatePageDisplay(tableType, touristRows, totalPages, page);
-            } else if (tableType === 'admin') {
-                adminCurrentPage = page;
-                updatePageDisplay(tableType, adminRows, totalPages, page);
-            } else if (tableType === 'deactivated') {
-                deactivatedCurrentPage = page;
-                updatePageDisplay(tableType, deactivatedRows, totalPages, page);
+            if (number === currentPage) {
+                button.classList.add('active');
             }
-        });
 
-        return button;
-    };
+            button.addEventListener('click', function() {
+                const page = parseInt(this.dataset.page);
+                if (tableType === 'tourist') {
+                    touristCurrentPage = page;
+                    updatePageDisplay(tableType, touristRows, totalPages, page);
+                } else if (tableType === 'admin') {
+                    adminCurrentPage = page;
+                    updatePageDisplay(tableType, adminRows, totalPages, page);
+                } else if (tableType === 'deactivated') {
+                    deactivatedCurrentPage = page;
+                    updatePageDisplay(tableType, deactivatedRows, totalPages, page);
+                }
+            });
 
-    // Calculate start and end for sliding window of 5 pages max
-    let startPage = 1;
-    let endPage = Math.min(5, totalPages);
+            return button;
+        };
 
-    if (currentPage > 3 && totalPages > 5) {
-        startPage = currentPage - 2;
-        endPage = currentPage + 2;
+        let startPage = 1;
+        let endPage = Math.min(5, totalPages);
 
-        if (endPage > totalPages) {
-            endPage = totalPages;
-            startPage = totalPages - 4;
-            if (startPage < 1) startPage = 1;
+        if (currentPage > 3 && totalPages > 5) {
+            startPage = currentPage - 2;
+            endPage = currentPage + 2;
+
+            if (endPage > totalPages) {
+                endPage = totalPages;
+                startPage = totalPages - 4;
+                if (startPage < 1) startPage = 1;
+            }
+        }
+
+        for (let i = startPage; i <= endPage; i++) {
+            pageNumbersContainer.appendChild(createPageButton(i));
         }
     }
-
-    for (let i = startPage; i <= endPage; i++) {
-        pageNumbersContainer.appendChild(createPageButton(i));
-    }
-}
-
     
     function updatePageDisplay(tableType, rows, totalPages, currentPage) {
         const prevBtn = document.getElementById(`${tableType}PrevBtn`);

@@ -1053,5 +1053,38 @@ body {
 #touristPagination{
     margin-top:110px !important;
 }
+.view-members-btn {
+    display: inline-block;
+    width: 120px;
+    color: #ffffff;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    font-size: 12px;
+    padding: 6px 15px;
+    border-radius: 5px;
+    transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+    cursor: pointer;
+    text-align: center;
+    text-decoration: none;
+    margin: 0 4px;
+    background-color: #FF7E3F;
+    border: 1px solid #FF7E3F;
+}
 
+.view-members-btn:hover {
+    background-color: #e06a2f;
+    border-color: #e06a2f;
+}
+
+#userModal {
+    z-index: 1051 !important; /* Higher than the members modal */
+}
+
+#changePinModal {
+    z-index: 1052 !important; /* Ensure PIN modal is on top of the user modal */
+}
+
+#membersModal {
+    z-index: 1049 !important; /* Lower z-index than PIN modal */
+}
 

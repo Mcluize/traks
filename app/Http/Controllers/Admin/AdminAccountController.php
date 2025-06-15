@@ -29,7 +29,7 @@ class AdminAccountController extends Controller
             ]);
 
             // Fetch only necessary fields
-            $users = $this->supabase->fetchTable('users', [], false, 'name_hash, user_type, user_id');
+            $users = $this->supabase->fetchTable('users', [], false, 'name_hash, contact_hash, user_type, user_id');
 
             // Check for duplicate name using hash
             $newNameHash = $this->supabase->hashName($validated['full_name']);
@@ -38,6 +38,17 @@ class AdminAccountController extends Controller
                     return response()->json([
                         'success' => false,
                         'message' => 'Full name already exists. Please choose a different name.'
+                    ], 422);
+                }
+            }
+
+            // Check for duplicate contact using hash
+            $newContactHash = $this->supabase->hashContact($validated['contact_details']);
+            foreach ($users as $user) {
+                if ($user['contact_hash'] === $newContactHash) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Contact details already exist. Please use a different contact.'
                     ], 422);
                 }
             }
@@ -57,6 +68,7 @@ class AdminAccountController extends Controller
             $encryptedFullName = $this->supabase->encryptData($validated['full_name']);
             $encryptedContactDetails = $this->supabase->encryptData($validated['contact_details']);
             $nameHash = $newNameHash;
+            $contactHash = $newContactHash;
 
             $createdAt = now()->toDateTimeString();
 
@@ -65,6 +77,7 @@ class AdminAccountController extends Controller
                 'full_name' => $encryptedFullName,
                 'contact_details' => $encryptedContactDetails,
                 'name_hash' => $nameHash,
+                'contact_hash' => $contactHash,
                 'address' => null,
                 'created_at' => $createdAt,
                 'user_type' => 'admin',
@@ -97,51 +110,50 @@ class AdminAccountController extends Controller
     }
 
     public function manageTourists()
-{
-    $users = $this->supabase->fetchTable('users');
-    $touristSpots = $this->supabase->fetchTable('tourist_spots');
+    {
+        $users = $this->supabase->fetchTable('users');
+        $touristSpots = $this->supabase->fetchTable('tourist_spots');
 
-    // Map admin addresses as before
-    $adminAddresses = [];
-    foreach ($touristSpots as $spot) {
-        if (isset($spot['created_by']) && !empty($spot['address'])) {
-            $adminAddresses[$spot['created_by']] = $spot['address'];
+        // Map admin addresses as before
+        $adminAddresses = [];
+        foreach ($touristSpots as $spot) {
+            if (isset($spot['created_by']) && !empty($spot['address'])) {
+                $adminAddresses[$spot['created_by']] = $spot['address'];
+            }
         }
-    }
 
-    foreach ($users as &$user) {
-        if ($user['user_type'] === 'admin' && isset($adminAddresses[$user['user_id']])) {
-            $user['address'] = $adminAddresses[$user['user_id']];
+        foreach ($users as &$user) {
+            if ($user['user_type'] === 'admin' && isset($adminAddresses[$user['user_id']])) {
+                $user['address'] = $adminAddresses[$user['user_id']];
+            }
         }
+        unset($user);
+
+        usort($users, function($a, $b) {
+            return $b['user_id'] <=> $a['user_id'];
+        });
+
+        // Counts based on above logic
+        $activeAdmins = array_filter($users, function($user) {
+            return isset($user['user_type'], $user['status']) 
+                && strtolower(trim($user['user_type'])) === 'admin'
+                && strtolower(trim($user['status'])) === 'active';
+        });
+
+        $adminAccounts = count($activeAdmins);
+
+        $touristAccounts = count(array_filter($users, function($user) {
+            return isset($user['user_type']) && strtolower(trim($user['user_type'])) === 'user';
+        }));
+
+        $totalAccounts = $touristAccounts + $adminAccounts;
+
+        Log::info("Total Accounts: $totalAccounts");
+        Log::info("Tourist Accounts: $touristAccounts");
+        Log::info("Admin Accounts: $adminAccounts");
+
+        return view('vendor.backpack.ui.manage-tourists', compact('totalAccounts', 'touristAccounts', 'adminAccounts', 'users'));
     }
-    unset($user);
-
-    usort($users, function($a, $b) {
-        return $b['user_id'] <=> $a['user_id'];
-    });
-
-    // Counts based on above logic
-    $activeAdmins = array_filter($users, function($user) {
-        return isset($user['user_type'], $user['status']) 
-            && strtolower(trim($user['user_type'])) === 'admin'
-            && strtolower(trim($user['status'])) === 'active';
-    });
-
-    $adminAccounts = count($activeAdmins);
-
-    $touristAccounts = count(array_filter($users, function($user) {
-        return isset($user['user_type']) && strtolower(trim($user['user_type'])) === 'user';
-    }));
-
-    $totalAccounts = $touristAccounts + $adminAccounts;
-
-    Log::info("Total Accounts: $totalAccounts");
-    Log::info("Tourist Accounts: $touristAccounts");
-    Log::info("Admin Accounts: $adminAccounts");
-
-    return view('vendor.backpack.ui.manage-tourists', compact('totalAccounts', 'touristAccounts', 'adminAccounts', 'users'));
-}
-
 
     public function deactivateAccount(Request $request, $userId)
     {
@@ -197,29 +209,27 @@ class AdminAccountController extends Controller
     }
 
     public function getAccountCounts()
-{
-    // Tourists count without status filter (all tourists)
-    $touristAccounts = $this->supabase->fetchTable('users', [
-        'user_type' => 'eq.user',
-    ], true);
+    {
+        // Tourists count without status filter (all tourists)
+        $touristAccounts = $this->supabase->fetchTable('users', [
+            'user_type' => 'eq.user',
+        ], true);
 
-    // Admins count only active ones
-    $adminAccounts = $this->supabase->fetchTable('users', [
-        'status' => 'eq.active',
-        'user_type' => 'eq.admin',
-    ], true);
+        // Admins count only active ones
+        $adminAccounts = $this->supabase->fetchTable('users', [
+            'status' => 'eq.active',
+            'user_type' => 'eq.admin',
+        ], true);
 
-    // Total accounts = sum of all tourists + active admins
-    $totalAccounts = $touristAccounts + $adminAccounts;
+        // Total accounts = sum of all tourists + active admins
+        $totalAccounts = $touristAccounts + $adminAccounts;
 
-    return response()->json([
-        'totalAccounts' => $totalAccounts,
-        'touristAccounts' => $touristAccounts,
-        'adminAccounts' => $adminAccounts,
-    ]);
-}
-
-
+        return response()->json([
+            'totalAccounts' => $totalAccounts,
+            'touristAccounts' => $touristAccounts,
+            'adminAccounts' => $adminAccounts,
+        ]);
+    }
 
     public function getUserDetails($userId)
     {
@@ -246,6 +256,34 @@ class AdminAccountController extends Controller
                 'trace' => $e->getTraceAsString()
             ]);
             return response()->json(['error' => 'Failed to fetch user details'], 500);
+        }
+    }
+
+    public function getMembers($userId)
+    {
+        try {
+            $members = $this->supabase->fetchTable('members', ['user_id' => "eq.$userId"], false, 'member_id');
+            return response()->json($members);
+        } catch (\Exception $e) {
+            Log::error('Failed to fetch members', ['error' => $e->getMessage()]);
+            return response()->json(['error' => 'Failed to fetch members'], 500);
+        }
+    }
+
+    public function getMemberDetails($memberId)
+    {
+        try {
+            $members = $this->supabase->fetchTable('members', ['member_id' => "eq.$memberId"], false, 'member_id, full_name, created_at');
+            if (empty($members)) {
+                return response()->json(['error' => 'Member not found'], 404);
+            }
+            $member = $members[0];
+            $decrypted = $this->supabase->decryptData($member['full_name']);
+            $member['full_name'] = is_array($decrypted) && isset($decrypted['decrypted_text']) ? $decrypted['decrypted_text'] : $decrypted;
+            return response()->json($member);
+        } catch (\Exception $e) {
+            Log::error('Failed to fetch member details', ['error' => $e->getMessage()]);
+            return response()->json(['error' => 'Failed to fetch member details'], 500);
         }
     }
 }

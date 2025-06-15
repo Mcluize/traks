@@ -460,4 +460,25 @@ class SupabaseService
             throw new \Exception('Failed to hash name: ' . $response->body());
         }
     }
+    public function hashContact($contact)
+    {
+        $response = Http::withHeaders([
+            'apikey' => $this->key,
+            'Authorization' => 'Bearer ' . $this->key,
+            'Content-Type' => 'application/json',
+        ])->post("{$this->url}/rest/v1/rpc/hash_contact", [
+            'contact' => $contact
+        ]);
+
+        if ($response->successful()) {
+            return $response->json();
+        } else {
+            throw new \Exception('Failed to hash contact: ' . $response->body());
+        }
+    }
+
+    public function fetchMember($memberId)
+    {
+        return $this->fetchTable('members', ['member_id' => "eq.$memberId"], false, 'member_id, full_name, created_at');
+    }
 }

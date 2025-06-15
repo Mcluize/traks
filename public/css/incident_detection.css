@@ -300,7 +300,7 @@ body {
     border-radius: 4px;
 }
 
-.status.status-resolved {
+.status.status-reported {
     background-color: #28A745; /* Green */
     color: white;
     padding: 2px 8px;

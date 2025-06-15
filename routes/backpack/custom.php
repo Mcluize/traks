@@ -94,9 +94,11 @@ Route::group([
     Route::get('api/accounts/count',             [DashboardController::class, 'getAccountCounts']);
     Route::get('api/account-counts',             [AdminAccountController::class, 'getAccountCounts']);
     Route::get('/admin/analytics/map-data/{activityFilter}/{timeFilter}', [AnalyticsController::class, 'getMapData']);
-    Route::get('analytics/tourist-activities', [AnalyticsController::class, 'getTouristinActivities'])
-         ->name('analytics.tourist-activities');
+    Route::get('analytics/tourist-activities', [AnalyticsController::class, 'getTouristActivities'])
+    ->name('analytics.tourist-activities');
      Route::get('analytics/stats', [AnalyticsController::class, 'stats'])->name('admin.analytics.stats');
      Route::post('/admin/user/decrypted-details', [AdminAccountController::class, 'getDecryptedUserDetails']);
      Route::get('api/user-details/{userId}', [AdminAccountController::class, 'getUserDetails'])->name('admin.user.details');
+     Route::get('api/members/{userId}', [AdminAccountController::class, 'getMembers'])->name('admin.members');
+     Route::get('api/member-details/{memberId}', [AdminAccountController::class, 'getMemberDetails'])->name('admin.member.details');
 });
